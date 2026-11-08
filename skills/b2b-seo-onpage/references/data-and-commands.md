@@ -2,6 +2,8 @@
 
 仅 Python 3.11+ 标准库。学员用自然语言；输入、解析和 JSON 由 Codex 完成。工具只读本地证据，网络/登录/页面保存由环境内可用工具负责，无固定平台或 MCP 依赖。
 
+WordPress 页面保存走[Harness 协作流程](wordpress-harness-handoff.md)。本文件的 `plan.json` 是 SEO 改稿协议，不是 Harness REST `content-plan` 的输入；先查实际记录/字段，由对应实施方生成该适配器的请求，再把真实 WordPress 改后输出交回这里核对。
+
 ## 1. 页面证据
 
 保存实际 HTML（UTF-8）和取数说明；浏览器 DOM、源 HTML、第三方 tool_raw_html、用户供稿是不同阶段，不互相冒充。

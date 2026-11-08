@@ -1,13 +1,15 @@
 ---
 name: b2b-seo-onpage
-description: 从目标关键词和现有URL开始优化外贸B2B单页；只有关键词时先判断意图与适合页型。结合用户行业词库、网页版工具、SERP及竞品页面形成简报，再优化标题、H标签、正文与内链；支持局部改稿和改后回读。
+description: 从关键词和页面开始优化外贸B2B单页，结合行业词库、SERP与竞品研究交付简报及改稿；WordPress页面通过已有Build Harness分工实施和回读，支持只改稿或已授权的页面修改。
 metadata:
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # B2B 单页 SEO 优化
 
 围绕已选主词与页面，完成「行业词库 → 本页候选词 → SERP与竞品研究 → 页面简报 → 可用改稿 → 实施回读」。完整优化必须取得用户行业词库；直接接收原始表格或文件夹，由 Codex 整理，不要求用户先运行其他 Skill。局部标题/段落修改按本次范围完成，复用已有研究，不冒充完整研究。
+
+本 Skill 负责 SEO 研究、编辑判断与改稿；WordPress Build Harness 负责站点身份、内容/模板归属、实际写入与相应验收。用户提到 Harness，或目标是已有 Harness 管理的 WordPress 项目时，读 [WordPress 协作与实施](references/wordpress-harness-handoff.md)，在同一任务中衔接 `wordpress-builder`，按实际变更调用 Content、Design、Delivery。仅交改稿无需启动或配置 WordPress；已有实施授权则完成到约定目标的回读，不停在让用户再调用另一个 Skill。
 
 ## 从用户已有的信息开始
 
@@ -69,6 +71,8 @@ metadata:
 - 每项改动有现状、改后、位置、理由、依据与 ready/blocked 状态。没有必要修改时说明保留理由，不制造无意义改稿。
 - 完整任务用 `onpage-review.md` 作阅读入口；`page-brief.md` 说明研究结论和每个模块的内容任务，`keyword-selection.xlsx` 说明选词与排除理由，`serp-results.xlsx` / `competitor-comparison.xlsx` 展示实际研究，`page-changes.xlsx` / `keyword-placement.xlsx` 展示改稿和安排。CSV/JSON与原始证据留作接续。缺证主张单列，不混入可发布正文。
 - 在已有实施授权内修改源码/CMS，保留改前证据，重开记录与前台页面回读 Title、描述、实际 H 标签、正文、相关链接和页面身份。未实施则明确“改稿”；本地、CMS、预览、线上分别说明。改 URL、合页、跳转或全站设置需要对应范围的授权。
+
+WordPress 实施先把改稿映射到实际记录、字段或模板，由 [Harness 协作流程](references/wordpress-harness-handoff.md)完成写入与验收。`plan.json` 是 SEO 改稿协议，不是 WordPress 写入请求；校验通过不能说明 CMS 已保存，也不能用一份静态 HTML 代替目标 WordPress 的实际输出。交付合并说明研究覆盖、稿件状态、目标站保存/回读结果与待办，不要求用户在不同 Skill 之间搬运同一份资料。
 
 Python 3.11+ 标准库工具可提取证据、核研究引用与完整性、校验旧文定位和关键词安排，并比较改后快照。完整页的 `check-plan` 必须有行业词库研究记录；文件/引用通过不等于语义正确或实访真实，模拟必须明示。按需要读 [输入、命令与示例](references/data-and-commands.md)。结构化数据、技术故障或性能只处理本页实际相关问题，规则按当时官方来源核查，详见 [B2B 判断](references/b2b-checks.md)。
 

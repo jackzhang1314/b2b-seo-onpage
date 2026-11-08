@@ -20,7 +20,7 @@ from urllib.parse import urljoin, urlsplit
 
 from onpage_research import validate_research
 
-VERSION = "2.3.0"
+VERSION = "2.4.0"
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
     "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt", "fieldset", "figcaption",
