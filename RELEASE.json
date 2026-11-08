@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "name": "b2b-seo-onpage",
+  "version": "2.3.0",
+  "release_ref": "v2.3.0",
+  "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
+  "skill_path": "skills/b2b-seo-onpage",
+  "runtime_python": "3.11+ standard library",
+  "prepared_at": "2026-11-08T09:42:37.747315+08:00",
+  "maintenance_source": {
+    "repository": "https://github.com/jackzhang1314/b2b-seo-skills",
+    "commit": "177216b67bb7e4e3d4a737ae61c0ac9645531900",
+    "path": "skills/b2b-seo-onpage",
+    "note": "The source identifier is from the local suite candidate. This standalone repository publishes the complete runtime independently."
+  },
+  "runtime_file_count": 11,
+  "file_count_excluding_manifest": 12,
+  "files_sha256": {
+    "README.md": "f38a0142fa7fac106eae2e085fa00577f50b5adbc211c1a11215fd86c3c1cd90",
+    "skills/b2b-seo-onpage/SKILL.md": "8f2843864a6d87a00ed10dfbf6bddaccb2646a2af79721452724913c7a3699e3",
+    "skills/b2b-seo-onpage/agents/openai.yaml": "5afd6891932c5932d755d994f4dced75440c9ffda57d2db4438bdaa52791b791",
+    "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
+    "skills/b2b-seo-onpage/references/data-and-commands.md": "59b2111bd689fc183b5b51c9235b256f23ced2ea1047465db3f54a60a33a8187",
+    "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "06aea3aa706b254f4528cfad4c9d33b42e1abc6cca400acb8eb6aa62cb433af9",
+    "skills/b2b-seo-onpage/references/research-contract.md": "f7061b749f85f49163e8953ca60afa44bb6229062bb392e7c962ce6329edd026",
+    "skills/b2b-seo-onpage/references/research-workflow.md": "805ee7ab1d331025bdea3aa515f75696060c51de20d43d3775abf40c887a73bc",
+    "skills/b2b-seo-onpage/references/title-and-snippet.md": "9c442a1e955e193f998b6c95c5dfb3a45d2ac350f152bcd6cba10e27eeccfd03",
+    "skills/b2b-seo-onpage/references/upstream.md": "9510ff87f87b26e5dcd965085b82e28ee81d4e738de26455436dfdd7ee3781f4",
+    "skills/b2b-seo-onpage/scripts/onpage.py": "4acdb62e236a1db81582b7227b9745816a716a1546346412340de82a309ef0bf",
+    "skills/b2b-seo-onpage/scripts/onpage_research.py": "08dd0f73f76107f09d7cfdc377727599759400535c6305f617bfd98962d1161f"
+  },
+  "manifest_self_excluded": true,
+  "verification_scope": "Runtime identity, installable files, CLI and synthetic workflow compatibility. Not a guarantee of live SERP, CMS, rankings or leads."
+}

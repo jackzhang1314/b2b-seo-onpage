@@ -1,0 +1,4 @@
+interface:
+  display_name: "B2B 单页 SEO 优化"
+  short_description: "结合词库和SERP研究，按页型优化Title、摘要与内容，交可用改稿并核对依据"
+  default_prompt: "使用 $b2b-seo-onpage，从我的目标关键词和已有页面判断适配；尚未建页时先建议页型，再结合行业词库与SERP竞品研究完成简报和改稿。"
