@@ -45,6 +45,10 @@ competitor_pages 每项含 `url`、`read_state`（read/partial/failed）、`sele
 
 brief.modules 每项为 `id`、`heading`、`task`、`evidence_refs`。task 写清保留/新增/改进、模块回答的问题、必要事实及内链任务；angle 说明本页差异及依据。企业事实仍用 plan.claims / fact_gaps 管理，研究引用不会自动赋予公开使用许可。候选词通过 module_ids 连接到模块；正文改稿通过 keyword_placement 连接到实际表达。
 
+为商业页选 B 端属性词时，按[品类选词流程](category-modifier-research.md)把实际查询短语记入上述 keyword_decisions。reason 写明买家任务、企业条件与本页去向，evidence_refs 指向本项目的词库、市场观察及业务依据。brief.angle 说明最终用词或保留原题的理由。仅在内置词表看到的写法属于 editorial 构想，后续查到的实际证据按来源登记。
+
+产品＋属性词的 Google 查询应各自登记查询词、市场、日期、来源及发现的域名；在对应的 serp 类型来源文件保留这些分查询记录。主词的 serp.results 和 samples 仅收主词那次查询的结果。另一个查询命中的 URL 或站内导航找到的页面，均可按 competitor_pages 登记实访：selection_reason 中标明发现路径与页型，observed_strengths 记录真实 Title、属性所在位置与采购含义，recommendation 说明对同页型的借鉴。外站词频可按独立域名和已读页型说明，不用页面重复出现次数推断搜索量。
+
 ## 输出与状态
 
 - `research.json`：原始研究判断及归一来源路径；`research-sources.json`：来源哈希与时间。

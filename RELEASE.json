@@ -1,37 +1,38 @@
 {
   "schema_version": 1,
   "name": "b2b-seo-onpage",
-  "version": "2.4.0",
-  "release_ref": "v2.4.0",
+  "version": "2.5.0",
+  "release_ref": "codex/onpage-category-research-v2.5.0",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-08T14:02:03.676478+08:00",
+  "prepared_at": "2026-11-21T22:12:55+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
-    "branch": "codex/wordpress-harness-v2.4.0",
+    "branch": "codex/onpage-category-research-v2.5.0",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "v2.3.0",
-    "commit": "76a8248223f5c40fb670a6973d04ecd4ae74e991",
-    "suite_origin_commit": "177216b67bb7e4e3d4a737ae61c0ac9645531900"
+    "release_ref": "v2.4.0",
+    "commit": "095983dfcaac134259f760e1def502c989cd4d95"
   },
-  "runtime_file_count": 12,
-  "file_count_excluding_manifest": 13,
+  "runtime_file_count": 14,
+  "file_count_excluding_manifest": 15,
   "files_sha256": {
-    "README.md": "7a985c5a94e7adb455d05149aecf2c87545ac668c4cb1b63a4dd7e17fb525e23",
-    "skills/b2b-seo-onpage/SKILL.md": "d09b77185acaf2a74073027d3f9de6da3659ec93ffef4f006d7ac48e9284ff84",
-    "skills/b2b-seo-onpage/agents/openai.yaml": "81461c15fcfa20aa27b2d185d26c916dd134d99c14a5a42a0d3bbdf62644487e",
+    "README.md": "d3b9d711c1512e2ed7c47c2f414c427703deb963869cda6760c9c3bcbeaa224a",
+    "skills/b2b-seo-onpage/SKILL.md": "96191dd69166f264990b9f58055c4ef379204c78170ffc30a18554836cd4116b",
+    "skills/b2b-seo-onpage/agents/openai.yaml": "24063fc8698f3b3f33389179b5a7db383538356cf4dbfa6580a12b9fe6845544",
+    "skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv": "a1439f35852fa63106905821ce7f36720e039c2d5dcd545adb7af0312ff95388",
     "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
+    "skills/b2b-seo-onpage/references/category-modifier-research.md": "f17ee3bc94f74b3416cf6a2b633e12779692d7a5ca4ee88a47d18fb0debc1658",
     "skills/b2b-seo-onpage/references/data-and-commands.md": "fae86aeefbd26d8527abdbddf64978feb8adeac628f5b08876035f4e9370ab6b",
     "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "06aea3aa706b254f4528cfad4c9d33b42e1abc6cca400acb8eb6aa62cb433af9",
-    "skills/b2b-seo-onpage/references/research-contract.md": "f7061b749f85f49163e8953ca60afa44bb6229062bb392e7c962ce6329edd026",
-    "skills/b2b-seo-onpage/references/research-workflow.md": "805ee7ab1d331025bdea3aa515f75696060c51de20d43d3775abf40c887a73bc",
-    "skills/b2b-seo-onpage/references/title-and-snippet.md": "15ddd8caaa53c447e0c353a478389199b6aef830d3e40bb6b1200ef15e9c8f24",
+    "skills/b2b-seo-onpage/references/research-contract.md": "3058ce030f66c395ede7d73507aa5ed9cebacc44d210708dbd69fa6352ed9ee2",
+    "skills/b2b-seo-onpage/references/research-workflow.md": "744b13e85290741f140f5500bcbfd001a934fc02fc64ade4fc5d35296c8f035a",
+    "skills/b2b-seo-onpage/references/title-and-snippet.md": "b1eae3b1f77d06a8fbd54f51c1e0e64845d3fa1cdf56209d9e673f175f04738e",
     "skills/b2b-seo-onpage/references/upstream.md": "9510ff87f87b26e5dcd965085b82e28ee81d4e738de26455436dfdd7ee3781f4",
     "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "e390c45ef94904c008d6255d2c6f4e21ea890491dfe1459bd103ac1217d943b6",
-    "skills/b2b-seo-onpage/scripts/onpage.py": "75116ba03781ca42ace46f506f7ac4c857bc9499fdd308954e3c3f3a1139b423",
+    "skills/b2b-seo-onpage/scripts/onpage.py": "8cfc166beb4aaa5eb4d4465f66c4964b0209dc353788b132245870d24f905d18",
     "skills/b2b-seo-onpage/scripts/onpage_research.py": "08dd0f73f76107f09d7cfdc377727599759400535c6305f617bfd98962d1161f"
   },
   "manifest_self_excluded": true,
@@ -41,15 +42,24 @@
     "reviewed_distribution_revision": 19,
     "availability": "Reuse actual installed Harness and current site contract; Harness is not bundled or installed by this package."
   },
-  "verification_scope": "See the release notes for observed installation, synthetic research and local WordPress acceptance. No guarantee of live Google rankings or leads.",
+  "verification_scope": "Local standalone package and targeted on-page workflow. See verification for actual coverage.",
   "verification": {
     "onpage_regressions": 24,
     "strict_mypy_source_files": 2,
     "ruff": "passed",
     "skill_format": "passed",
-    "markdown_links": "passed",
-    "wordpress_end_to_end": "incomplete; no complete CMS acceptance claimed",
-    "new_version_public_install": "not rerun",
-    "previous_v230_public_install_and_input_guidance": "passed with isolation deviation documented in local evaluation"
+    "markdown_links": 31,
+    "source_page_observation": "Compared actual HTML title and H1 on one packaging supplier homepage, collection and product page. Supplier discovery used general web search.",
+    "target_market_google": "Google requested a verification step during the sample. No live target-market Google rankings verified.",
+    "wordpress_end_to_end": "not exercised for this change",
+    "customer_search_performance": "not measured"
+  },
+  "distribution": "local",
+  "modifier_library": {
+    "terms": 273,
+    "groups": 14,
+    "source_linked_terms": 221,
+    "editorial_search_seeds": 52,
+    "distinct_source_urls": 79
   }
 }

@@ -1,4 +1,4 @@
 interface:
   display_name: "B2B 单页 SEO 优化"
-  short_description: "结合词库和SERP研究，按页型优化Title、摘要与内容，交可用改稿并核对依据"
-  default_prompt: "使用 $b2b-seo-onpage，结合目标关键词、页面和行业词库完成研究与改稿；目标为WordPress且已授权实施时，通过现有Build Harness继续修改并回读实际页面。"
+  short_description: "调研外贸 B2B 品类的采购用词，按页型交付有依据的 SEO 标题与内容改稿"
+  default_prompt: "使用 $b2b-seo-onpage，先从我的行业词库提取本品类的采购用词，再设计几组产品加属性词的 Google 搜索，实读同行独立站，按页型和本企业实际业务推荐标题。"

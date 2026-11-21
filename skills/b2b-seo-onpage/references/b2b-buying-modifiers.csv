@@ -1,0 +1,274 @@
+用途,词组,英文候选,中文含义与适用条件,英文搭配示例（编辑示意）,候选依据,来源对应表达,公开来源
+采购属性,供方身份与生产场所,manufacturer,生产该品类的企业,mini excavator manufacturer,来源用语,manufacturer,https://www.thomasnet.com/articles/procurement/how-to-find-a-manufacturer/
+采购属性,供方身份与生产场所,custom manufacturer,按客户规格生产的企业,custom cable assembly manufacturer,来源用语,custom manufacturer,https://www.thomasnet.com/articles/procurement/how-to-find-a-manufacturer/
+采购属性,供方身份与生产场所,factory,实际经营对应生产场地,garment factory in Portugal,来源用语,factory,https://brooklyngarmentfactory.com/pages/manufacturing
+采购属性,供方身份与生产场所,producer,生产商，适用于原料等品类的当地用语,industrial salt producer,来源用语,producer,https://www.coupebeverages.com/
+采购属性,供方身份与生产场所,mill,实际承担轧制、纺织或制纸等生产,stainless steel mill,来源用语,mill,https://www.tatasteeluk.com/services/service-centres
+采购属性,供方身份与生产场所,foundry,承接金属铸件的铸造厂,steel casting foundry,来源用语,foundry,https://monettmetals.com/services/
+采购属性,供方身份与生产场所,fabricator,承接按要求加工制作的企业,sheet metal fabricator,编辑扩展,,
+采购属性,供方身份与生产场所,machine shop,接机加工订单的车间或企业,precision machine shop,来源用语,machine shop,https://www.xometry.com/capabilities/cnc-machining-service/
+采购属性,供方身份与生产场所,toolmaker,为客户设计制作模具或工装,injection mold toolmaker,来源用语,toolmaker,https://centsmold.com/about/
+采购属性,供方身份与生产场所,converter,把纸膜、胶材等转制成下游产品,flexible packaging converter,来源用语,converting services,https://www.multifoil.com/en/contract-converting-services/
+采购属性,供方身份与生产场所,extruder,以挤出为生产能力的供应方，区分设备购买,custom aluminum extruder,编辑扩展,,
+采购属性,供方身份与生产场所,compounder,按配方配混原材料的企业,custom polymer compounder,编辑扩展,,
+采购属性,供方身份与生产场所,co-packer,替品牌承担约定包装工序的企业,beverage co-packer,来源用语,co-packer,https://www.texbev.com/
+采购属性,供方身份与生产场所,bottler,业务确含灌装装瓶,contract bottler for beverage brands,编辑扩展,,
+采购属性,供方身份与生产场所,systems integrator,为客户集成多种设备或系统,conveyor systems integrator,编辑扩展,,
+采购属性,供方身份与生产场所,service center,材料分销并提供库存或加工服务,steel service center,来源用语,service center,https://americandouglasmetals.com/aluminum-extrusions/
+采购属性,供货渠道与买家,supplier,为该品类实际供货，适用于多种企业身份,industrial bearing supplier,来源用语,supplier,https://help.thomasnet.com/search-for-suppliers
+采购属性,供货渠道与买家,distributor,在供应链中分销产品,industrial fastener distributor,来源用语,distributor,https://help.thomasnet.com/search-for-suppliers
+采购属性,供货渠道与买家,authorized distributor,取得并能核对相应品牌与区域授权,authorized bearing distributor,来源用语,authorized distributor,https://cdn.skfmediahub.skf.com/api/public/0901d19680b51400/pdf_preview_medium/0901d19680b51400_pdf_preview_medium.pdf
+采购属性,供货渠道与买家,stocking distributor,备有库存的分销商,stocking distributor of industrial fasteners,来源用语,stocking distributor,https://advancecomponents.com/pages/faqs
+采购属性,供货渠道与买家,master distributor,向下游分销网络供货的总分销层级,master distributor of fasteners,来源用语,master distributor,https://advancecomponents.com/pages/faqs
+采购属性,供货渠道与买家,dealer,相应设备的经销商，区别买家在找经销商还是想成为经销商,commercial kitchen equipment dealer,来源用语,dealer,https://www.dragoamerica.com/become-a-dealer/
+采购属性,供货渠道与买家,wholesaler,以批发为业务的企业,blank apparel wholesaler,编辑扩展,,
+采购属性,供货渠道与买家,stockist,目标市场用来找备货商的词,aluminium sheet stockist,来源用语,stockist,https://www.rudgwickmetals.co.uk/our-services/
+采购属性,供货渠道与买家,stockholder,持货供应商，常见于英式金属供应表达,stainless steel stockholder,来源用语,stockholder,https://www.aalco.co.uk/about-us/processing-services.aspx
+采购属性,供货渠道与买家,exporter,出口该品类并面向相关市场,ceramic tile exporter,来源用语,exporter,https://www.carmelabd.com/files/Profile%20Carmela%20BD%20V2.51.pdf
+采购属性,供货渠道与买家,importer,企业承担目标市场进口角色,specialty fabric importer,来源用语,importer,https://www.carmelabd.com/files/Profile%20Carmela%20BD%20V2.51.pdf
+采购属性,供货渠道与买家,trading company,以选品与组织货源为主要业务,textile trading company,来源用语,trading company,https://www.carmelabd.com/files/Profile%20Carmela%20BD%20V2.51.pdf
+采购属性,供货渠道与买家,sourcing agent,代表买方寻找并协调货源,apparel sourcing agent,来源用语,sourcing agent,https://dawnsourcing.com/about
+采购属性,供货渠道与买家,buying house,服装等行业的采购代理机构,garment buying house,来源用语,buying house,https://www.carmelabd.com/files/Profile%20Carmela%20BD%20V2.51.pdf
+采购属性,供货渠道与买家,factory direct,该品由生产方直接销售,factory direct commercial refrigerators,来源用语,factory direct,https://hardline-usa.com/
+采购属性,供货渠道与买家,trade only,销售对象限获认可的行业客户,trade only lighting supplier,来源用语,trade only,https://www.northcreeknurseries.com/page/How-To-Order
+采购属性,供货渠道与买家,for dealers,面向经销商供货，区分产品页与招商入口,compact excavators for dealers,来源用语,for dealers,https://wsdist.com/dealer-program
+采购属性,供货渠道与买家,for resellers,服务转售商,blank drinkware for resellers,来源用语,for resellers,https://www.firstpressprint.com/trade-printing-reseller-program
+采购属性,供货渠道与买家,for retailers,以零售商为采购方,wholesale candles for retailers,来源用语,for retailers,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购属性,供货渠道与买家,for brands,接品牌客户的开发或生产订单,cut and sew manufacturing for brands,来源用语,for brands,https://brooklyngarmentfactory.com/pages/manufacturing
+采购属性,供货渠道与买家,for OEMs,向整机厂提供配套件,cable assemblies for OEMs,编辑扩展,,
+采购属性,供货渠道与买家,for contractors,面向施工或安装承包商,commercial lighting for contractors,编辑扩展,,
+采购属性,按需定制与订单驱动,custom,能按订单调整产品属性，写清改什么,custom mailer boxes,来源用语,custom,https://packlane.com/about
+采购属性,按需定制与订单驱动,bespoke,目标市场采用此词，能承接个别设计,bespoke hotel furniture,来源用语,bespoke,https://www.archidecors.com/en/contract-furniture-manufacturer
+采购属性,按需定制与订单驱动,made to order,下单后按约定生产，可为标准款,made-to-order seating,来源用语,made to order,https://learn.microsoft.com/en-us/dynamics365/supply-chain/production-control/production-process-overview
+采购属性,按需定制与订单驱动,built to order,接单后制造或装配，核可选范围,built-to-order pump systems,编辑扩展,,
+采购属性,按需定制与订单驱动,custom engineered,针对项目需求进行工程设计,custom engineered conveyors,来源用语,custom engineered,https://www.cummins-wagner.com/manufacturer/eps-engineered-process-solutions/
+采购属性,按需定制与订单驱动,engineer to order,收到订单后完成产品工程设计,engineer-to-order pump systems,来源用语,engineer to order,https://learn.microsoft.com/en-us/dynamics365/supply-chain/production-control/production-process-overview
+采购属性,按需定制与订单驱动,configure to order,从已定义的配置选项组合供货,configure-to-order industrial computers,来源用语,configure to order,https://learn.microsoft.com/en-us/dynamics365/supply-chain/production-control/production-process-overview
+采购属性,按需定制与订单驱动,assemble to order,按订单组合现有组件,assemble-to-order cabinets,编辑扩展,,
+采购属性,按需定制与订单驱动,make to stock,预先生产备货，通常用于供应方式说明,make-to-stock fasteners,来源用语,make to stock,https://learn.microsoft.com/en-us/dynamics365/supply-chain/production-control/production-process-overview
+采购属性,按需定制与订单驱动,build to print,按客户定版图纸生产,build-to-print wire harnesses,来源用语,build to print,https://www.yccable.com/about/16/
+采购属性,按需定制与订单驱动,build to spec,按功能或技术规格实现,build-to-spec cable assemblies,来源用语,build to spec,https://conexsmart.com/capabilities/wire-harness-assembly/
+采购属性,按需定制与订单驱动,made to measure,按客户测量尺寸制作,made-to-measure contract curtains,编辑扩展,,
+采购属性,按需定制与订单驱动,cut to size,片板按指定长宽裁切,aluminum sheets cut to size,来源用语,cut to size,https://www.metalsupermarkets.co.uk/metals/
+采购属性,按需定制与订单驱动,cut to length,型材、管材等按指定长度下料,aluminum extrusions cut to length,来源用语,cut-to-length,https://americandouglasmetals.com/aluminum-extrusions/
+采购属性,按需定制与订单驱动,custom profiles,可开发客户专用截面,custom aluminum profiles,来源用语,custom profiles,https://americandouglasmetals.com/aluminum-extrusions/
+采购属性,按需定制与订单驱动,custom dimensions,尺寸可定制，核可做范围,corrugated boxes in custom dimensions,编辑扩展,,
+采购属性,按需定制与订单驱动,color matching,按客户色样或色号配色,custom color matching for polymer compounds,来源用语,color matching,https://gauttam.com/toll-compounding/
+采购属性,按需定制与订单驱动,custom formulation,按性能、肤感或成分需求开发配方,custom skincare formulation,来源用语,custom formulation,https://www.selfnamed.com/en/private-label-skincare-manufacturing
+采购属性,按需定制与订单驱动,custom blend,按客户要求混配,custom spice blends,来源用语,custom blend,https://www.aveepolymers.com/materials/custom-compounding/
+采购属性,按需定制与订单驱动,custom tooling,为特定项目开发工装或模具,custom tooling for molded parts,编辑扩展,,
+采购属性,品牌归属与委托制造,OEM,按本行业语境核整机配套、委托生产或原厂件含义,OEM cable assemblies,来源用语,OEM,https://www.yccable.com/about/16/
+采购属性,品牌归属与委托制造,ODM,供方承担相应设计和制造,ODM panel PC manufacturing,来源用语,ODM,https://newdata.aaeon.com.tw/DOWNLOAD/Brochure/MKT-2201802-SelectionGuide-V1.pdf
+采购属性,品牌归属与委托制造,joint development,供需双方共同承担开发职责,joint development of industrial computers,来源用语,joint development,https://newdata.aaeon.com.tw/DOWNLOAD/Brochure/MKT-2201802-SelectionGuide-V1.pdf
+采购属性,品牌归属与委托制造,contract manufacturing,按合同替品牌或设备商生产,contract electronics manufacturing,来源用语,contract manufacturing,https://newdata.aaeon.com.tw/DOWNLOAD/Brochure/MKT-2201802-SelectionGuide-V1.pdf
+采购属性,品牌归属与委托制造,contract assembly,客户委托装配,contract assembly of wire harnesses,来源用语,contract assembly,https://www.circuitassembly.com/
+采购属性,品牌归属与委托制造,contract filling,为客户进行特定容器与产品的灌装,contract filling for skincare,来源用语,contract filling,https://www.sachetsco.com/pages/contract-manufacturing-white-label-cosmetics
+采购属性,品牌归属与委托制造,contract packaging,承接外部客户的包装工序,contract packaging for sauces,来源用语,contract packaging,https://ezychef.com.au/contract-packaging/
+采购属性,品牌归属与委托制造,toll manufacturing,客户提供主要材料并委托加工，按项目核料权,toll manufacturing of polymer compounds,编辑扩展,,
+采购属性,品牌归属与委托制造,toll processing,按约定承接来料加工,toll processing of steel coils,编辑扩展,,
+采购属性,品牌归属与委托制造,toll compounding,来料配混,toll compounding of thermoplastics,来源用语,toll compounding,https://gauttam.com/toll-compounding/
+采购属性,品牌归属与委托制造,contract converting,承接片卷材料转制,contract converting for adhesive films,来源用语,contract converting,https://www.multifoil.com/en/contract-converting-services/
+采购属性,品牌归属与委托制造,private label,以客户品牌销售，核具体产品与品牌权限,private label skincare,来源用语,private label,https://www.selfnamed.com/en/private-label-skincare-manufacturing
+采购属性,品牌归属与委托制造,white label,供方有可换标的标准产品或服务,white label cosmetic sachets,来源用语,white label,https://www.sachetsco.com/pages/contract-manufacturing-white-label-cosmetics
+采购属性,品牌归属与委托制造,own brand,零售商自有品牌采购，依目标市场用语,own-brand cosmetics supplier,来源用语,own brand,https://www.selfnamed.com/en/private-label-skincare-manufacturing
+采购属性,品牌归属与委托制造,unbranded,能供应无品牌成品,unbranded cotton hoodies,来源用语,unbranded,https://shangledisplay.com/trade-partner-program/
+采购属性,品牌归属与委托制造,custom branding,可按客户品牌要求处理外观或包装,drinkware with custom branding,来源用语,custom branding,https://weftapparel.com/
+采购属性,品牌归属与委托制造,customer-supplied materials,接受客户提供的材料,garment manufacturing with customer-supplied materials,来源用语,customer-supplied material,https://www.screamingcircuits.com/capabilities/sourcing-solutions
+采购属性,品牌归属与委托制造,full package production,约定从物料采购到成衣交付的范围,full package production for apparel brands,来源用语,full package production,https://minkuapparel.com/what-is-full-package-production/
+采购属性,品牌归属与委托制造,cut make trim,客户提供主要材料，按约定裁剪缝制整理,cut make trim garment manufacturing,来源用语,"cut, make, and trim",https://brooklyngarmentfactory.com/pages/manufacturing
+采购属性,品牌归属与委托制造,electronics manufacturing services,为电子企业提供合同约定的制程，简称 EMS,electronics manufacturing services for OEMs,来源用语,electronics manufacturing services,https://simtekems.co.uk/services/
+采购属性,品牌归属与委托制造,commercial off the shelf,采用现成标准品，电子采购常用 COTS,commercial off-the-shelf industrial computers,来源用语,commercial off the shelf,https://newdata.aaeon.com.tw/DOWNLOAD/Brochure/MKT-2201802-SelectionGuide-V1.pdf
+采购属性,数量规模与生产阶段,wholesale,按批发渠道和条件供货,wholesale blank T-shirts,来源用语,wholesale,https://www.blankapparel.com/t-shirts
+采购属性,数量规模与生产阶段,bulk,大批量或散装，核具体计量方式,bulk industrial salt,来源用语,bulk,https://www.cargill.com/industrial/na/general-industrial-salts
+采购属性,数量规模与生产阶段,by the case,按整箱订购,blank tumblers by the case,来源用语,by the case,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购属性,数量规模与生产阶段,case pack,按一个箱规的件数采购,case packs of cotton socks,来源用语,case pack,https://www.faire.com/support/articles/360060351591
+采购属性,数量规模与生产阶段,pallet quantities,以整托或约定托量供货,mailer boxes in pallet quantities,编辑扩展,,
+采购属性,数量规模与生产阶段,truckload,整车量采购或交货,truckload quantities of bulk salt,来源用语,truckload,https://allenleefoods.com/pack-formats/
+采购属性,数量规模与生产阶段,by the roll,按整卷采购,upholstery fabric by the roll,编辑扩展,,
+采购属性,数量规模与生产阶段,small batch,可接受小批量定制生产,small-batch skincare manufacturing,来源用语,small batch,https://weftapparel.com/
+采购属性,数量规模与生产阶段,short run,适合短版印刷或短批生产,short-run printed cartons,来源用语,short run,https://liondell.com/services/product-manufacture/short-prototype-batches/
+采购属性,数量规模与生产阶段,low volume,低量生产，核可接批量,low-volume injection molding,来源用语,low volume,https://www.protolabs.com/resources/product-life-cycle/low-volume-production/
+采购属性,数量规模与生产阶段,high volume,具备量产条件,high-volume fastener manufacturing,来源用语,high volume,https://www.xometry.com/capabilities/cnc-machining-service/
+采购属性,数量规模与生产阶段,high mix low volume,多品种小批量,high-mix low-volume PCB assembly,来源用语,"low-to-medium volume, high-mix",https://simtekems.co.uk/services/
+采购属性,数量规模与生产阶段,pilot run,正式放量前的试产订单,pilot runs for custom enclosures,来源用语,pilot run,https://www.protolabs.com/services/injection-molding/production/
+采购属性,数量规模与生产阶段,prototype,面向样件验证,prototype CNC machining,来源用语,prototype,https://www.xometry.com/capabilities/cnc-machining-service/
+采购属性,数量规模与生产阶段,rapid prototyping,按加速流程提供原型,rapid prototyping for molded parts,来源用语,rapid prototyping,https://www.xometry.com/capabilities/cnc-machining-service/
+采购属性,数量规模与生产阶段,pre-production sample,量产前用于批准的样件,pre-production apparel samples,来源用语,pre-production sample,https://minkuapparel.com/what-is-full-package-production/
+采购属性,数量规模与生产阶段,bridge tooling,过渡工装承接验证至量产之间的数量,bridge tooling for plastic housings,来源用语,bridge tooling,https://www.protolabs.com/services/injection-molding/production/
+采购属性,数量规模与生产阶段,production tooling,用于稳定量产的工装,production tooling for molded enclosures,来源用语,production tooling,https://liondell.com/services/product-manufacture/short-prototype-batches/
+采购属性,数量规模与生产阶段,on-demand manufacturing,按实际需求组织制造,on-demand manufacturing of machined parts,来源用语,on-demand manufacturing,https://www.protolabs.com/services/injection-molding/on-demand-manufacturing/
+采购属性,数量规模与生产阶段,series production,连续批次或系列量产,series production of extruded profiles,编辑扩展,,
+采购属性,数量规模与生产阶段,mass production,可承担批量生产阶段,mass production of electronic assemblies,来源用语,mass production,https://product.minebeamitsumi.com/en/custom/index.html
+采购属性,数量规模与生产阶段,new product introduction,从新产品导入过渡到可制造阶段，简称 NPI,new product introduction services for electronics,来源用语,new product introduction,https://www.yccable.com/about/16/
+行业采购用语,服装面料与工艺标识,cut and sew,按版裁剪缝制，核可定制范围,cut and sew hoodie manufacturer,来源用语,cut and sew,https://brooklyngarmentfactory.com/pages/manufacturing
+行业采购用语,服装面料与工艺标识,tech pack,按服装技术包评估和打样，通常写在能力说明,garment sampling from a tech pack,来源用语,tech pack,https://brooklyngarmentfactory.com/pages/manufacturing
+行业采购用语,服装面料与工艺标识,pattern making,能制作服装纸样,pattern making for clothing brands,来源用语,pattern making,https://www.mulangapparel.com/solutions
+行业采购用语,服装面料与工艺标识,sample making,提供样衣或实物打样,garment sample making for brands,来源用语,sample making,https://brooklyngarmentfactory.com/pages/manufacturing
+行业采购用语,服装面料与工艺标识,grading,成衣版型放码,pattern grading services,来源用语,grading,https://brooklyngarmentfactory.com/pages/manufacturing
+行业采购用语,服装面料与工艺标识,blank,印花商采购无装饰基底成衣,wholesale blank hoodies,来源用语,blank,https://www.blankapparel.com/t-shirts
+行业采购用语,服装面料与工艺标识,greige,坯布未经后续染整，适合面料采购,greige cotton fabric by the roll,编辑扩展,,
+行业采购用语,服装面料与工艺标识,deadstock,该批为余料或库存尾货，核可补单性,wholesale deadstock fabric,来源用语,deadstock,https://fabricdistrictdirect.com/catalogs
+行业采购用语,服装面料与工艺标识,screen printed,能完成指定丝网印刷,bulk screen-printed tote bags,来源用语,screen printed,https://minkuapparel.com/what-is-full-package-production/
+行业采购用语,服装面料与工艺标识,embroidered,可按要求刺绣标识,custom embroidered work shirts,来源用语,embroidered,https://minkuapparel.com/what-is-full-package-production/
+行业采购用语,服装面料与工艺标识,heat transfer,使用热转印装饰,heat transfer logos for workwear,来源用语,heat transfer,https://www.mulangapparel.com/solutions
+行业采购用语,服装面料与工艺标识,direct to garment,提供服装直喷印花，简称 DTG,direct-to-garment printing for apparel brands,来源用语,DTG,https://www.mulangapparel.com/solutions
+行业采购用语,服装面料与工艺标识,all-over print,可整幅印制图案,all-over print fabric for uniforms,来源用语,all-over print,https://minkuapparel.com/what-is-full-package-production/
+行业采购用语,服装面料与工艺标识,garment dyed,成衣染色工艺,wholesale garment-dyed tees,来源用语,garment dyed,https://www.blankapparel.com/t-shirts
+行业采购用语,服装面料与工艺标识,laser engraved,能激光刻标或刻字,laser-engraved promotional drinkware,来源用语,laser engraving,https://www.gemline.com/sfsites/c/file-asset/Order_Lead_Times_92425pdf?v=
+行业采购用语,服装面料与工艺标识,pad printed,移印标识,pad-printed promotional pens,来源用语,pad print,https://www.gemline.com/sfsites/c/file-asset/Order_Lead_Times_92425pdf?v=
+行业采购用语,服装面料与工艺标识,debossed,可压凹标识,custom debossed notebook covers,来源用语,deboss,https://www.gemline.com/sfsites/c/file-asset/Order_Lead_Times_92425pdf?v=
+行业采购用语,服装面料与工艺标识,foil stamped,可按图烫印,foil-stamped cosmetic cartons,来源用语,foil stamp,https://www.gemline.com/sfsites/c/file-asset/Order_Lead_Times_92425pdf?v=
+行业采购用语,服装面料与工艺标识,imprint area,核可印制位置和尺寸，常放详情,imprint area for promotional tumblers,编辑扩展,,
+行业采购用语,包装印刷与灌装,custom printed,客户提供图稿并可实际印刷,custom printed mailer boxes,来源用语,custom printed,https://www.sheetlabels.com/printed/roll-labels
+行业采购用语,包装印刷与灌装,die cut,按刀模切割，核形状与材质,die-cut packaging inserts,来源用语,die cut,https://www.sheetlabels.com/printed/roll-labels
+行业采购用语,包装印刷与灌装,dieline,采购方需要刀线图做包装设计,custom carton dieline,来源用语,dieline,https://packlane.com/about
+行业采购用语,包装印刷与灌装,shelf ready,可直接上架陈列的零售包装,shelf-ready corrugated packaging,来源用语,shelf ready,https://www.dssmith.com/products-services/packaging-solutions/retail-packaging/shelf-ready-packaging
+行业采购用语,包装印刷与灌装,retail ready,适合销售端上架或陈列，核实际形式,retail-ready packaging,来源用语,retail ready,https://www.dssmith.com/products-services/packaging-solutions/retail-packaging/shelf-ready-packaging
+行业采购用语,包装印刷与灌装,point of purchase,承接零售终端的 POP 展示项目,point-of-purchase cardboard displays,编辑扩展,,
+行业采购用语,包装印刷与灌装,corrugated display,面向陈列项目供货的瓦楞展示产品,custom corrugated displays,来源用语,corrugated display,https://shangledisplay.com/trade-partner-program/
+行业采购用语,包装印刷与灌装,folding carton,明确折叠纸盒品类,custom folding cartons,编辑扩展,,
+行业采购用语,包装印刷与灌装,roll labels,卷装标签供连续贴标,custom printed roll labels,来源用语,roll labels,https://www.sheetlabels.com/printed/roll-labels
+行业采购用语,包装印刷与灌装,sheet labels,按张供应标签,sheet labels for short print runs,来源用语,sheet labels,https://www.sheetlabels.com/printed/roll-labels
+行业采购用语,包装印刷与灌装,pressure sensitive,采用压敏胶，符合贴标应用,pressure-sensitive product labels,编辑扩展,,
+行业采购用语,包装印刷与灌装,foodservice pack,供餐饮或机构厨房使用的装量,tomato puree in foodservice packs,来源用语,foodservice pack,https://allenleefoods.com/pack-formats/
+行业采购用语,包装印刷与灌装,bag in box,盒中袋包装,bag-in-box fruit puree,来源用语,bag in box,https://allenleefoods.com/pack-formats/
+行业采购用语,包装印刷与灌装,bag in drum,桶中袋包装，按物料和交货条件核实,mango puree in bag-in-drum packaging,编辑扩展,,
+行业采购用语,包装印刷与灌装,sachet filling,按指定袋形与容量灌装,contract sachet filling services,来源用语,sachet filling,https://www.sachetsco.com/pages/contract-manufacturing-white-label-cosmetics
+行业采购用语,包装印刷与灌装,bulk bags,大袋装，实际容积和材质要对应,bulk bags of mineral filler,来源用语,bulk bags,https://allenleefoods.com/pack-formats/
+行业采购用语,包装印刷与灌装,drum,按桶交付，容量依 SKU 而定,fruit concentrate in drums,来源用语,drum,https://allenleefoods.com/pack-formats/
+行业采购用语,包装印刷与灌装,IBC tote,中型散装容器交付，核规格与可用物料,liquid ingredients in IBC totes,编辑扩展,,
+行业采购用语,金属塑胶与按图加工,CNC machining,买家委托数控加工,custom CNC machining services,来源用语,CNC machining,https://www.xometry.com/capabilities/cnc-machining-service/
+行业采购用语,金属塑胶与按图加工,CNC turning,车削类零件委托生产,CNC turning for stainless steel shafts,来源用语,CNC turning,https://www.xometry.com/capabilities/cnc-machining-service/
+行业采购用语,金属塑胶与按图加工,CNC milling,铣削类零件委托生产,CNC milling for aluminum housings,来源用语,CNC milling,https://www.xometry.com/capabilities/cnc-machining-service/
+行业采购用语,金属塑胶与按图加工,sheet metal fabrication,钣金制作服务,sheet metal fabrication for industrial cabinets,来源用语,sheet metal fabrication,https://community.xometry.com/kb/articles/726-what-are-xometrys-sheet-metal-services
+行业采购用语,金属塑胶与按图加工,laser cutting,按图激光切割,laser cutting for stainless steel panels,来源用语,laser cutting,https://community.xometry.com/kb/articles/726-what-are-xometrys-sheet-metal-services
+行业采购用语,金属塑胶与按图加工,waterjet cutting,按图水刀切割,waterjet cutting for custom gaskets,来源用语,waterjet cutting,https://www.gasketsupply.com/pages/custom-gaskets
+行业采购用语,金属塑胶与按图加工,press brake forming,按图折弯成形,press brake forming for brackets,编辑扩展,,
+行业采购用语,金属塑胶与按图加工,investment casting,可按相应制程生产精铸件,investment casting for stainless steel valve bodies,来源用语,investment casting,https://monettmetals.com/services/
+行业采购用语,金属塑胶与按图加工,sand casting,砂型铸件采购,sand casting for pump housings,来源用语,sand casting,https://monettmetals.com/services/
+行业采购用语,金属塑胶与按图加工,near net shape,坯件形状接近最终形状，核余量,near-net-shape castings,来源用语,near net shape,https://monettmetals.com/services/
+行业采购用语,金属塑胶与按图加工,injection molding,注塑加工采购,custom injection molding for housings,来源用语,injection molding,https://www.xometry.com/capabilities/cnc-machining-service/
+行业采购用语,金属塑胶与按图加工,insert molding,能实施嵌件注塑,insert molding for threaded inserts,来源用语,insert molding,https://www.protolabs.com/services/injection-molding/production/
+行业采购用语,金属塑胶与按图加工,overmolding,能实施二次包覆成型,overmolding for tool grips,来源用语,overmolding,https://www.protolabs.com/services/injection-molding/production/
+行业采购用语,金属塑胶与按图加工,compression molding,压缩成型工艺可用,compression molding for rubber seals,编辑扩展,,
+行业采购用语,金属塑胶与按图加工,custom compounding,按性能和组分开发配混料,custom compounding for engineering plastics,来源用语,custom compounding,https://www.aveepolymers.com/materials/custom-compounding/
+行业采购用语,金属塑胶与按图加工,masterbatch,采购用于配色或添加剂的母粒,custom color masterbatch,来源用语,masterbatch,https://www.rtpcompany.com/products/color/tradename/
+行业采购用语,金属塑胶与按图加工,precolored resin,直接采购预着色树脂,precolored resin for injection molding,来源用语,precolored resin,https://www.rtpcompany.com/products/color/tradename/
+行业采购用语,金属塑胶与按图加工,coil processing,把卷材加工为下游需要的形态,steel coil processing services,来源用语,coil processing,https://www.aalco.co.uk/about-us/processing-services.aspx
+行业采购用语,金属塑胶与按图加工,slitting,按需分切卷材宽度,aluminum coil slitting,来源用语,slitting,https://www.aalco.co.uk/about-us/processing-services.aspx
+行业采购用语,金属塑胶与按图加工,blanking,按规格落料,steel blanking services,来源用语,blanking,https://www.aalco.co.uk/about-us/processing-services.aspx
+行业采购用语,金属塑胶与按图加工,decoiling,开卷供料或加工,steel decoiling services,来源用语,decoiling,https://www.tatasteeluk.com/services/service-centres
+行业采购用语,金属塑胶与按图加工,mill finish,轧制或挤出后原始表面状态,mill finish aluminum profiles,来源用语,mill finish,https://americandouglasmetals.com/aluminum-extrusions/
+行业采购用语,金属塑胶与按图加工,powder coated,可交付指定粉末涂装,powder-coated aluminum enclosures,来源用语,powder coated,https://americandouglasmetals.com/aluminum-extrusions/
+行业采购用语,金属塑胶与按图加工,anodized,可交付阳极氧化表面,anodized aluminum extrusions,来源用语,anodized,https://americandouglasmetals.com/aluminum-extrusions/
+行业采购用语,金属塑胶与按图加工,roll to roll,连续卷对卷加工,roll-to-roll coating services,编辑扩展,,
+行业采购用语,金属塑胶与按图加工,toll converting,以客户供料转制纸膜、胶带等,toll converting for adhesive films,来源用语,toll converting,https://lamatek.com/services/rewinding/
+行业采购用语,金属塑胶与按图加工,spooling,交付为指定线轴或卷轴,custom spooling for narrow tapes,来源用语,spooling,https://www.multifoil.com/en/contract-converting-services/
+行业采购用语,电子装配与元件交货,PCB fabrication,负责生产裸板,multilayer PCB fabrication,来源用语,PCB fabrication,https://www.screamingcircuits.com/capabilities/sourcing-solutions
+行业采购用语,电子装配与元件交货,PCB assembly,负责装配板上元件,PCB assembly for industrial controls,来源用语,PCB assembly,https://www.circuitassembly.com/
+行业采购用语,电子装配与元件交货,turnkey assembly,按约定承担采购与组装,turnkey PCB assembly,来源用语,turnkey assembly,https://www.screamingcircuits.com/capabilities/sourcing-solutions
+行业采购用语,电子装配与元件交货,partial turnkey,部分物料由客户提供,partial turnkey PCB assembly,来源用语,partial turnkey,https://www.screamingcircuits.com/capabilities/sourcing-solutions
+行业采购用语,电子装配与元件交货,consigned assembly,客户供料由工厂完成装配,consigned PCB assembly,编辑扩展,,
+行业采购用语,电子装配与元件交货,component sourcing,承担约定的元件采购,component sourcing for PCB assembly,来源用语,component sourcing,https://www.screamingcircuits.com/capabilities/sourcing-solutions
+行业采购用语,电子装配与元件交货,box build,承担整机或箱体级集成装配,industrial electronics box build,来源用语,box build,https://www.circuitassembly.com/
+行业采购用语,电子装配与元件交货,electromechanical assembly,机电组件组合装配,electromechanical assembly services,来源用语,electromechanical assembly,https://www.circuitassembly.com/
+行业采购用语,电子装配与元件交货,surface mount,SMT 贴装能力,surface mount PCB assembly,来源用语,surface mount,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+行业采购用语,电子装配与元件交货,through-hole assembly,通孔元件装配,through-hole assembly services,来源用语,through-hole assembly,https://simtekems.co.uk/services/
+行业采购用语,电子装配与元件交货,cable assembly,组件带指定连接器和端接，区别单根电缆供货,custom cable assembly for industrial equipment,来源用语,cable assembly,https://www.yccable.com/about/16/
+行业采购用语,电子装配与元件交货,wire harness,按系统连接需求供线束,build-to-print wire harness manufacturing,来源用语,wire harness,https://www.yccable.com/about/16/
+行业采购用语,电子装配与元件交货,tape and reel,贴装机可用的卷带包装,tape-and-reel temperature sensors,来源用语,tape and reel,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+行业采购用语,电子装配与元件交货,cut tape,元件按短段载带供货,cut-tape components for prototype assembly,来源用语,cut tape,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+行业采购用语,电子装配与元件交货,full reel,电子元件原卷或整卷供应，核每卷数量,full-reel capacitor supply,编辑扩展,,
+行业采购用语,工程配套与设备交付,turnkey,供方承担的整套交付范围可在本页核实,turnkey bottling lines,来源用语,turnkey,https://www.krones.com/en/products/filling-and-packing-technology/
+行业采购用语,工程配套与设备交付,complete line,采购一条完整的配套生产线,complete PET bottling line,来源用语,complete line,https://www.krones.com/en/products/filling-and-packing-technology/
+行业采购用语,工程配套与设备交付,system integration,把多种设备和控制环节集成为系统,packaging line system integration,来源用语,system integration,https://portal.endress.com/dla/5000000/1338/000/01/CP00002S_04_EN_13.11.pdf
+行业采购用语,工程配套与设备交付,modular,可按实际模块组合或扩展,modular refrigeration plant,来源用语,modular,https://www.clauger.com/products/packaged-skid-systems/
+行业采购用语,工程配套与设备交付,skid mounted,设备于撬座成套安装,skid-mounted pump systems,来源用语,skid mounted,https://www.cummins-wagner.com/manufacturer/eps-engineered-process-solutions/
+行业采购用语,工程配套与设备交付,containerized,以集装箱模块交付,containerized refrigeration systems,来源用语,containerized,https://www.clauger.com/products/packaged-skid-systems/
+行业采购用语,工程配套与设备交付,plug and play,接口和接入条件明确的预集成设备,plug-and-play pump skids,来源用语,plug and play,https://www.clauger.com/products/packaged-skid-systems/
+行业采购用语,工程配套与设备交付,preassembled,主要装配在出厂前已完成,preassembled pump modules,编辑扩展,,
+行业采购用语,工程配套与设备交付,packaged system,提供集成的成套设备,packaged pump systems,来源用语,packaged system,https://www.clauger.com/products/packaged-skid-systems/
+行业采购用语,工程配套与设备交付,commissioning,供方可提供项目调试服务,commissioning for filling lines,来源用语,commissioning,https://portal.endress.com/dla/5000000/1338/000/01/CP00002S_04_EN_13.11.pdf
+行业采购用语,工程配套与设备交付,retrofit,基于既有设备或装置的改造,pump retrofit services,来源用语,retrofit,https://www.ksb.com/en-us/spare-parts/reverse-engineering
+行业采购用语,工程配套与设备交付,upgrade kit,为特定系列升级的套件,drive upgrade kits for conveyors,编辑扩展,,
+行业采购用语,工程配套与设备交付,design build,同一项目承接设计和建造,design-build material handling systems,编辑扩展,,
+行业采购用语,工程配套与设备交付,line integration,把单机接入既有或新生产线,bottling line integration,编辑扩展,,
+行业采购用语,工程配套与设备交付,site installation,能在约定市场/场所提供安装,on-site installation for conveyor systems,编辑扩展,,
+行业采购用语,备件替换与项目选型,spare parts,用于在役设备的备件,pump spare parts,来源用语,spare parts,https://www.ksb.com/en-us/spare-parts/reverse-engineering
+行业采购用语,备件替换与项目选型,spare parts kit,面向对应机型的一套备件,centrifugal pump spare parts kits,编辑扩展,,
+行业采购用语,备件替换与项目选型,replacement,供替换用途，核具体互换条件,replacement seals for centrifugal pumps,来源用语,replacement,https://www.ksb.com/en-us/spare-parts/reverse-engineering
+行业采购用语,备件替换与项目选型,aftermarket,独立售后供应身份成立,aftermarket replacement filters,来源用语,aftermarket,https://www.cat.com/en_US/blog/cat-core-acceptance.html
+行业采购用语,备件替换与项目选型,genuine,能验证原厂来源、具体品牌与产品,genuine pump spare parts,来源用语,genuine,https://www.cat.com/en_US/by-industry/electric-power/product-support/services-and-repair-options/reman.html
+行业采购用语,备件替换与项目选型,remanufactured,能说明再制造范围与验收条件,remanufactured engine components,来源用语,remanufactured,https://www.cat.com/en_US/by-industry/electric-power/product-support/services-and-repair-options/reman.html
+行业采购用语,备件替换与项目选型,refurbished,经翻新处理，核翻新程度,refurbished industrial pumps,编辑扩展,,
+行业采购用语,备件替换与项目选型,core exchange,约定旧件返还或交换条款,core exchange for remanufactured engines,来源用语,core exchange,https://www.cat.com/en_US/by-industry/electric-power/product-support/services-and-repair-options/reman.html
+行业采购用语,备件替换与项目选型,drop-in replacement,已有对应接口和尺寸验证,drop-in replacement pump assemblies,编辑扩展,,
+行业采购用语,备件替换与项目选型,reverse engineering,能按样件重建制造所需数据，核权利和测绘范围,reverse engineering for discontinued pump parts,来源用语,reverse engineering,https://www.ksb.com/en-us/spare-parts/reverse-engineering
+行业采购用语,备件替换与项目选型,contract grade,面向合同项目的耐用要求，核实际规格,contract-grade hotel seating,来源用语,contract grade,https://www.archidecors.com/en/contract-furniture-manufacturer
+行业采购用语,备件替换与项目选型,hospitality,为酒店餐饮项目配套,hospitality casegoods,来源用语,hospitality,https://www.archidecors.com/en/contract-furniture-manufacturer
+行业采购用语,备件替换与项目选型,FF&E,酒店等项目的家具装置设备采购范围,hotel FF&E procurement,来源用语,FF&E,https://www.archidecors.com/en/contract-furniture-manufacturer
+行业采购用语,备件替换与项目选型,commercial grade,商用使用条件及依据明确,commercial-grade restaurant shelving,来源用语,commercial grade,https://www.archidecors.com/en/contract-furniture-manufacturer
+行业采购用语,备件替换与项目选型,specification grade,项目设计师按规格选型的产品线,specification-grade architectural lighting,来源用语,specification grade,https://www.lalighting.com/wp-content/uploads/2025/02/DEMO-LA-Lighting-LED-Product-Guide-2024-American-Lighting-Solutions.pdf
+行业采购用语,备件替换与项目选型,foodservice,餐饮机构作为使用方,foodservice refrigeration equipment,来源用语,foodservice,https://allenleefoods.com/pack-formats/
+行业采购用语,备件替换与项目选型,industrial grade,工业用途等级能指明规格与条件,industrial-grade salt,编辑扩展,,
+行业采购用语,备件替换与项目选型,bare root,苗木裸根交付形式,wholesale bare-root nursery stock,来源用语,bare root,https://heritageseedlings.com/pages/ordering
+行业采购用语,备件替换与项目选型,liner,苗圃继续培育用幼苗，区分其他行业同词,wholesale perennial liners,来源用语,liner,https://heritageseedlings.com/pages/ordering
+行业采购用语,备件替换与项目选型,plug tray,按穴盘形式供苗，核每盘株数,plug trays for nursery growers,编辑扩展,,
+采购条件,报价门槛与样品,minimum order quantity,MOQ，指单次至少订多少，注明单位,minimum order quantity for custom packaging,来源用语,minimum order quantity,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购条件,报价门槛与样品,order minimum,最低订货金额或数量，核计算口径,wholesale apparel order minimum,来源用语,order minimum,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购条件,报价门槛与样品,low MOQ,起订量低，需要给出适用品类与实际数量,low MOQ private label hoodies,来源用语,low MOQ,https://weftapparel.com/
+采购条件,报价门槛与样品,no minimum,相应订单确无最低数量或金额限制,custom labels with no minimum order,来源用语,no minimum,https://www.protolabs.com/services/injection-molding/on-demand-manufacturing/
+采购条件,报价门槛与样品,opening order,首次订货的门槛或条件,opening order for wholesale homeware,来源用语,opening order,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购条件,报价门槛与样品,reorder,补单条件可能不同于首单,wholesale fabric reorder requirements,来源用语,reorder,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购条件,报价门槛与样品,wholesale pricing,按批发渠道执行的价格,wholesale pricing for blank T-shirts,来源用语,wholesale pricing,https://www.faire.com/blog/for-brands/wholesale-basics-for-brands-makers-and-artists
+采购条件,报价门槛与样品,volume pricing,按采购数量分段报价,volume pricing for molded housings,来源用语,volume pricing,https://www.protolabs.com/services/injection-molding/on-demand-manufacturing/
+采购条件,报价门槛与样品,quantity breaks,分数量档的价格或优惠,quantity breaks on industrial fasteners,编辑扩展,,
+采购条件,报价门槛与样品,trade pricing,限合格行业买家使用的价格,trade pricing for contract furniture,来源用语,trade pricing,https://www.firstpressprint.com/trade-printing-reseller-program
+采购条件,报价门槛与样品,factory-direct pricing,确实直销且有对应报价方式,factory-direct pricing on commercial refrigerators,来源用语,factory-direct pricing,https://hardline-usa.com/
+采购条件,报价门槛与样品,sample order,可先下单采购样品,sample orders for private label skincare,编辑扩展,,
+采购条件,报价门槛与样品,sample kit,可寄送明确样包或材料组合,printed packaging sample kit,编辑扩展,,
+采购条件,报价门槛与样品,swatch,面料、饰面等可提供实物样片,upholstery fabric swatches,来源用语,swatch,https://fabricdistrictdirect.com/catalogs
+采购条件,报价门槛与样品,pre-production proof,正式生产前提供打样或校样,pre-production proof for printed packaging,编辑扩展,,
+采购条件,报价门槛与样品,request a quote,页面承接询价，通常用作入口或需求检索,request a quote for custom gaskets,来源用语,request a quote,https://www.gasketsupply.com/pages/custom-gaskets
+采购条件,报价门槛与样品,RFQ,买家有成形的询价单或技术要求,sheet metal fabrication RFQ,来源用语,RFQ,https://www.xometry.com/capabilities/cnc-machining-service/
+采购条件,报价门槛与样品,lead time,须核当前数量、生产与运输口径，通常入摘要,lead time for custom extrusions,来源用语,lead time,https://www.protolabs.com/services/injection-molding/on-demand-manufacturing/
+采购条件,报价门槛与样品,quick turn,能核实相应数量和时间的快速交付,quick-turn prototype PCB assembly,来源用语,quick turn,https://www.protolabs.com/services/injection-molding/on-demand-manufacturing/
+采购条件,报价门槛与样品,stock sample,提供现有样品，区别于按客户资料打样,stock samples of mailer boxes,编辑扩展,,
+采购条件,备货物流与长期供货,in stock,特定地点与时间的可售库存,in-stock stainless steel sheet,来源用语,in stock,https://isg-steel.co.uk/
+采购条件,备货物流与长期供货,stock program,可说明常备系列与补货条件,stock program for upholstery fabrics,编辑扩展,,
+采购条件,备货物流与长期供货,vendor managed inventory,VMI，按协议替客户管理库存,vendor-managed inventory for fasteners,来源用语,vendor managed inventory,https://www.genfast.com/vmi
+采购条件,备货物流与长期供货,consignment stock,寄售库存，核所有权及结算约定,consignment stock for industrial bearings,来源用语,consignment stock,https://docs.ifs.com/ifsclouddocs/23r2/Procurement/ActivitySpecifyConsignmentStockInfo.htm
+采购条件,备货物流与长期供货,just in time,能按约定节奏交付到用料环节,just-in-time fastener delivery,来源用语,just in time,https://www.websonfasteners.com/Services.html
+采购条件,备货物流与长期供货,Kanban,按看板机制补料,Kanban replenishment for production fasteners,来源用语,Kanban,https://www.genfast.com/vmi
+采购条件,备货物流与长期供货,bin stocking,按现场料箱定期补充,bin stocking for industrial hardware,来源用语,bin stocking,https://www.websonfasteners.com/Services.html
+采购条件,备货物流与长期供货,kitting,把多料号配成作业所需套包,custom fastener kitting,来源用语,kitting,https://www.websonfasteners.com/Services.html
+采购条件,备货物流与长期供货,blanket order,协议下按批次放单或交付,blanket orders for machined components,来源用语,blanket order,https://www.websonfasteners.com/Services.html
+采购条件,备货物流与长期供货,scheduled deliveries,可分批按约定时间交货,scheduled deliveries of packaging materials,来源用语,scheduled releases,https://www.websonfasteners.com/Services.html
+采购条件,备货物流与长期供货,blind shipping,代合作方无供方标识发货，核单据和外箱,blind shipping for trade printers,来源用语,blind shipping,https://columbiapublication.com/trade-book-printing
+采购条件,备货物流与长期供货,drop shipping,按已约定渠道直接发至下游客户,drop shipping for wholesale homeware,来源用语,drop shipping,https://www.tradeprint.co.uk/drop-shipping
+采购条件,备货物流与长期供货,mixed pallet,允许不同货号拼托交付,mixed pallets of foodservice ingredients,来源用语,mixed pallet,https://allenleefoods.com/pack-formats/
+采购条件,备货物流与长期供货,split case,可拆箱订货，核适用 SKU,split-case ordering for distributors,编辑扩展,,
+采购条件,备货物流与长期供货,case size,采购箱规及每箱数量,wholesale case sizes for tableware,来源用语,case size,https://www.faire.com/support/articles/35169424923291
+采购条件,备货物流与长期供货,trade account,有面向行业客户的开户或授信渠道,trade accounts for lighting specifiers,编辑扩展,,
+采购条件,备货物流与长期供货,dealer program,有经销商准入和支持方案，偏渠道页,commercial refrigeration dealer program,来源用语,dealer program,https://wsdist.com/dealer-program
+采购条件,规格适配与验收资料,part number,采购以零件料号定位，正文或标题写真实编号,replacement bearing by part number,来源用语,part number,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+采购条件,规格适配与验收资料,cross reference,存在可核对的型号对应关系,bearing cross-reference for replacement orders,来源用语,cross reference,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+采购条件,规格适配与验收资料,compatible with,适配机型、接口和条件有据,pump seal compatible with the specified pump series,编辑扩展,,
+采购条件,规格适配与验收资料,datasheet,可提供对应型号的数据表,industrial sensor datasheet,来源用语,datasheet,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q32RVCNJQ-TR/29218907
+采购条件,规格适配与验收资料,spec sheet,有本型号的规格单,commercial refrigerator spec sheet,来源用语,spec sheet,https://hardline-usa.com/
+采购条件,规格适配与验收资料,drawing,提供实际工程图或用于接收客户图纸,dimensions and drawing for a flange bearing,来源用语,drawing,https://www.protolabs.com/media/y3gd35lg/pl_procurement_guide.pdf
+采购条件,规格适配与验收资料,CAD model,确有对应文件或明确按客户模型报价,CAD models for configurable extrusions,来源用语,CAD model,https://www.xometry.com/capabilities/cnc-machining-service/
+采购条件,规格适配与验收资料,bill of materials,按 BOM 备料或核对装配范围,bill of materials sourcing for PCB assembly,来源用语,bill of materials,https://www.yccable.com/about/16/
+采购条件,规格适配与验收资料,material certificate,具体材料和批次的材质文件可核实,steel plate with a material certificate,编辑扩展,,
+采购条件,规格适配与验收资料,certificate of conformance,可提供对应订单的符合性文件，区分证书范围,machined components with a certificate of conformance,来源用语,certificate of test / conformance,https://www.brownmetals.com/metals-101/how-to-read-our-certificate-of-conformance/
+采购条件,规格适配与验收资料,first article inspection,首件检验能力及报告范围明确，简称 FAI,first article inspection for CNC parts,来源用语,first article inspection,https://www.protolabs.com/media/y3gd35lg/pl_procurement_guide.pdf
+采购条件,规格适配与验收资料,dimensional inspection,可按指定尺寸和方法验收,dimensional inspection of machined housings,来源用语,dimensional inspection,https://www.protolabs.com/media/y3gd35lg/pl_procurement_guide.pdf
+采购条件,规格适配与验收资料,lot traceability,能按规定追溯原料或成品批次,lot traceability for production fasteners,来源用语,lot traceability,https://www.websonfasteners.com/Services.html
+采购条件,规格适配与验收资料,PPAP,客户要求的生产件批准资料能在相应项目提供,PPAP documentation for production components,来源用语,PPAP,https://www.protolabs.com/media/y3gd35lg/pl_procurement_guide.pdf
+采购条件,规格适配与验收资料,factory acceptance test,可在出厂前按约定实施验收，简称 FAT,factory acceptance testing for filling lines,来源用语,factory acceptance test,https://portal.endress.com/dla/5000000/1338/000/01/CP00002S_04_EN_13.11.pdf
+采购条件,规格适配与验收资料,site acceptance test,可在现场按约定实施验收，简称 SAT,site acceptance testing for a packaging line,来源用语,site acceptance test,https://portal.endress.com/dla/5000000/1338/000/01/CP00002S_04_EN_13.11.pdf
+采购条件,规格适配与验收资料,tolerance,规格明确时用本型号实际公差或能力范围,CNC machining to specified tolerances,来源用语,tolerance,https://www.xometry.com/capabilities/cnc-machining-service/
+采购条件,规格适配与验收资料,thread size,采购依据螺纹规格，实际呈现对应尺寸,thread sizes for industrial cable glands,来源用语,thread size,https://www.xometry.com/capabilities/cnc-machining-service/
+采购条件,规格适配与验收资料,bore diameter,采购依据内孔尺寸，核型号图纸,deep groove bearing with a 25 mm bore,编辑扩展,,
+采购条件,规格适配与验收资料,load rating,对应工况与产品额定值已有资料,load ratings for industrial bearings,编辑扩展,,
+采购条件,规格适配与验收资料,operating weight,工程机械按作业重量选型，区分系列与具体配置,operating weight of a compact excavator,来源用语,operating weight,https://assets.bobcat.com/literatures/leaflet/new-edition-2020/mini-excavator/MEX_E20_Leaflet_B-1962_EN.pdf

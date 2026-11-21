@@ -2,35 +2,19 @@
 
 从目标关键词和页面开始，结合行业词库、目标市场 SERP 与竞品内容，完成页面简报、Title、描述、H 标签、正文和内链改稿。需要修改 WordPress 页面时，与已有 WordPress Build Harness 配合完成保存和回读。
 
-**版本：v2.4.0。** 本仓库只提供 `b2b-seo-onpage`，可以独立安装，无需先安装整套 B2B SEO Skills 或 SEMrush MCP。适用于企业首页、产品类目、型号详情、文章、能力和应用页面。SEO研究与改稿可独立使用；WordPress实施复用本机已有Build Harness及该站项目。
+**此份本地安装包为 v2.5.0。** Codex 先从你提供的行业词库找本品类的 B 端属性词，然后用产品和可能的采购用语做 Google 搜索，找到外贸 B2B 同行独立站，实读首页、产品集合页和详情页，再根据本页业务推荐标题。也支持文章、能力和应用页的简报与改稿。需要写入 WordPress 时复用已有 Build Harness 和站点项目。
 
 ## 安装
 
-把下面这段发给 Codex：
+把本版 ZIP 或其解压目录交给 Codex，发送这段话即可安装本地版本。
 
 ```text
-请使用 $skill-installer 安装 B2B On-page SEO Skill。
-仓库：https://github.com/jackzhang1314/b2b-seo-onpage
-固定版本：v2.4.0
-目录：skills/b2b-seo-onpage
-
-先核对已有同名Skill；相同版本且内容一致则复用。
-需要更新时先保留旧版和本地定制，不覆盖其他Skills，不降级较新版本。
-安装后检查版本、参考文件和脚本是否完整，并告诉我如何调用。
+请从我给你的本地包安装 skills/b2b-seo-onpage，核对 RELEASE.json 中的版本和文件摘要。
+已有相同内容就复用。升级时先备份同名旧版和本地定制，保留较新版本。
+安装后核对本机能调用的版本，告诉我怎样开始。
 ```
 
-安装完成后从下一轮对话使用；若当前宿主尚未刷新技能列表，打开新会话。需要离线文件时下载 [v2.4.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.4.0/b2b-seo-onpage-2.4.0.zip)，将解压目录交给 Codex 安装。不要只复制 `SKILL.md`，须保留整个 `skills/b2b-seo-onpage` 文件夹。
-
-给熟悉命令行的用户：使用本机 `skill-installer` 提供的脚本执行：
-
-```sh
-python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage \
-  --ref v2.4.0 \
-  --path skills/b2b-seo-onpage
-```
-
-`/path/to/skill-installer` 替换成本机实际目录。处理脚本需要 Python 3.11+，运行依赖仅为标准库。浏览器、文件访问和网站后台能力使用当前 Codex 环境已有工具，不随本 Skill 安装获得。
+宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库，网页工具和站点权限沿用当前环境。上个公开版本另有[固定版安装说明](https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.4.0)。
 
 ## 第一次使用，提供什么
 
@@ -70,7 +54,9 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 ```text
 使用 $b2b-seo-onpage。
 页面：【URL或稿件】；已选主词：【关键词】。
-只优化Title与description，交一个推荐版本及依据；适合保留的部分请保留。
+行业词库：【文件或目录】。市场和语言：【例如美国、英文】。
+先从词库找这个品类的采购用词，再用几组“产品＋可能的属性词”去 Google 找同行独立站。
+看看同行在首页、集合页和详情页各用什么词。结合我们能接的订单，只给这页一个推荐 Title、description 和依据。
 ```
 
 局部任务复用已有资料，不必重做整个行业研究。完整任务缺词库时，先交页面现状和意图/页型初判，并引导补充资料，不宣称完整研究已经完成。
@@ -103,7 +89,7 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 
 完整任务先看 `onpage-review.md`。`page-brief.md` 说明这一页为什么这样写；选词、SERP、竞品对照、改稿和关键词安排表保留依据。用户会拿到实际可替换的文案，缺证主张放在正文之外。
 
-标题按页面任务选择主题与可兑现的点击理由，保留型号和真实范围。长度预览帮助判断表达，不以60字符、关键词密度、固定字数或SEO总分作为通过标准。已经准确的标题可以保留。
+首页、类目页和详情页会先从你的词库提取相关的完整查询和 B 端属性，再核当地搜索结果与企业事实。比如库里同时有 `custom printed mailer boxes` 和 `stock mailer boxes in bulk`，做按图印刷的一页应优先验证前者，批发标准现货箱的一页应优先验证后者。内置词表帮助识别漏项与补查。已有标题准确时可以原样保留。可查看[品类调研方法](skills/b2b-seo-onpage/references/category-modifier-research.md)和[跨行业采购用词表](skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv)。
 
 如果要求实际修改本地文件或 CMS，请在同一请求中说明目标与修改范围。改稿、保存、前台回读、Google展示和流量/询盘效果分别说明。
 
@@ -115,7 +101,7 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 
 ## 版本与验证范围
 
-本独立版含12个运行文件；来源标识和文件摘要见 [RELEASE.json](RELEASE.json)。不包含其他SEO Skills、Harness源码、客户资料、研究记录或测试夹具。
+本地 v2.5.0 增加 14 组、273 个英文候选表达。221 个附有原页对应表达，52 个为编辑提出的检索种子。品类研究从你的行业词库开始，再用 Google 找同行、按页型读实际页面。安装文件和验证范围见 [RELEASE.json](RELEASE.json)。
 
 2.4.0已通过24项On-page回归、两个脚本的严格类型检查、lint、Skill格式及文档链接检查。协作说明对照Harness 2.39.24、分发修订19的实际接口编写。完整WordPress端到端实测尚未完成，不宣称本版已通过完整CMS实施验收。2.3.0的公开安装与资料引导已单独演练；此前9个离线合成场景及35项语义核对属于2.3.0基础版本。这些检查均不证明真实客户排名或询盘增长。
 
