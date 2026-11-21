@@ -43,11 +43,11 @@ python3 SKILL_DIR/scripts/onpage.py check-plan --evidence /绝对路径/证据�
 }
 ```
 
-上下文必须与证据相同。`intent_fit`：fit/mixed/mismatch/unknown。局部/旧接口的 `serp` 可省略，此时明确未校验完整研究链。`focus.scope=full_page` 必须提供 `research`，其中必须有已读取的行业词库文件；详见[研究接口](research-contract.md)。研究中的 SERP 作为整页报告来源；局部旧接口 results 每项有 url/page_type/evidence_ref，排名仅实际取得时记录，空结果配真实限制。
+上下文必须与证据相同。`intent_fit`：fit/mixed/mismatch/unknown。局部/旧接口的 `serp` 可省略，此时明确未校验完整研究链。`focus.scope=full_page` 必须提供 `research`，使用客户词库时登记可读原件；缺少词库时走有真实来源的独立研究并标记 partial（模拟仍标 simulation）；详见[研究接口](research-contract.md)。研究中的 SERP 作为整页报告来源；局部旧接口 results 每项有 url/page_type/evidence_ref，排名仅实际取得时记录，空结果配真实限制。
 
 change field：title/description/h1/h2/h3/h4/h5/h6/body/link/image_alt/schema/other。priority：P1/P2/P3。copy_state：ready/blocked。导出只接受 proposed；不能把校验成功设为已改站。
 
-title/description 的 before 与 head 证据匹配。H1–H6 要有 HTML 证据，before 按标签及原文定位；同文同级出现多次时必须给 `heading_index`（全部标题按序，从1开始），并核对原文和级别。可用 `after_tag` 调整级别；新增同级标题需要 `placement` 说明插入位置。正文替换的 before 要能在提取文本定位。link/image_alt/schema/other 仍由 Codex 核具体位置，脚本不做完整 DOM 校验。
+title/description 的 before 与 head 证据匹配。H1–H6 要有 HTML 证据，before 按标签及原文定位；同文同级出现多次时必须给 `heading_index`（全部标题按序，从1开始），并核对原文和级别。可用 `after_tag` 调整级别；新增同级标题需要 `placement` 说明插入位置。保留既有 H 标签时可在关键词安排中给 `heading_index` 以核确切位置。改后的同文若仅在另一位置出现，带编号的比较会要求人工复核模块。正文替换的 before 要能在提取文本定位。link/image_alt/schema/other 仍由 Codex 核具体位置，脚本不做完整 DOM 校验。
 
 只有正文/Markdown可写候选标签与标题大纲，但不能捏造 HTML 标签现状来通过校验；用可读稿件交付，并标明待真实页面回读。
 
@@ -81,6 +81,8 @@ claim verification_state：page_observed/user_provided/verified/unverified/contr
 `scope`：metadata/headings/section/full_page。可选 `architecture_ref`、`selection_ref` 只填写真实来源。`keyword_placement` 的 location 为 title/description/h1–h6/intro/body/link/image_alt/not_used。已修改位置给 `change_id`，表达必须实际出现在该条改稿中，位置与改稿字段对应；正文开头 intro 对应 body，位置仍需人工回读。
 
 保留现有表达时给 `source_ref`（不再给 change_id），脚本核它在该类型的已保存证据中出现；引用真实性和实际视觉位置由 Codex 核实。`not_used` 只写原因，不给 expression/change_id/source_ref。允许自然近义词作为 expression，不要求精确重复 keyword，也不计算密度分数。完整页必须说明主词和每一个已选辅助词的位置或本次不用的理由；只在研究表里选中、没有安排到正文也没有解释不用的词会被拒绝。
+
+需要核 H3 是否落在指定 H2 下时，在该条 heading 改稿中写 `"parent_heading":{"tag":"h2","text":"实际期望的 H2 文案"}`。inspect 在保存的 H 标签序列中记录 `parent_heading_index`；compare 按文档顺序核对最近的上级标题。同词出现在错误章节或多个无法区分的位置会要求复核。页面可见性与真实模块仍从对应页面核对。
 
 输出增加 `page-focus.json`、`keyword-placement.csv/.xlsx`。标题更改的 `field` 是旧标签，`after_tag` 是改后标签。例如将第二个实际标题从 H2 改 H3：
 

@@ -2,7 +2,7 @@
 
 用户提供链接/文件和任务即可，不填此结构。先按[研究流程](research-workflow.md)实际研究，再把 `research` 对象加到 `plan.json`，使用原来的 `onpage.py check-plan`。无需新增命令或联网 Python 依赖。
 
-完整页 `focus.scope=full_page` 缺 `research` 会拒绝；研究里缺可读取的行业词库文件也会拒绝。局部/旧接口兼容，但明确 `research_status=not_checked`，不能表示完整研究完成。研究字段可保留更多实际观察，脚本不限制额外属性。
+完整页 `focus.scope=full_page` 缺 `research` 会拒绝；声明使用客户行业词库时必须有可读原件。确实缺词库时可走有实际证据的独立研究路径。局部/旧接口兼容，但明确 `research_status=not_checked`，不能表示完整研究完成。研究字段可保留更多实际观察，脚本不限制额外属性。
 
 ## 最小字段
 
@@ -12,7 +12,7 @@
 | evidence_class | observed 或 simulation；合成数据始终 simulation |
 | sources | 实际本地证据登记，见下文；先从用户链接读取/下载后生成 |
 | library | source_refs、source_kinds、competitors、rank_cutoff=30、coverage |
-| keyword_decisions | 本页候选词取舍，至少含行业词库候选 |
+| keyword_decisions | 本页候选词取舍；有用户词库时先评估库内原词 |
 | serp | query=主词、source、actual_market、actual_language、coverage、results；可加 samples/features/设备/日期 |
 | competitor_coverage | coverage；可附选取范围、数量和理由 |
 | competitor_pages | 每个实际阅读/尝试阅读的页面及具体对照 |
@@ -28,6 +28,8 @@ sources 每项含 `id`（唯一、不含 #）、`kind`（library/serp/competitor
 引用写 `source-id#具体行/段/截图位置`；至少引用已登记来源。脚本核 source-id 存在和来源类型，**不自动验证行号/引文内容**；Codex 必须对照原文件。词库至少登记合并/归一化表与可追溯来源关系，不能只创建一个空壳“已完成研究”说明文件。
 
 library.source_kinds 是 seed_expansion 与 competitor_rankings 的实际来源集合；competitors 是实际覆盖的独立竞品域名。少于 20 家、缺一种来源或 coverage 非 complete 会标 partial。多个文件不等于多个竞品。rank_cutoff 是自然排名上限，不是关键词条数。清洗规则、原始行数、去重数量、关系表位置和未知来源可作为附加字段保留。
+
+独立研究将 library 填为 `{"coverage":"unavailable","unavailable_reason":"说明查找过的项目资料和实际缺项"}`。登记实际的 site/business 与 serp/competitor 来源，至少一个 web 候选引用真实外部观察。使用者可以拿到整页改稿；普通实测仍标 partial，模拟仍标 simulation。如确实读了用户词库但本品类零命中，保留 library 来源，写 `no_match_reason` 说明范围；不用构造库内关键词。
 
 ## 候选词、SERP 与页面对照
 

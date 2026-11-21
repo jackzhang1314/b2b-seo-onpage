@@ -1,4 +1,4 @@
 interface:
   display_name: "B2B 单页 SEO 优化"
   short_description: "调研外贸 B2B 品类的采购用词，按页型交付有依据的 SEO 标题与内容改稿"
-  default_prompt: "使用 $b2b-seo-onpage，先从我的行业词库提取本品类的采购用词，再设计几组产品加属性词的 Google 搜索，实读同行独立站，按页型和本企业实际业务推荐标题。"
+  default_prompt: "使用 $b2b-seo-onpage，复用已确认的网站架构和我的词库，实读同行，尽量把相容的采购属性自然写入一个标题，并把主辅词分配到 H1、H2/H3 与对应正文。缺少架构就自行研究本页。"

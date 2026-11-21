@@ -1,39 +1,41 @@
 {
   "schema_version": 1,
   "name": "b2b-seo-onpage",
-  "version": "2.5.0",
-  "release_ref": "codex/onpage-category-research-v2.5.0",
+  "version": "2.6.0",
+  "release_ref": "codex/onpage-architecture-live-v2.6.0",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-21T22:12:55+08:00",
+  "prepared_at": "2026-11-22T00:03:58+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
-    "branch": "codex/onpage-category-research-v2.5.0",
+    "branch": "codex/onpage-architecture-live-v2.6.0",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "v2.4.0",
-    "commit": "095983dfcaac134259f760e1def502c989cd4d95"
+    "release_ref": "codex/onpage-category-research-v2.5.0",
+    "commit": "69a097b666493fd5fbcd6b9653b9d2f782abcbef"
   },
-  "runtime_file_count": 14,
-  "file_count_excluding_manifest": 15,
+  "runtime_file_count": 16,
+  "file_count_excluding_manifest": 17,
   "files_sha256": {
-    "README.md": "d3b9d711c1512e2ed7c47c2f414c427703deb963869cda6760c9c3bcbeaa224a",
-    "skills/b2b-seo-onpage/SKILL.md": "96191dd69166f264990b9f58055c4ef379204c78170ffc30a18554836cd4116b",
-    "skills/b2b-seo-onpage/agents/openai.yaml": "24063fc8698f3b3f33389179b5a7db383538356cf4dbfa6580a12b9fe6845544",
+    "README.md": "73b3b2290333d2a7e9fdca36e52a987819872a76b41b4561d8988d56eadd627d",
+    "skills/b2b-seo-onpage/SKILL.md": "93567e03bb58a2b3d18d254b4b7c87dea4c782ee273769feaaf0cf5372454cb0",
+    "skills/b2b-seo-onpage/agents/openai.yaml": "560e2590e60573811f7c4972e3f9d0ae391cb6c385f6bbc3b5b138ce2c71e537",
+    "skills/b2b-seo-onpage/references/architecture-to-page.md": "8000bcafdef7df0129407cdc20962b9f988bf5f5e19d7d008e19352f0f25e290",
     "skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv": "a1439f35852fa63106905821ce7f36720e039c2d5dcd545adb7af0312ff95388",
     "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
-    "skills/b2b-seo-onpage/references/category-modifier-research.md": "f17ee3bc94f74b3416cf6a2b633e12779692d7a5ca4ee88a47d18fb0debc1658",
-    "skills/b2b-seo-onpage/references/data-and-commands.md": "fae86aeefbd26d8527abdbddf64978feb8adeac628f5b08876035f4e9370ab6b",
-    "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "06aea3aa706b254f4528cfad4c9d33b42e1abc6cca400acb8eb6aa62cb433af9",
-    "skills/b2b-seo-onpage/references/research-contract.md": "3058ce030f66c395ede7d73507aa5ed9cebacc44d210708dbd69fa6352ed9ee2",
-    "skills/b2b-seo-onpage/references/research-workflow.md": "744b13e85290741f140f5500bcbfd001a934fc02fc64ade4fc5d35296c8f035a",
-    "skills/b2b-seo-onpage/references/title-and-snippet.md": "b1eae3b1f77d06a8fbd54f51c1e0e64845d3fa1cdf56209d9e673f175f04738e",
+    "skills/b2b-seo-onpage/references/category-modifier-research.md": "7b2b3865d11f6c7ec7f272d20a124c6945f2e91979c1a90462ea3a833bf2f6b3",
+    "skills/b2b-seo-onpage/references/data-and-commands.md": "02a01bb3c79b8589e5a4ddf8a45665bfa0f9c9a0b043e57b745f32b7f3edb5dd",
+    "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "41da1ce838f792ac69bb60f721ebd5e216f5ec4256698627a421442289984170",
+    "skills/b2b-seo-onpage/references/research-contract.md": "72af6f7b88c5039cf910a12cf9ae821bd40c4f221211c7706bbdc2c6e6bdaaa6",
+    "skills/b2b-seo-onpage/references/research-workflow.md": "3feb4b3fbb77c95df227d59b80dcb2b6d8d47f4c30ee0db6797d6d201c05641e",
+    "skills/b2b-seo-onpage/references/title-and-snippet.md": "35068e338ee11fadfcfff58388212c42906ef10c9b2aa3d33dd8996ecbbcf0a7",
     "skills/b2b-seo-onpage/references/upstream.md": "9510ff87f87b26e5dcd965085b82e28ee81d4e738de26455436dfdd7ee3781f4",
-    "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "e390c45ef94904c008d6255d2c6f4e21ea890491dfe1459bd103ac1217d943b6",
-    "skills/b2b-seo-onpage/scripts/onpage.py": "8cfc166beb4aaa5eb4d4465f66c4964b0209dc353788b132245870d24f905d18",
-    "skills/b2b-seo-onpage/scripts/onpage_research.py": "08dd0f73f76107f09d7cfdc377727599759400535c6305f617bfd98962d1161f"
+    "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "b824601f7dc3f30e502a2454737d14f60bfe5e1f8c0f13987d88b1801c8d44fc",
+    "skills/b2b-seo-onpage/scripts/architecture_page.py": "edc77de5cdeb2d4b7d219f47093863a2d113b521a60e72b4f6b26bb63532baa9",
+    "skills/b2b-seo-onpage/scripts/onpage.py": "a5f21c0f8efb1cc00dd277394c3b1a94d686f30c0a7a47218aea67b10f667c97",
+    "skills/b2b-seo-onpage/scripts/onpage_research.py": "564b9901e367f1904f15029ffbcab0e43abeb0ebef6a6d7e17f94b7f4e16b4ea"
   },
   "manifest_self_excluded": true,
   "wordpress_harness_contract": {
@@ -42,17 +44,28 @@
     "reviewed_distribution_revision": 19,
     "availability": "Reuse actual installed Harness and current site contract; Harness is not bundled or installed by this package."
   },
-  "verification_scope": "Local standalone package and targeted on-page workflow. See verification for actual coverage.",
+  "verification_scope": "Standalone local build. Two noindex Hostinger demos; per-page CMS and anonymous HTTP HTML readback and restoration. Search outcomes were not measured.",
   "verification": {
-    "onpage_regressions": 24,
-    "strict_mypy_source_files": 2,
+    "existing_regressions": 24,
+    "new_cli_regressions": 4,
+    "strict_mypy_source_files_including_tests": 4,
     "ruff": "passed",
     "skill_format": "passed",
-    "markdown_links": 31,
-    "source_page_observation": "Compared actual HTML title and H1 on one packaging supplier homepage, collection and product page. Supplier discovery used general web search.",
-    "target_market_google": "Google requested a verification step during the sample. No live target-market Google rankings verified.",
-    "wordpress_end_to_end": "not exercised for this change",
-    "customer_search_performance": "not measured"
+    "local_markdown_links": 37,
+    "upstream_architecture": {
+      "version": "0.4.1",
+      "commit": "bb52b6894887ca72ba72490fad50641d9ccdec76"
+    },
+    "live_test": {
+      "sites": 2,
+      "restored_public_pages": 5,
+      "drafts_saved": 1,
+      "checks": "CMS + anonymous public HTML; authenticated admin editor reopening and visual review were not recorded",
+      "draft_repeat": "same ID, no changes",
+      "target_market_google": "verification page; supplier observations via general search",
+      "customer_industry_library": "unavailable for these two demo sites"
+    },
+    "offline_editorial_trial": "Five page roles plus partial inputs, synthetic industry and architecture data."
   },
   "distribution": "local",
   "modifier_library": {

@@ -92,19 +92,27 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         return result
 
     library = object_value(research.get("library"))
-    refs(library.get("source_refs"), "library")
-    origins = set(strings(library.get("source_kinds")))
-    if not origins <= {"seed_expansion", "competitor_rankings"} or not origins:
-        raise ValueError("Invalid library source_kinds")
-    if origins != {"seed_expansion", "competitor_rankings"}:
-        gaps.append("行业词库未覆盖种子扩展与竞品排名两类来源")
-    domains = strings(library.get("competitors"))
-    if len({domain.lower().strip() for domain in domains}) != len(domains):
-        raise ValueError("Library competitor list contains duplicates")
-    if len(domains) < 20:
-        gaps.append(f"行业词库仅登记 {len(domains)} 家竞品，未达到 Top 20 覆盖")
-    if type(library.get("rank_cutoff")) is not int or library["rank_cutoff"] != 30:
-        raise ValueError("Library rank_cutoff must be position 30, not 30 keywords")
+    independent = library.get("coverage") == "unavailable" and "unavailable_reason" in library
+    if independent:
+        gaps.append("未取得用户行业词库：" + string(library["unavailable_reason"]))
+        if any(library.get(k) for k in ("source_refs", "source_kinds", "competitors")) or "library" in kinds.values():
+            raise ValueError("Independent research cannot claim customer library inputs")
+        if not {"serp", "competitor"}.intersection(kinds.values()) or not {"site", "business"}.intersection(kinds.values()):
+            raise ValueError("Independent research needs external observations and site or business evidence")
+    else:
+        refs(library.get("source_refs"), "library")
+        origins = set(strings(library.get("source_kinds")))
+        if not origins <= {"seed_expansion", "competitor_rankings"} or not origins:
+            raise ValueError("Invalid library source_kinds")
+        if origins != {"seed_expansion", "competitor_rankings"}:
+            gaps.append("行业词库未覆盖种子扩展与竞品排名两类来源")
+        domains = strings(library.get("competitors"))
+        if len({domain.lower().strip() for domain in domains}) != len(domains):
+            raise ValueError("Library competitor list contains duplicates")
+        if len(domains) < 20:
+            gaps.append(f"行业词库仅登记 {len(domains)} 家竞品，未达到 Top 20 覆盖")
+        if type(library.get("rank_cutoff")) is not int or library["rank_cutoff"] != 30:
+            raise ValueError("Library rank_cutoff must be position 30, not 30 keywords")
 
     def coverage(part: dict[str, object], label: str) -> None:
         if part.get("coverage") not in {"complete", "partial", "unknown", "unavailable"}:
@@ -188,6 +196,7 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     keywords: list[dict[str, str]] = []
     included: set[str] = set()
     seen: set[str] = set()
+    observed_web_candidate = False
     for item in items(research.get("keyword_decisions")):
         decision = object_value(item)
         keyword = string(decision.get("keyword"))
@@ -199,6 +208,8 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         if choice not in {"include", "other_page", "exclude", "review"} or origin not in {"library", "web", "editorial"}:
             raise ValueError("Invalid keyword decision/origin")
         citations = refs(decision.get("evidence_refs"), "library" if origin == "library" else None)
+        if origin == "web" and any(kinds[ref.split("#", 1)[0]] in {"serp", "competitor"} for ref in citations):
+            observed_web_candidate = True
         targets = strings(decision.get("module_ids", []))
         if not set(targets) <= modules or (choice == "include" and not targets):
             raise ValueError("Included keywords need existing brief module_ids")
@@ -216,8 +227,13 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
                          "target_url": other_target, "target_page_role": other_role,
                          "metrics": json.dumps(metrics, ensure_ascii=False) if metrics else "",
                          "evidence_refs": " | ".join(citations)})
-    if not any(row["origin"] == "library" for row in keywords):
-        raise ValueError("Research must evaluate candidates from the industry library")
+    if independent:
+        if not observed_web_candidate:
+            raise ValueError("Independent research needs an externally observed candidate with matching evidence")
+    elif not any(row["origin"] == "library" for row in keywords):
+        if not library.get("no_match_reason"):
+            raise ValueError("Research must evaluate candidates from the industry library")
+        gaps.append("用户词库中未找到本页候选：" + string(library["no_match_reason"]))
     for keyword in strings(focus.get("secondary_keywords", [])):
         if term(keyword) not in included:
             raise ValueError("Focus secondary keyword was not included by research")

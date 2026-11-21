@@ -9,6 +9,7 @@ from itertools import chain
 import json
 import re
 import sys
+from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
 from html.parser import HTMLParser
 from pathlib import Path
@@ -18,9 +19,10 @@ from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
+from architecture_page import read_page
 from onpage_research import validate_research
 
-VERSION = "2.5.0"
+VERSION = "2.6.0"
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
     "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt", "fieldset", "figcaption",
@@ -28,7 +30,7 @@ TEXT_BREAK_TAGS = HEADING_TAGS | {
     "table", "tbody", "td", "th", "thead", "tr", "ul",
 }
 CHANGE_FIELDS = {"title", "description", "body", "link", "image_alt", "schema", "other"} | HEADING_TAGS
-CHANGE_COLUMNS = ["change_id", "field", "heading_index", "after_tag", "placement", "before", "proposed_after",
+CHANGE_COLUMNS = ["change_id", "field", "heading_index", "after_tag", "parent_heading", "placement", "before", "proposed_after",
                   "reason", "priority", "copy_state", "apply_state", "claim_ids", "evidence_refs"]
 
 
@@ -278,6 +280,22 @@ def schema_types(value: object) -> set[str]:
     return result
 
 
+def outline_parents(headings: Sequence[Mapping[str, object]]) -> list[int | None]:
+    """Nearest preceding higher-level heading in document order, using zero-based indexes."""
+    parents: list[int | None] = []
+    stack: list[tuple[int, int]] = []
+    for index, heading in enumerate(headings):
+        tag = string(heading.get("tag"))
+        if tag not in HEADING_TAGS:
+            raise ValueError("Invalid heading in saved outline")
+        level = int(tag[1])
+        while stack and stack[-1][0] >= level:
+            stack.pop()
+        parents.append(stack[-1][1] if stack else None)
+        stack.append((level, index))
+    return parents
+
+
 def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, language: str,
                  collected_at: str, stage_kind: str, capture_path: Path | None, out: Path,
                  rendered_head_path: Path | None = None) -> None:
@@ -305,8 +323,10 @@ def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, l
         parser = PageParser(url)
         parser.feed(raw)
         parser.close()
-        for index, heading in enumerate(parser.headings, 1):
+        parents = outline_parents(parser.headings)
+        for index, (heading, parent) in enumerate(zip(parser.headings, parents), 1):
             heading["heading_index"] = str(index)
+            heading["parent_heading_index"] = "" if parent is None else str(parent + 1)
         body = compact("".join(parser.fragments))
         selected_head, selected_head_seen = parser.head, parser.head_seen
         if rendered_head_path:
@@ -380,6 +400,12 @@ def heading_before(change: dict[str, object], evidence: dict[str, object]) -> No
             raise ValueError("Adding another heading requires a concrete placement")
     if change.get("after_tag", field) not in HEADING_TAGS:
         raise ValueError("after_tag must be H1-H6 in lowercase")
+    if "parent_heading" in change:
+        parent = obj(change["parent_heading"])
+        tag = string(parent.get("tag"))
+        string(parent.get("text"))
+        if tag not in HEADING_TAGS or tag >= str(change.get("after_tag", field)):
+            raise ValueError("Expected parent must have a higher heading level than the proposed heading")
 
 
 def placement_rows(plan: dict[str, object], evidence: dict[str, object],
@@ -422,6 +448,9 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
         if not all(isinstance(v, str) for v in (expression, change_id, source_ref)):
             raise ValueError("Placement expression/change_id/source_ref must be strings")
         expression, change_id, source_ref = str(expression), str(change_id), str(source_ref)
+        heading_index = row.get("heading_index")
+        if heading_index is not None and (type(heading_index) is not int or heading_index < 1 or location not in HEADING_TAGS or not source_ref):
+            raise ValueError("A retained heading_index requires a one-based position, heading location and source_ref")
         state = "not_used"
         if location == "not_used":
             if expression or change_id or source_ref:
@@ -445,8 +474,10 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
                     head = obj(evidence["head"]) if evidence.get("head") is not None else {}
                     samples = head_texts(head.get(location, []))
                 elif location in HEADING_TAGS:
-                    samples = [str(obj(h).get("text", "")) for h in arr(evidence.get("headings", []))
-                               if obj(h).get("tag") == location]
+                    headings = [obj(h) for h in arr(evidence.get("headings", []))]
+                    if isinstance(heading_index, int):
+                        headings = headings[heading_index - 1:heading_index]
+                    samples = [str(h.get("text", "")) for h in headings if h.get("tag") == location]
                 elif location in {"link", "image_alt"}:
                     key, attribute = ("links", "text") if location == "link" else ("images", "alt")
                     samples = [str(obj(item).get(attribute, "")) for item in arr(evidence.get(key, []))]
@@ -456,6 +487,7 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
                     raise ValueError("Preserved placement expression not found in saved evidence")
                 state = "preserved_snapshot_text"
         result.append({"keyword": keyword, "role": role, "location": location, "expression": expression,
+                       "heading_index": str(heading_index or changes_by_id.get(change_id, {}).get("heading_index", "")),
                        "change_id": change_id, "source_ref": source_ref, "reason": reason, "copy_state": state})
     if focus["scope"] == "full_page" and not any(r["role"] == "primary" for r in result):
         raise ValueError("Full-page focus needs a primary placement or an explained not_used record")
@@ -519,7 +551,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
                 raise ValueError("Before does not match saved head")
         if field in HEADING_TAGS:
             heading_before(change, evidence)
-        elif "after_tag" in change or "heading_index" in change:
+        elif "after_tag" in change or "heading_index" in change or "parent_heading" in change:
             raise ValueError("Heading selectors are only valid for heading changes")
         if "placement" in change:
             string(change["placement"])
@@ -541,6 +573,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
         if not evidence_refs:
             raise ValueError("Change requires evidence_refs")
         rows.append({"change_id": cid, "field": field, "heading_index": str(change.get("heading_index", "")),
+                     "parent_heading": json.dumps(change["parent_heading"], ensure_ascii=False) if "parent_heading" in change else "",
                      "after_tag": str(change.get("after_tag", field if field in HEADING_TAGS else "")),
                      "placement": str(change.get("placement", "")), "before": before, "proposed_after": after,
                      "reason": string(change.get("reason")), "priority": str(change["priority"]),
@@ -557,7 +590,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
     gaps = texts(plan.get("fact_gaps", []))
     focus = obj(plan.get("focus", {}))
     if focus.get("scope") == "full_page" and "research" not in plan:
-        raise ValueError("Full-page optimization requires industry library research; request the library link first")
+        raise ValueError("Full-page optimization requires research: use the industry library or document independent page research")
     research = validate_research(plan["research"], plan, focus, plan_path.parent) if "research" in plan else None
     if research is not None:
         raw_serp = obj(obj(plan["research"])["serp"])
@@ -603,7 +636,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
         if "focus" in plan:
             write_json(destination / "page-focus.json", plan["focus"])
             plan_table("keyword-placement.csv", placements,
-                      ["keyword", "role", "location", "expression", "change_id", "source_ref", "reason", "copy_state"])
+                      ["keyword", "role", "location", "heading_index", "expression", "change_id", "source_ref", "reason", "copy_state"])
         review = [f"# On-page · {plan['keyword']}", "", f"页面：{plan['target_url']}",
                   f"市场/语言：{plan['market']} / {plan['language']}",
                   f"意图匹配：{plan['intent_fit']}；{plan['intent_reason']}",
@@ -671,6 +704,34 @@ def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simula
                             for s in samples)
                 status = "observed_in_snapshot" if found else "not_observed_in_snapshot"
                 detail = "String presence only; check position, visibility and duplicate elements manually"
+                if field in {"title", "description"} and found and len(samples) != 1:
+                    status = "manual_check_required"
+                    detail = f"Observed {len(samples)} {field} entries; verify which component owns the output"
+                if field in HEADING_TAGS and found and change.get("heading_index") is not None:
+                    index = change["heading_index"]
+                    headings = arr(after.get("headings", []))
+                    if type(index) is not int or index < 1:
+                        raise ValueError("heading_index must be a positive one-based position")
+                    at_index = obj(headings[index - 1]) if index <= len(headings) else {}
+                    if at_index.get("tag") == change.get("after_tag", field) and compact(str(at_index.get("text", ""))) == compact(text):
+                        detail = f"Text and heading level observed at saved heading position {index}; check module and visibility"
+                    else:
+                        status = "manual_check_required"
+                        detail = f"Text found in a heading at another position; inspect the intended module for position {index}"
+                if field in HEADING_TAGS and found and "parent_heading" in change:
+                    expected = obj(change["parent_heading"])
+                    outline = [obj(h) for h in arr(after.get("headings", []))]
+                    parents = outline_parents(outline)
+                    indexes = [i for i, h in enumerate(outline) if h.get("tag") == change.get("after_tag", field)
+                               and compact(str(h.get("text", ""))) == compact(text)
+                               and change.get("heading_index") in {None, i + 1}]
+                    matches = [i for i in indexes if (p := parents[i]) is not None and
+                               outline[p].get("tag") == expected.get("tag") and
+                               compact(str(outline[p].get("text", ""))) == compact(string(expected.get("text")))]
+                    if len(matches) != 1:
+                        status, detail = "manual_check_required", "Could not identify one matching heading under the expected parent"
+                    else:
+                        detail = "Observed text and level under the requested parent heading; confirm the visible module"
                 if local_simulation:
                     detail += "; internal simulation only; original copy/public-use blocks remain unchanged"
         rows.append({"change_id": string(change.get("change_id")), "field": field, "proposed_after": text,
@@ -713,9 +774,19 @@ def main() -> int:
     compare.add_argument("--after", type=Path, required=True)
     compare.add_argument("--out", type=Path, required=True)
     compare.add_argument("--local-simulation", action="store_true", help="Read blocked copy only in a supplied local simulation; public-use state is unchanged")
+    architecture = commands.add_parser("architecture-page", help="Read one page and its keyword assignments from an architecture delivery")
+    architecture.add_argument("--source", type=Path, required=True)
+    match = architecture.add_mutually_exclusive_group(required=True)
+    match.add_argument("--url")
+    match.add_argument("--page-id")
+    architecture.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
-        if args.command == "inspect":
+        if args.command == "architecture-page":
+            page_note = read_page(args.source, args.url, args.page_id)
+            with output_dir(args.out) as destination:
+                write_json(destination / "architecture-page.json", page_note)
+        elif args.command == "inspect":
             inspect_page(args.html or args.text, "html" if args.html else "text", args.url, args.keyword,
                          args.market, args.language, args.collected_at, args.stage, args.capture, args.out, args.rendered_head)
         elif args.command == "check-plan":

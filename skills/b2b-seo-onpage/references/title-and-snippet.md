@@ -17,6 +17,18 @@
 
 ## 按页型调整，而不是套一张标题模板
 
+商业页应尽量在一个自然、清楚的 Title 中承接更多**有证据且彼此相容**的采购属性。编辑时先写出最简产品主题，再逐一尝试加入有意义的限定：买什么、向谁买、接受哪种订单、具体哪一款。比较短稿和覆盖更广的稿，若新增词表达了该页实际能满足的另一项采购要求，句子仍自然，就保留。最后交一个推荐稿，并说明哪些词字面写入、哪些只表达了近义意图、哪些移到 H2、正文或其他页面。这里的覆盖指文案和采购意图，排名须由实际查询数据观察。
+
+| 页型 | 条件成立时的一个标题 | 选词理由 |
+| --- | --- | --- |
+| 首页 | `Custom Workwear Manufacturer – Order Direct from Our Factory` | 当企业实际自产、直接接受企业订单且库内有相应找厂意图时，custom 说明定制，manufacturer 说明身份，后半句说明买家可以直接向工厂订货。单有“自产”资料时可用 `Custom Workwear Manufacturer`，待核直供。 |
+| 一级类目 | `Custom Retail Packaging for Wholesale Orders` | 整类承接零售包装开发并接受批发订单；标题同时覆盖产品范围与订单方式。 |
+| 二级类目 | `Custom Printed Mailer Boxes for Bulk Orders` | 聚焦具体箱型和印刷方式。单个包材的特殊覆膜、某个 SKU 的尺寸留给相应详情。 |
+| 产品详情 | `TC-01 Custom Resin Coffee Table in Walnut` | 保留型号、产品、材料及已确认的单款定制服务。若只支持选颜色，可把可选饰面写清楚。 |
+| 文章 | `How to Compare Custom Workwear Manufacturers for a Bulk Order` | 调研工厂与批量订单可以服务同一个比较问题，前提是文章真的教读者怎样比较。 |
+
+若 `factory` 与 `manufacturer` 在本品类只重复“制造商”身份，选同页型同行和用户原词更支持的自然说法。若“factory-direct”有独立渠道含义且有直供证据，可以连用。贸易商、分销商和通过代理接单的工厂分别核自己的交易角色。多项属性不设词数配额；读出整句，去掉没有新增含义的重复和会误导的承诺。[Google 标题链接指南](https://developers.google.com/search/docs/appearance/title-link)
+
 以下都是虚构示意，方括号必须换成真实内容；不能直接当作客户事实或待发布稿。
 
 | 页型 | 标题优先帮助读者辨认 | 有条件的示意 |
