@@ -26,3 +26,19 @@
 | 型号数据、测量教程或另一种交易方式属于相邻页面 | 本页在有用位置给入口。保留子页职责。缺企业依据时，将相应承诺列为待核。 |
 
 在改稿里指明承接位置和一句可核的答案。读到词只证明有这段文字；归在页尾、模板导航或泛谈段落的字样，需要查看实际模块再判断是否解决本页问题。[Google 的搜索用词与自然表达说明](https://developers.google.com/search/docs/fundamentals/seo-starter-guide) · [Ahrefs 对主题覆盖的说明](https://help.ahrefs.com/en/articles/9879434-about-the-new-ai-content-helper)
+
+## 从拟定的 Title 写到买家能用的一段话
+
+拿拟题里会左右询价的那一项承诺，问“买家看完标题，进来还缺哪条信息才能下单？”H1 保留整页产品身份。逐项找正文中已有的答案，能指出具体规格行、选项或段落就保留。只写了卖点时，在对应模块补采购方需要的条件。只有一个问题时写一个 H2 和答案，确有从属问题才分 H3。若企业资料也缺答案，缩小或删除拟题里的承诺，把待企业确认的问题留在稿外。
+
+**虚构工装类目示例。** 假设产品表确认整个软壳系列支持左胸或袖部刺绣，报价单要求提供徽标文件、位置和各尺码数量，页面已有尺码表。用这些事实可以直接交下列英文稿。
+
+| 页面位置 | 可采用的文案 |
+| --- | --- |
+| SEO Title | Custom Softshell Work Jackets with Embroidered Logos |
+| 理由 | 软壳说明是哪个系列，刺绣说明整个系列可采用的加标方式。 |
+| H1 | Custom Softshell Work Jackets |
+| H2 | Where Can We Embroider Your Logo? |
+| 紧接 H2 的正文 | Choose the left chest or sleeve for your embroidered logo. To request a quote, send your logo file, preferred placement and the quantity you need in each size. |
+
+这一个段落可以同时回答绣标位置和询价所需资料，已有尺码表继续服务选尺码的买家。若平台还出现 `mixed-size bulk orders`，仅凭“报价要报各尺码数量”无法断定不同尺码可合并达到起订量。只有接单规则明确时，再写是否可以合计以及如何计算。若只有 SJ-08 可绣标，类目标题收窄到软壳系列，把刺绣说明放在该型号的选项旁。只接标题任务时，核原页能否回答，用一句理由交付即可。

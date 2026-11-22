@@ -69,6 +69,8 @@ claim verification_state：page_observed/user_provided/verified/unverified/contr
     "scope": "full_page",
     "selection_ref": "user-selected-keyword",
     "architecture_ref": "planning/pages.csv#P01",
+    "grouping_ref": "planning/keyword-page-map.csv#need=N01",
+    "library_ref": "data/keywords.csv#keyword_id=K01",
     "preserve": ["Actual model identity and the confirmed category scope"]
   },
   "keyword_placement": [
@@ -78,7 +80,7 @@ claim verification_state：page_observed/user_provided/verified/unverified/contr
 }
 ```
 
-`scope`：metadata/headings/section/full_page。可选 `architecture_ref`、`selection_ref` 只填写真实来源。`keyword_placement` 的 location 为 title/description/h1–h6/intro/body/link/image_alt/not_used。已修改位置给 `change_id`，表达必须实际出现在该条改稿中，位置与改稿字段对应；正文开头 intro 对应 body，位置仍需人工回读。
+scope 可选 metadata/headings/section/full_page。已收到页面规划、分组表及词库时，在 `architecture_ref`、`grouping_ref`、`library_ref` 记录真实页、组和原词出处。selection_ref 可记录选定主词的依据。批量表格的按页读取方法见[三表衔接](architecture-to-page.md)。keyword_placement 的 location 为 title/description/h1–h6/intro/body/link/image_alt/not_used。已修改位置给 change_id，表达须出现在该条改稿中。正文开头 intro 对应 body。
 
 保留现有表达时给 `source_ref`（不再给 change_id），脚本核它在该类型的已保存证据中出现；引用真实性和实际视觉位置由 Codex 核实。`not_used` 只写原因，不给 expression/change_id/source_ref。允许自然近义词作为 expression，不要求精确重复 keyword，也不计算密度分数。完整页必须说明主词和每一个已选辅助词的位置或本次不用的理由；只在研究表里选中、没有安排到正文也没有解释不用的词会被拒绝。
 

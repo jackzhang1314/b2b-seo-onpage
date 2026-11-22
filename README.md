@@ -1,65 +1,63 @@
 # B2B On-page SEO Skill
 
-从目标关键词和页面开始，结合行业词库、目标市场 SERP 与竞品内容，完成页面简报、Title、描述、H 标签、正文和内链改稿。需要修改 WordPress 页面时，与已有 WordPress Build Harness 配合完成保存和回读。
+**把客户已有的网站规划和关键词分组落实到每一个页面。** 给 Codex 行业词库、网站页面规划、关键词分组表和目标 URL 或页面编号，它会找出分配给这页的组及成员，回查原词，再交付一个 SEO 标题、H 标题和可替换的正文。需要修改 WordPress 页面时，可以接已有 WordPress Build Harness 完成保存和回读。
 
-**本目录为本地候选版 v2.7.0-rc.1。** 现有页面可附本页的 Search Console 查询导出。Codex 先保留已吸引目标买家的用词，再从行业词库与同行具体页面核对值得补充的采购条件，交付一个 SEO 标题和有实际答案的段落。新页可以直接提供架构、词库和业务资料。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
+v2.7.0 支持从几千到几万行的行业词库按页筛选。已有分组优先，词库用于查原词和补漏，同行实页用来核对采购表达。拟定的标题会和本站相邻页比较，再用本企业资料回答标题里影响下单的问题。[页面规划、关键词分组与词库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
-在这个候选目录中可以直接说：“请使用本目录的 `skills/b2b-seo-onpage` 优化【网址】。词库、页面和已有数据在【目录】。告诉我哪些买家用语应该保留，哪些采购问题还没有回答，并给我可替换的标题与正文。”
+已有页面还可以附上该 URL 的 Google Search Console 查询导出，保留确实带来相关展现或点击的买家用语。新页从已有架构、词库和产品资料开始。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
 
-## 安装公开稳定版 v2.6.0
+## 安装 v2.7.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.6.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.7.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.6.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.6.0/b2b-seo-onpage-2.6.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.6.0/b2b-seo-onpage-2.6.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.7.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.7.0/b2b-seo-onpage-2.7.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.7.0/b2b-seo-onpage-2.7.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.6.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.7.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
 
 ## 第一次使用，提供什么
 
-**已有页面：目标关键词＋URL/稿件就能启动。尚未建页：先给关键词和目标市场。** Codex 会识别或建议页型；已确认的页型和主词会沿用。
+**已有规划时，给三份原表和一个目标页即可。** 三份资料可以分布在多个 Excel、CSV、在线表格，或同一工作簿的几个标签页。尚未上线的页面可给规划 URL 或编号。只有关键词和页面稿时，也可以先做这页。
 
 以下资料有助于确定市场、采购词和可发布的企业事实。已有的直接复用。
 
-- **行业词库位置**：CSV、表格链接，或原始导出文件夹；不用自己合并、去重或改列名。
+- **行业词库**提供完整采购短语、关键词编号及已有来源。客户整理好的版本可以直接给，保留原表头。
+- **网站页面规划**提供页面编号、规划 URL、上级、页面职责及已定主词。
+- **关键词分组规划表**提供已分配的词组、成员词、角色和目标页。有些表用页面编号关联，有些用组号或 URL，Codex 会按实际列对照。
 - **目标国家和内容语言**，例如美国、英文。
 - **真实业务资料**：企业角色、产品/型号范围、规格、可公开的能力与采购条件；已有架构或页面简报一并复用。
 - **补查工具入口（可选）**：已有网页版关键词工具，或已导出的研究数据。
 
-行业词库按两部分整理：①用户 Top 20 竞争对手各自自然排名位置 **1–30** 的关键词及排名 URL；②产品核心种子词的扩展词。不是每个竞品只取30个词。Codex保留来源与排名关系，同一个词的搜索量不会跨文件相加；缺失的竞品或来源会明确列出。
+已有种子扩展或竞品自然排名导出时可以一并提供。Top 20 竞品资料可保留每家自然排名位置 1–30 的关键词及对应 URL。词库没有排名或搜索量时，仍可按客户已确认的分组改稿。
 
 ## 可直接复制的调用
 
 ```text
 使用 $b2b-seo-onpage。
-目标关键词：mini excavator manufacturer。
-页面：【URL或稿件路径；没建页就写尚未建页】。
-市场和语言：美国、英文。
-行业词库或原始导出文件夹：【链接或路径】。
-公司及产品资料：【链接或路径】。
-已有网页版关键词工具：【入口；没有可省略】。
+目标页是【页面编号或 URL】，目标市场和语言是【美国、英文】。
+行业词库在【文件】，网站页面规划在【文件】，关键词分组表在【文件或工作表】。
+企业及产品资料在【目录】。
 
-请识别页面类型，核对主词与真实业务是否适合；
-整理词库，筛选适合本页的词组，分析目标市场SERP和代表竞品页面，
-形成页面简报，再交Title、描述、标题结构和实际正文改稿。
-说明选词与排除理由、竞品优点如何采用、关键词位置和资料缺口。
-这次先交改稿，已有内容合适可以保留。
+先找出已经分给这页的主词、词组和全部成员，再回查行业词库里的完整采购短语。
+请核对同行同页型的实际页面，给我一个推荐 SEO Title 和一句理由，
+再给 H1、相关 H2/H3 和可直接替换的段落。标明哪些词沿用了规划，
+哪些建议补充，哪些应留给其他页面。这次只交改稿。
 ```
 
-上面的关键词是示例。贸易商不能仅因关键词带 `manufacturer` 就写成自有工厂；美国市场也不等于美国制造。
+例如，软壳夹克类目可以同时接“软壳夹克”和“绣标选项”两组。若“怎样测量工装尺码”已经分给指南页，类目可保留尺码表并链接指南，测量教程仍由指南页承接。
 
 只改标题时，可以直接说：
 
@@ -67,17 +65,29 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 使用 $b2b-seo-onpage。
 页面：【URL或稿件】；已选主词：【关键词】。
 行业词库：【文件或目录】。市场和语言：【例如美国、英文】。
-先从词库找这个品类的采购用词，再用几组“产品＋可能的属性词”去 Google 找同行独立站。
-看看同行在首页、集合页和详情页各用什么词。结合我们能接的订单，只给这页一个推荐 Title、description 和依据。
+从词库的完整查询里看买家想下什么订单，再去 Google 找同市场、同页型的同行页面。
+对照本站上级和同级页，结合我们确实能接的订单，只给这页一个推荐 Title 和一句理由。
 ```
 
 已有架构时，给架构输出目录、index.html 或 Markdown 简报即可。Codex 会复用这页的主词、章节词、筛选词、模板模块及资料缺口。有词库先查词库，没有架构就独立研究本页；缺少客户词库时仍可依据实页和业务资料给出改稿，注明研究覆盖。
 
 ## 给已有页面布局关键词
 
-可以直接说“用 $b2b-seo-onpage。架构、行业词库和公司资料在这个文件夹，目标页面是这个 URL。请尽量把相容的采购属性自然组合进一个 SEO Title，给出 H1、H2/H3 和实际段落。已有归属的主词沿用；没有架构就自行研究这一页。” 查看[架构交接和 H 标签实例](skills/b2b-seo-onpage/references/architecture-to-page.md)以及[五种页型的标题示例](skills/b2b-seo-onpage/references/title-and-snippet.md)。
+可以直接说：“用 `$b2b-seo-onpage` 优化【页面】。词库和公司资料在【目录】。先给一个标题，告诉我为什么用它。再把买家看到标题后最关心的问题写成 H2 和可直接替换的正文。已有架构和写得准确的段落请沿用。” [架构交接](skills/b2b-seo-onpage/references/architecture-to-page.md) · [按页型拟标题](skills/b2b-seo-onpage/references/title-and-snippet.md)
 
-例如，一家按买家设计印刷、接受批量订单的邮寄盒厂家，可以把集合页的 SEO 标题写为 `Custom Printed Mailer Box Manufacturer for Bulk Orders`。H1 用 `Custom Printed Mailer Boxes` 点明类目。H2 `Planning a Bulk Mailer Box Order` 说明询价需要哪些资料，下面的 H3 `Artwork and Box Dimensions` 给出图稿和尺寸要求。
+以工装为例，`custom workwear manufacturer` 关心谁能定制生产，`factory direct workwear` 关心能否向生产方直接下单，`wholesale blank workwear` 关心能否按批发条件买到未加标的服装。先保留整条查询和可得的排名 URL，再判断哪些条件能在同一张订单上成立。[采购短语与订单示例](skills/b2b-seo-onpage/references/category-modifier-research.md)
+
+假设软壳夹克与保暖夹克各有一个类目，企业资料确认所有软壳款可在左胸或袖部绣标，报价需图稿、位置和分尺码数量。软壳页可以这样交稿。
+
+| 位置 | 示例改稿 |
+| --- | --- |
+| SEO Title | Custom Softshell Work Jackets with Embroidered Logos |
+| 选词理由 | “Softshell” 让买家认出系列，“Embroidered Logos” 说明整个系列可以怎样定制。 |
+| H1 | Custom Softshell Work Jackets |
+| H2 | Where Can We Embroider Your Logo? |
+| 紧接 H2 的正文 | Choose the left chest or sleeve for your embroidered logo. To request a quote, send your logo file, preferred placement and the quantity you need in each size. |
+
+如果只有 SJ-08 可绣标，就把刺绣说明放在该型号旁，类目的标题只承诺整个系列共有的条件。原有尺码表可以直接保留。
 
 ## 配合 WordPress Build Harness 使用
 
@@ -107,7 +117,7 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 
 ## 会交付什么
 
-完整任务先看 `onpage-review.md`。`page-brief.md` 说明这一页为什么这样写；选词、SERP、竞品对照、改稿和关键词安排表保留依据。用户会拿到实际可替换的文案，缺证主张放在正文之外。
+只改 Title 时会拿到一个标题和一句理由，也要 description 时直接说明。整页改稿先给推荐标题、H1、相关 H2/H3 及可直接使用的正文，再说明最影响决定的一项取舍。读完整报告可从 `onpage-review.md` 开始，`page-brief.md` 和选词、SERP、竞品及关键词安排表保留详细依据。
 
 首页、类目页和详情页会先从你的词库提取相关的完整查询和 B 端属性，再核当地搜索结果与企业事实。比如库里同时有 `custom printed mailer boxes` 和 `stock mailer boxes in bulk`，做按图印刷的一页应优先验证前者，批发标准现货箱的一页应优先验证后者。内置词表帮助识别漏项与补查。已有标题准确时可以原样保留。可查看[品类调研方法](skills/b2b-seo-onpage/references/category-modifier-research.md)和[跨行业采购用词表](skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv)。
 
@@ -120,6 +130,8 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 只取得可见样本就说明样本范围。通用搜索或未验证地域的结果不会冒充完整美国Google前十。账号、密码和会话信息不写进交付或公开包。
 
 ## 版本与验证范围
+
+v2.7.0 将客户的页面规划、分组表和行业词库接到单页改稿。选词和布局表可回查原组、规划角色与来源。新版加入完整采购短语解读、相邻页标题比较和采购答案写作，并纳入候选版已有的按 URL 引用 Search Console 查询功能。本次正式版按要求未运行测试。
 
 v2.7.0-rc.1 用同一份模拟客户资料与 v2.6.0 做了离线改稿对照。两版都保留了有效查询并补清了起订条件。候选版增加了可回读的 GSC 来源、查询归属与日期检查，已在命令行验证。实际搜索表现需要已收录页面的后续数据。
 

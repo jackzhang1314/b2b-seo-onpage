@@ -22,7 +22,8 @@ from urllib.parse import urljoin, urlsplit
 from architecture_page import read_page
 from onpage_research import validate_research
 
-VERSION = "2.7.0-rc.1"
+VERSION = "2.7.0"
+PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
     "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt", "fieldset", "figcaption",
@@ -427,7 +428,7 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
     terms = [compact(t).casefold() for t in [primary, *secondary]]
     if len(terms) != len(set(terms)):
         raise ValueError("Primary/secondary keywords must be distinct")
-    for optional in ("architecture_ref", "selection_ref"):
+    for optional in ("architecture_ref", "selection_ref", "grouping_ref", "library_ref"):
         if optional in focus:
             string(focus[optional])
     texts(focus.get("preserve", []))
@@ -622,7 +623,8 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
             write_json(destination / "research.json", exported_research)
             write_json(destination / "research-sources.json", research.sources)
             plan_table("keyword-selection.csv", research.keywords,
-                      ["keyword", "origin", "decision", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs"])
+                      ["keyword", "origin", "decision", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs",
+                       *PLANNING_COLUMNS])
             plan_table("serp-results.csv", research.serp,
                       ["position", "url", "title", "page_type", "evidence_refs"])
             plan_table("competitor-comparison.csv", research.competitors,
@@ -635,33 +637,50 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
         plan_table("page-changes.csv", rows, CHANGE_COLUMNS)
         if "focus" in plan:
             write_json(destination / "page-focus.json", plan["focus"])
-            plan_table("keyword-placement.csv", placements,
-                      ["keyword", "role", "location", "heading_index", "expression", "change_id", "source_ref", "reason", "copy_state"])
+            decisions = {compact(row["keyword"]).casefold(): row for row in research.keywords} if research is not None else {}
+            placement_export: list[dict[str, str]] = []
+            for item in placements:
+                decision = decisions.get(compact(item["keyword"]).casefold(), {})
+                planning = {key: decision.get(key, "") for key in PLANNING_COLUMNS}
+                placement_export.append({**item, **planning, "selection_evidence": decision.get("evidence_refs", "")})
+            plan_table("keyword-placement.csv", placement_export,
+                      ["keyword", "role", "location", "heading_index", "expression", "change_id", "source_ref", "reason", "copy_state",
+                       *PLANNING_COLUMNS, "selection_evidence"])
         review = [f"# On-page · {plan['keyword']}", "", f"页面：{plan['target_url']}",
                   f"市场/语言：{plan['market']} / {plan['language']}",
                   f"意图匹配：{plan['intent_fit']}；{plan['intent_reason']}",
                   f"SERP 范围：{serp['actual_scope']}；{serp['coverage']}", ""]
         if research is not None:
-            review += [f"研究记录：{research.status}；先读 [页面简报](page-brief.md) 与 keyword-selection.xlsx。",
-                       "文件与引用校验不等于研究真实性或语义质量验收。", "",
-                       *[f"- 研究缺口：{gap}" for gap in research.gaps], ""]
+            review += [f"研究状态为 {research.status}。[页面简报](page-brief.md)", ""]
         else:
             review += ["研究记录：未校验完整研究链。本次为局部/旧接口改稿，不代表完整 On-page 研究。", ""]
+
+        title_changes = [row for row in rows if row["field"] == "title"]
+        recommended = title_changes[0] if len(title_changes) == 1 and title_changes[0]["copy_state"] == "ready" else None
+        if not title_changes and focus.get("scope") in ("full_page", "metadata") and head is not None and evidence.get("head_seen"):
+            retained = next((item for item in placements if item["location"] == "title" and item["copy_state"] == "preserved_snapshot_text"), None)
+            if retained is not None:
+                observed = head_texts(head.get("title", []))
+                if len(observed) == 1:
+                    review += ["## 保留的 SEO Title", "", observed[0], "", retained["reason"], ""]
+        if not rows:
+            review += ["## 保留现状", "", string(plan.get("retention_reason")), ""]
+        for exported in sorted(rows, key=lambda row: row is not recommended):
+            label = f"{exported['change_id']} · {exported['field']} · {exported['priority']} · {exported['copy_state']}"
+            heading = f"推荐 SEO Title · {label}" if exported is recommended else label
+            review += [f"## {heading}", "", exported["proposed_after"], "", f"理由：{exported['reason']}", "",
+                       f"现状：{exported['before'] or '拟新增，需在编辑器定位'}", "",
+                       f"定位：{exported['placement'] or '原文匹配'}；标题序号：{exported['heading_index'] or '不适用'}；改后标签：{exported['after_tag'] or '不适用'}", "",
+                       f"依据：{exported['evidence_refs']}", ""]
         if "focus" in plan:
-            focus = obj(plan["focus"])
             review += ["## 本页目标与关键词安排", "", f"主词：{focus['primary_keyword']}",
                        f"页面职责：{focus['page_role']}；采购任务：{focus['buyer_task']}；范围：{focus['scope']}",
                        "辅助词：" + "；".join(texts(focus.get("secondary_keywords", []))), ""]
             for item in placements:
                 review += [f"- {item['keyword']} → {item['location']}：{item['expression'] or '本次不用'}；{item['reason']}"]
             review += [""]
-        if not rows:
-            review += ["## 保留现状", "", string(plan.get("retention_reason")), ""]
-        for exported in rows:
-            review += [f"## {exported['change_id']} · {exported['field']} · {exported['priority']} · {exported['copy_state']}", "",
-                       f"现状：{exported['before'] or '拟新增；需在编辑器定位'}", "", exported["proposed_after"], "",
-                       f"定位：{exported['placement'] or '原文匹配'}；标题序号：{exported['heading_index'] or '不适用'}；改后标签：{exported['after_tag'] or '不适用'}", "",
-                       f"理由：{exported['reason']}", "", f"依据：{exported['evidence_refs']}", ""]
+        if research is not None and research.gaps:
+            review += ["## 研究缺口", "", *[f"- {gap}" for gap in research.gaps], ""]
         review += ["## 资料缺口", "", *[f"- {gap}" for gap in gaps], "",
                    "状态：改稿建议。脚本只校验引用、上下文和部分现状匹配，不能自动证明事实完整、语义正确或排名提升。"]
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
@@ -779,11 +798,16 @@ def main() -> int:
     match = architecture.add_mutually_exclusive_group(required=True)
     match.add_argument("--url")
     match.add_argument("--page-id")
+    architecture.add_argument("--keyword-map", type=Path, help="Page and group assignments, one CSV row per member")
+    architecture.add_argument("--library", type=Path, help="Original keyword rows keyed by keyword_id, market and language")
+    architecture.add_argument("--market", help="Target market as recorded in the keyword map")
+    architecture.add_argument("--language", help="Content language as recorded in the keyword map")
     architecture.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     try:
         if args.command == "architecture-page":
-            page_note = read_page(args.source, args.url, args.page_id)
+            page_note = read_page(args.source, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
+                                  market=args.market, language=args.language)
             with output_dir(args.out) as destination:
                 write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":

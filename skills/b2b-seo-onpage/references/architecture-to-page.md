@@ -2,6 +2,36 @@
 
 先找当前网站已经确认的架构。可接收用户给的目录、HTML、Markdown、表格或单页链接。确认产品、站点、语言、页型、上级和实际 URL。项目中的 `docs/CURRENT.md`、内容简报、旧网址映射和客户确认意见有助于区分原规划与已上线版本。
 
+## 客户给了页面规划、关键词分组表和几万行行业词库
+
+先记下文件版本、工作表和实际列名。三份资料可以是三个文件，也可以在同一工作簿的不同标签页。页面规划决定这页负责什么，分组表说明哪些需求已分给它，总词库提供完整原词及已有依据。版本互相矛盾时优先采用能确认的客户决定。有争议的成员单列，其余照常写稿。
+
+| 顺序 | 实际读取与判断 |
+| --- | --- |
+| 页面 → 分组 | 从页面编号、规划 URL 或已证实的新旧网址关系定位，再取这页绑定的所有组。对照同语言的上级和最相近同级页，保留已定主词、职责、章节及不应混入的主题。 |
+| 分组 → 成员 | 展开各组的完整成员，保留组号/组名、关键词 ID、角色、原行和确认状态。一组跨页时用成员自己的归属。同页多个组可以分别回答选型、工艺、订货等问题。每个组的代表词只代表该组。 |
+| 成员 → 行业词库 | 优先用共用关键词 ID、市场、语言找原词、来源和可得的排名 URL。没有共同 ID 时在同市场、同语言核对整句，保留型号、单位和限定词。多个候选留原行复核。词库里暂时找不到的分组词仍保留规划来源。 |
+| 补充词 → 已有归属 | 本页分配读全后，再在总库按产品、同义说法和采购条件查漏。查新词在全站规划中是否已分给别页。属于别页时保留页面 ID 或 URL，以及本页有用的简述或链接。确属本页而尚未分配时标“建议补充”。分组与接单资料矛盾时写明原方案、证据和建议去向。 |
+| 组与成员 → 页面文案 | 给组内每项需求一个去向。能被同一句、同段或同一张规格表满足的词可以共同指向那里。简报列本页主词及组名，安排表给出可见位置、实际表达及原表出处。按同一去重口径注明分配成员数、已处理数和余项原因。 |
+
+例如规划将 P12 软壳夹克类目分为 G4“采购软壳夹克”和 G9“绣标选项”，尺码测量教程归 P28。应先从 G4 确认 P12 的品类用词，从 G9 选出实际支持的刺绣问题写入 H2 和正文。P28 的测量步骤留给教程，必要时在 P12 的尺码表旁给入口。若总库另有 `factory direct workwear`，先核首页是否已承接找厂需求，再核本类目是否直接接单。以上编号和事实均为示意。
+
+### 表格读取
+
+Excel、CSV 或可访问的在线表格按原格式交给 Codex。先检查工作表及表头，再用可用的表格工具或逐行读取按页筛选，保留原文件、表名和行号。几万行可以建立可复用索引或分批读取，按当前页展开完整成员及相关边界词。只拿到预览或抽样时注明实际覆盖。
+
+标准 CSV 可用现有 `architecture-page` 接入三份资料。下面的页面编号、市场、语言和路径换成实际值。
+
+```sh
+python3 skills/b2b-seo-onpage/scripts/onpage.py architecture-page --source planning \
+  --page-id P12 --keyword-map planning/keyword-page-map.csv --library data/keywords.csv \
+  --market US --language en --out work/P12-input
+```
+
+页面计划沿用下文格式。分组映射每行一个成员，列为 `keyword_id, keyword, target_url, market, language`，可带 `owner_page_id`、`group_id` 或 `need_id`、角色与状态。只按编号分配时保留空的 `target_url` 列。词库列为 `keyword_id, keyword_original, market, language`。市场和语言沿用原表的值，有页面或项目范围时可省命令行选项。客户表头不同或分组关系在另一张工作表时，由 Codex 根据真实对应关系生成供读取的 CSV，保留原文件、原工作表、原始行号和分组列。两表没有共用 ID 时可留空。没有已确认的“组 → 页”关系时，只采用能确定归属的行。
+
+结果在 `architecture-page.json` 的 `planning_inputs`。 原架构也给了逐词分配时，`architecture_ownership_review` 会列出与本页候选重叠的其他页、暂缓或排除记录。查看 `assigned_rows` 的成员、`library_matches` 的原词和 `ownership_review` 中的跨页或未分配记录。无共用 ID 的同市场整句命中列于 `exact_phrase_candidates`，同 ID 但原词不同列于 `id_phrase_review`，均由编辑对照原件后采用。`missing_library_ids` 列出未对上的编号。`map_rows_read` 和 `library_rows_read` 统计扫过的记录数，单页完成度按该页成员的实际去向计算。分组、角色、原有来源列与本次读取的 CSV 行号均保留。
+
 ## 已有架构怎样接
 
 核对过的上游是 [b2b-seo-site-architecture v0.4.1 输出说明](https://github.com/jackzhang1314/b2b-seo-site-architecture/blob/bb52b6894887ca72ba72490fad50641d9ccdec76/skills/b2b-seo-site-architecture/references/output-contract.md)。按实际收到的版本及文件取用。

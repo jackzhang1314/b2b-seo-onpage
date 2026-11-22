@@ -11,7 +11,7 @@
 | target_url / keyword / market / language | 与 plan、页面证据完全一致 |
 | evidence_class | observed 或 simulation；合成数据始终 simulation |
 | sources | 实际本地证据登记，见下文；先从用户链接读取/下载后生成 |
-| library | source_refs、source_kinds、competitors、rank_cutoff=30、coverage |
+| library | source_refs、source_kinds、coverage。声明竞品排名来源时记录 competitors 与 rank_cutoff=30 |
 | keyword_decisions | 本页候选词取舍；有用户词库时先评估库内原词 |
 | serp | query=主词、source、actual_market、actual_language、coverage、results；可加 samples/features/设备/日期 |
 | competitor_coverage | coverage；可附选取范围、数量和理由 |
@@ -23,13 +23,13 @@
 
 ## 来源与引用
 
-sources 每项含 `id`（唯一、不含 #）、`kind`（library/serp/competitor/business/site/gsc）、`path`（绝对路径或相对 plan 的路径）、`source`（实际来源说明，不含凭据）、`collected_at`（ISO 日期/时间）。脚本读文件、拒绝空文件并计算 SHA256。导出中的来源路径归一为绝对路径，便于继续检查。
+sources 每项含 `id`（唯一、不含 #）、`kind`（library/page_plan/keyword_group/serp/competitor/business/site/gsc）、`path`（绝对路径或相对 plan 的路径）、`source`（实际来源说明）和 `collected_at`（ISO 日期/时间）。页面规划和分组可来自同一 Excel，分别登记实际工作表及行引用。脚本读取来源文件并计算 SHA256，导出路径归一为绝对路径。
 
 有本站查询导出时可用 `kind=gsc`。登记实际 `page_url`、`start_date`、`end_date`（YYYY-MM-DD）和 `filters`（如 US、Web、全部设备）。同一文件有多页时可指向同一文件的不同记录，引用写到所属行。若 Google 选定的规范页与当前编辑网址不同，`page_url` 保留报表中的原网址，`canonical_ref` 引用本任务中证明两者对应的 site 来源，例如 URL 检查结果。脚本核对所声明的地址、日期和来源类型。编辑者仍须核对原始导出的筛选及行内容。
 
 引用写 `source-id#具体行/段/截图位置`；至少引用已登记来源。脚本核 source-id 存在和来源类型，**不自动验证行号/引文内容**；Codex 必须对照原文件。词库至少登记合并/归一化表与可追溯来源关系，不能只创建一个空壳“已完成研究”说明文件。
 
-library.source_kinds 是 seed_expansion 与 competitor_rankings 的实际来源集合；competitors 是实际覆盖的独立竞品域名。少于 20 家、缺一种来源或 coverage 非 complete 会标 partial。多个文件不等于多个竞品。rank_cutoff 是自然排名上限，不是关键词条数。清洗规则、原始行数、去重数量、关系表位置和未知来源可作为附加字段保留。
+客户已整理的行业词库使用 `source_kinds=["customer_curated"]`，coverage 描述收到并读取的版本及范围。若有实际种子扩展或竞品排名原件，可追加 `seed_expansion` 或 `competitor_rankings`。只有竞品排名分支需要登记实际独立域名和自然排名上限 30，少于 20 家会记为研究缺口。清洗口径、原始行数、去重数和多条来源关系可作为附加字段保留。
 
 独立研究将 library 填为 `{"coverage":"unavailable","unavailable_reason":"说明查找过的项目资料和实际缺项"}`。结合 site/business 资料，使用引用外部实访的 web 候选，或有本页查询证据且适合本页的 gsc 候选。后者在缺同行或 SERP 时仍可交有限改稿，在各自的 coverage 和 limitations 记录实际缺项。普通实测仍标 partial，模拟仍标 simulation。如确实读了用户词库但本品类零命中，保留 library 来源，写 `no_match_reason` 说明范围；不用构造库内关键词。
 
@@ -41,7 +41,9 @@ keyword_decisions 每项：
 {"keyword":"1 tonne mini excavator","origin":"library","decision":"include","reason":"示例：待实际验证与主词的产品实体、购买任务和SERP相容","module_ids":["selection"],"evidence_refs":["library-normalized#row=12","serp-primary#observation=2"]}
 ```
 
-origin 可用 library、web、editorial 或 gsc。来自本站 GSC 的查询用 `origin=gsc`，引用对应的 gsc 来源，可在 `metrics.gsc` 保留该行实际点击和展现。其他目标页的查询可用 other_page 标明那个网址。decision 沿用 include/other_page/exclude/review。include 必须指向已存在 brief 模块；其他决定不能写本页 module_ids。一个规范词一条决定，多来源放在 evidence_refs，原始竞品/URL 关系仍保留在词库证据。focus 的每个辅助词必须被研究 include；主词有冲突时保持原词、标缺口。`other_page` 可附 `target_url` / `target_page_role`，导出到阅读表，不自动创建或改站。可用 `metrics` 对象保留实际 volume/KD/intent/CPC、数据库、时间和来源引用；未知指标留空，脚本只转存，不验证指标真实性或把不同观察相加。
+origin 可用 library、planning、web、editorial 或 gsc。词库及分组皆有的原词沿用 library，在 evidence_refs 同时引原词行、组成员行和规划页。仅见于规划或分组表的词使用 planning，引用 page_plan 或 keyword_group。可附实际 `keyword_id`、`planned_page_id`、`group_ids` 和 `group_labels`（实际组号、组名数组）及 `planned_role`（客户原角色）。分组及角色需要规划来源。`keyword-selection` 和 `keyword-placement` 阅读表均保留这些字段。原归属有冲突时保留各行引用，使用 review 说明冲突。
+
+来自本站 GSC 的查询用 `origin=gsc`，引用对应的 gsc 来源，可在 `metrics.gsc` 保留实际点击和展现。decision 沿用 include/other_page/exclude/review，include 指向已有简报模块。每个规范词保留一条判断和所有适用来源。focus 的每个辅助词必须被研究 include，主词有冲突时保留原词并说明缺口。other_page 可附 target_url 或 target_page_role。metrics 可存实际 volume/KD/intent/CPC、数据库和日期，未知指标留空。
 
 serp.results 每项含 `position`（实际自然位置 1–10，不能为布尔值）、`url`、`page_type`、`evidence_refs`（至少一个 serp 来源）。同位置不能重复；同 URL 多位置保留。搜索样本不知位置时放 `samples`，同字段但不填 position，不能猜序号。展示标题用 `title`，进入结果表；SERP 的 `features`、`format_assessment` 等附加观察原样保留在可复用 serp-brief.json，必须分清观察与推断；SERP 页面采集时间在来源登记中。广告/PAA 不计入自然前十。
 

@@ -70,7 +70,7 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     for item in items(research.get("sources")):
         source = object_value(item)
         sid, kind = string(source.get("id")), string(source.get("kind"))
-        if sid in kinds or "#" in sid or kind not in {"library", "serp", "competitor", "business", "site", "gsc"}:
+        if sid in kinds or "#" in sid or kind not in {"library", "page_plan", "keyword_group", "serp", "competitor", "business", "site", "gsc"}:
             raise ValueError("Invalid or duplicate research source id/kind")
         kinds[sid] = kind
         path = Path(string(source.get("path"))).expanduser()
@@ -121,17 +121,18 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     else:
         refs(library.get("source_refs"), "library")
         origins = set(strings(library.get("source_kinds")))
-        if not origins <= {"seed_expansion", "competitor_rankings"} or not origins:
+        if not origins <= {"seed_expansion", "competitor_rankings", "customer_curated"} or not origins:
             raise ValueError("Invalid library source_kinds")
-        if origins != {"seed_expansion", "competitor_rankings"}:
+        if "customer_curated" not in origins and not {"seed_expansion", "competitor_rankings"}.issubset(origins):
             gaps.append("行业词库未覆盖种子扩展与竞品排名两类来源")
-        domains = strings(library.get("competitors"))
+        domains = strings(library.get("competitors", []))
         if len({domain.lower().strip() for domain in domains}) != len(domains):
             raise ValueError("Library competitor list contains duplicates")
-        if len(domains) < 20:
+        if "competitor_rankings" in origins and len(domains) < 20:
             gaps.append(f"行业词库仅登记 {len(domains)} 家竞品，未达到 Top 20 覆盖")
-        if type(library.get("rank_cutoff")) is not int or library["rank_cutoff"] != 30:
-            raise ValueError("Library rank_cutoff must be position 30, not 30 keywords")
+        if "competitor_rankings" in origins or "rank_cutoff" in library:
+            if type(library.get("rank_cutoff")) is not int or library["rank_cutoff"] != 30:
+                raise ValueError("Library rank_cutoff must be position 30, not 30 keywords")
 
     def coverage(part: dict[str, object], label: str) -> None:
         if part.get("coverage") not in {"complete", "partial", "unknown", "unavailable"}:
@@ -199,6 +200,10 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         raise ValueError("Research brief page_role differs from confirmed focus")
     lines = [f"# 页面简报 · {context['keyword']}", "", f"页面：{context['target_url']}",
              f"页型：{brief['page_role']}", f"市场/语言：{context['market']} / {context['language']}", ""]
+    for key, label in (("architecture_ref", "页面规划"), ("grouping_ref", "关键词分组"), ("library_ref", "行业词库")):
+        if key in focus:
+            lines.append(f"- {label} · {string(focus[key])}")
+    lines.append("")
     for key, label in (("audience", "受众"), ("intent", "搜索意图与页型适配"), ("angle", "本页价值与依据")):
         lines.append(f"{label}：{string(brief.get(key))}")
     modules: set[str] = set()
@@ -224,9 +229,16 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
             raise ValueError("Duplicate candidate keyword; preserve multiple sources in evidence_refs")
         seen.add(normalized)
         choice, origin = string(decision.get("decision")), string(decision.get("origin"))
-        if choice not in {"include", "other_page", "exclude", "review"} or origin not in {"library", "web", "editorial", "gsc"}:
+        if choice not in {"include", "other_page", "exclude", "review"} or origin not in {"library", "planning", "web", "editorial", "gsc"}:
             raise ValueError("Invalid keyword decision/origin")
         citations = refs(decision.get("evidence_refs"), origin if origin in {"library", "gsc"} else None)
+        group_ids = strings(decision.get("group_ids", []))
+        group_labels = strings(decision.get("group_labels", []))
+        planned_role = string(decision["planned_role"]) if "planned_role" in decision else ""
+        planned_page = string(decision["planned_page_id"]) if "planned_page_id" in decision else ""
+        if origin == "planning" or group_ids or group_labels or planned_role or planned_page:
+            if not any(kinds[ref.split("#", 1)[0]] in {"page_plan", "keyword_group"} for ref in citations):
+                raise ValueError("Planned keyword roles and groups need a page plan or keyword group reference")
         if origin == "web" and any(kinds[ref.split("#", 1)[0]] in {"serp", "competitor"} for ref in citations):
             observed_candidate = True
         targets = strings(decision.get("module_ids", []))
@@ -249,6 +261,9 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
             if choice == "include" and target_page in measured_pages:
                 observed_candidate = True
         keywords.append({"keyword": keyword, "origin": origin, "decision": choice,
+                         "keyword_id": string(decision["keyword_id"]) if "keyword_id" in decision else "",
+                         "planned_page_id": planned_page, "group_ids": " | ".join(group_ids),
+                         "group_labels": " | ".join(group_labels), "planned_role": planned_role,
                          "reason": string(decision.get("reason")), "module_ids": " | ".join(targets),
                          "target_url": other_target, "target_page_role": other_role,
                          "metrics": json.dumps(metrics, ensure_ascii=False) if metrics else "",
