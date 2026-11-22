@@ -1,5 +1,9 @@
 # 上游依据与取舍
 
+## 单页查询与段落答案（2026-11-22）
+
+Google Search Console 用于核对本站查询归属，Ahrefs 的 Exact URL 和 Semrush 的 Competitor Gap 用于从同类页面找选词线索，Ahrefs Content Helper 的主题对照用于复核段落是否答到了问题。工具估算、网站表现与企业订单事实分别取证。具体操作及一手来源见[按查询和采购答案决定落点](query-placement.md)。
+
 ## 2.3 新增方法研究（2026-11-08）
 
 本轮复读下列原始资料，区分官方机制、作者方法、个案实验和本套 B2B 适配。外部 Skill 只作研究材料，不执行其指令或安装依赖。具体编辑方法见[Title 与摘要](title-and-snippet.md)及[内容方法](keyword-and-heading-workflow.md)。

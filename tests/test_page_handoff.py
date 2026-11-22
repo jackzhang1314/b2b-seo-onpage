@@ -109,6 +109,77 @@ class PageHandoffTest(unittest.TestCase):
             with (self.root / out / "implementation-observations.csv").open(encoding="utf-8-sig") as stream:
                 self.assertEqual(next(csv.DictReader(stream))["observation"], expected)
 
+    def test_existing_page_queries_keep_their_reported_url_and_period(self) -> None:
+        page_url = CONTEXT["target_url"]
+        guide_url = page_url + "guide/"
+        canonical = "https://fixture.example/catalog/steel-pins/"
+        (self.root / "page.html").write_text("<main><h1>Steel Pins</h1></main>")
+        (self.root / "inspection.txt").write_text(f"Synthetic URL inspection: {page_url} has Google-selected canonical {canonical}")
+        self.table("queries.csv", [
+            {"page": page_url, "query": "steel pins", "clicks": "4"},
+            {"page": guide_url, "query": "how to fit pins", "clicks": "8"},
+            {"page": canonical, "query": "steel pins", "clicks": "3"}])
+        self.run_cli("inspect", "--html", "page.html", "--url", page_url, "--keyword", "steel pins",
+                     "--market", "UK", "--language", "en", "--collected-at", "2026-11-21",
+                     "--stage", "supplied_html", "--out", "before")
+        common = {"source": "synthetic fixture", "collected_at": "2026-11-21"}
+        gsc = {**common, "kind": "gsc", "path": "queries.csv", "start_date": "2026-10-01",
+               "end_date": "2026-10-31", "filters": "UK, Web, all devices"}
+        category = {**gsc, "id": "category", "page_url": page_url}
+        primary: dict[str, object] = {"keyword": "steel pins", "origin": "gsc", "decision": "include",
+            "module_ids": ["catalog"], "reason": "Relevant observed query", "evidence_refs": ["category#row=2"],
+            "metrics": {"gsc": {"clicks": 4}}}
+        research = {**CONTEXT, "evidence_class": "simulation",
+            "sources": [category, {**gsc, "id": "guide", "page_url": guide_url},
+                        {**common, "id": "page", "kind": "site", "path": "page.html"},
+                        {**common, "id": "inspection", "kind": "site", "path": "inspection.txt"}],
+            "library": {"coverage": "unavailable", "unavailable_reason": "No industry export"},
+            "serp": {"query": "steel pins", "source": "no SERP", "actual_market": "unknown",
+                     "actual_language": "unknown", "coverage": "unavailable", "results": []},
+            "competitor_coverage": {"coverage": "unavailable"}, "competitor_pages": [],
+            "keyword_decisions": [primary, {"keyword": "how to fit pins", "origin": "gsc",
+                "decision": "other_page", "target_url": guide_url, "reason": "Separate guide",
+                "evidence_refs": ["guide#row=3"]}],
+            "brief": {"page_role": "category", "audience": "Buyers", "intent": "Select steel pins",
+                "angle": "Keep known demand", "modules": [{"id": "catalog", "heading": "Steel Pins",
+                "task": "Keep category identity", "evidence_refs": ["page#h1"]}]}}
+        plan = {**CONTEXT, "intent_fit": "fit", "intent_reason": "This catalog serves buyers",
+            "focus": {"page_role": "category", "scope": "full_page", "primary_keyword": "steel pins",
+                      "buyer_task": "Choose a steel pin"},
+            "review_outcome": "retain", "retention_reason": "Original wording identifies this catalog",
+            "keyword_placement": [{"keyword": "steel pins", "role": "primary", "location": "h1",
+                "expression": "Steel Pins", "source_ref": "page#h1", "reason": "The current H1 fits"}],
+            "changes": [], "research": research}
+
+        def check(output: str, success: bool = True) -> str:
+            self.save("plan.json", plan)
+            return self.run_cli("check-plan", "--evidence", "before/page-evidence.json", "--plan", "plan.json",
+                                "--out", output, success=success)
+
+        check("scoped")
+        with (self.root / "scoped/keyword-selection.csv").open(encoding="utf-8-sig") as stream:
+            first, other = csv.DictReader(stream)
+        self.assertEqual((first["origin"], json.loads(first["metrics"])), ("gsc", {"gsc": {"clicks": 4}}))
+        self.assertEqual((other["decision"], other["target_url"]), ("other_page", guide_url))
+        self.assertEqual(first["research_status"], "simulation")
+        primary["evidence_refs"] = ["guide#row=3"]
+        self.assertIn("GSC query evidence", check("wrong-page", False))
+        primary.update(origin="editorial", evidence_refs=["page#h1", "guide#row=3"])
+        self.assertIn("GSC query evidence", check("wrong-supporting-page", False))
+        primary["origin"] = "gsc"
+        primary["evidence_refs"] = ["page#h1"]
+        self.assertIn("gsc evidence reference", check("wrong-kind", False))
+        category.update(page_url=canonical, canonical_ref="inspection#result")
+        primary.update(evidence_refs=["category#row=4"], metrics={"gsc": {"clicks": 3}})
+        check("canonical")
+        saved = json.loads((self.root / "canonical/research-sources.json").read_text())[0]
+        self.assertEqual((saved["page_url"], saved["canonical_ref"], saved["start_date"], saved["filters"]),
+                         (canonical, "inspection#result", "2026-10-01", "UK, Web, all devices"))
+        category["canonical_ref"] = "guide#row=3"
+        self.assertIn("site evidence reference", check("wrong-canonical-proof", False))
+        category["end_date"] = "2026-09-30"
+        self.assertIn("start_date must not follow", check("wrong-date", False))
+
 
 if __name__ == "__main__":
     unittest.main()

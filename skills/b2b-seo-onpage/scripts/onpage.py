@@ -22,7 +22,7 @@ from urllib.parse import urljoin, urlsplit
 from architecture_page import read_page
 from onpage_research import validate_research
 
-VERSION = "2.6.0"
+VERSION = "2.7.0-rc.1"
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
     "address", "article", "aside", "blockquote", "br", "dd", "div", "dl", "dt", "fieldset", "figcaption",

@@ -23,13 +23,15 @@
 
 ## 来源与引用
 
-sources 每项含 `id`（唯一、不含 #）、`kind`（library/serp/competitor/business/site）、`path`（绝对路径或相对 plan 的路径）、`source`（实际来源说明，不含凭据）、`collected_at`（ISO 日期/时间）。脚本读文件、拒绝空文件并计算 SHA256。导出中的来源路径归一为绝对路径，便于继续检查。
+sources 每项含 `id`（唯一、不含 #）、`kind`（library/serp/competitor/business/site/gsc）、`path`（绝对路径或相对 plan 的路径）、`source`（实际来源说明，不含凭据）、`collected_at`（ISO 日期/时间）。脚本读文件、拒绝空文件并计算 SHA256。导出中的来源路径归一为绝对路径，便于继续检查。
+
+有本站查询导出时可用 `kind=gsc`。登记实际 `page_url`、`start_date`、`end_date`（YYYY-MM-DD）和 `filters`（如 US、Web、全部设备）。同一文件有多页时可指向同一文件的不同记录，引用写到所属行。若 Google 选定的规范页与当前编辑网址不同，`page_url` 保留报表中的原网址，`canonical_ref` 引用本任务中证明两者对应的 site 来源，例如 URL 检查结果。脚本核对所声明的地址、日期和来源类型。编辑者仍须核对原始导出的筛选及行内容。
 
 引用写 `source-id#具体行/段/截图位置`；至少引用已登记来源。脚本核 source-id 存在和来源类型，**不自动验证行号/引文内容**；Codex 必须对照原文件。词库至少登记合并/归一化表与可追溯来源关系，不能只创建一个空壳“已完成研究”说明文件。
 
 library.source_kinds 是 seed_expansion 与 competitor_rankings 的实际来源集合；competitors 是实际覆盖的独立竞品域名。少于 20 家、缺一种来源或 coverage 非 complete 会标 partial。多个文件不等于多个竞品。rank_cutoff 是自然排名上限，不是关键词条数。清洗规则、原始行数、去重数量、关系表位置和未知来源可作为附加字段保留。
 
-独立研究将 library 填为 `{"coverage":"unavailable","unavailable_reason":"说明查找过的项目资料和实际缺项"}`。登记实际的 site/business 与 serp/competitor 来源，至少一个 web 候选引用真实外部观察。使用者可以拿到整页改稿；普通实测仍标 partial，模拟仍标 simulation。如确实读了用户词库但本品类零命中，保留 library 来源，写 `no_match_reason` 说明范围；不用构造库内关键词。
+独立研究将 library 填为 `{"coverage":"unavailable","unavailable_reason":"说明查找过的项目资料和实际缺项"}`。结合 site/business 资料，使用引用外部实访的 web 候选，或有本页查询证据且适合本页的 gsc 候选。后者在缺同行或 SERP 时仍可交有限改稿，在各自的 coverage 和 limitations 记录实际缺项。普通实测仍标 partial，模拟仍标 simulation。如确实读了用户词库但本品类零命中，保留 library 来源，写 `no_match_reason` 说明范围；不用构造库内关键词。
 
 ## 候选词、SERP 与页面对照
 
@@ -39,7 +41,7 @@ keyword_decisions 每项：
 {"keyword":"1 tonne mini excavator","origin":"library","decision":"include","reason":"示例：待实际验证与主词的产品实体、购买任务和SERP相容","module_ids":["selection"],"evidence_refs":["library-normalized#row=12","serp-primary#observation=2"]}
 ```
 
-origin：library/web/editorial。decision：include/other_page/exclude/review。include 必须指向已存在 brief 模块；其他决定不能写本页 module_ids。一个规范词一条决定，多来源放在 evidence_refs，原始竞品/URL 关系仍保留在词库证据。focus 的每个辅助词必须被研究 include；主词有冲突时保持原词、标缺口。`other_page` 可附 `target_url` / `target_page_role`，导出到阅读表，不自动创建或改站。可用 `metrics` 对象保留实际 volume/KD/intent/CPC、数据库、时间和来源引用；未知指标留空，脚本只转存，不验证指标真实性或把不同观察相加。
+origin 可用 library、web、editorial 或 gsc。来自本站 GSC 的查询用 `origin=gsc`，引用对应的 gsc 来源，可在 `metrics.gsc` 保留该行实际点击和展现。其他目标页的查询可用 other_page 标明那个网址。decision 沿用 include/other_page/exclude/review。include 必须指向已存在 brief 模块；其他决定不能写本页 module_ids。一个规范词一条决定，多来源放在 evidence_refs，原始竞品/URL 关系仍保留在词库证据。focus 的每个辅助词必须被研究 include；主词有冲突时保持原词、标缺口。`other_page` 可附 `target_url` / `target_page_role`，导出到阅读表，不自动创建或改站。可用 `metrics` 对象保留实际 volume/KD/intent/CPC、数据库、时间和来源引用；未知指标留空，脚本只转存，不验证指标真实性或把不同观察相加。
 
 serp.results 每项含 `position`（实际自然位置 1–10，不能为布尔值）、`url`、`page_type`、`evidence_refs`（至少一个 serp 来源）。同位置不能重复；同 URL 多位置保留。搜索样本不知位置时放 `samples`，同字段但不填 position，不能猜序号。展示标题用 `title`，进入结果表；SERP 的 `features`、`format_assessment` 等附加观察原样保留在可复用 serp-brief.json，必须分清观察与推断；SERP 页面采集时间在来源登记中。广告/PAA 不计入自然前十。
 

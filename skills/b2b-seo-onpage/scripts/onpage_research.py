@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 import hashlib
 import json
 from pathlib import Path
@@ -70,7 +70,7 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     for item in items(research.get("sources")):
         source = object_value(item)
         sid, kind = string(source.get("id")), string(source.get("kind"))
-        if sid in kinds or "#" in sid or kind not in {"library", "serp", "competitor", "business", "site"}:
+        if sid in kinds or "#" in sid or kind not in {"library", "serp", "competitor", "business", "site", "gsc"}:
             raise ValueError("Invalid or duplicate research source id/kind")
         kinds[sid] = kind
         path = Path(string(source.get("path"))).expanduser()
@@ -78,10 +78,20 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         data = path.read_bytes()
         if not data.strip():
             raise ValueError("Research evidence file is empty")
-        date = string(source.get("collected_at"))
-        datetime.fromisoformat(date.replace("Z", "+00:00"))
-        sources.append({"id": sid, "kind": kind, "path": str(path), "source": string(source.get("source")),
-                        "collected_at": date, "sha256": hashlib.sha256(data).hexdigest()})
+        collected_at = string(source.get("collected_at"))
+        datetime.fromisoformat(collected_at.replace("Z", "+00:00"))
+        snapshot = {"id": sid, "kind": kind, "path": str(path), "source": string(source.get("source")),
+                    "collected_at": collected_at, "sha256": hashlib.sha256(data).hexdigest()}
+        if kind == "gsc":
+            start = date.fromisoformat(string(source.get("start_date")))
+            end = date.fromisoformat(string(source.get("end_date")))
+            if start > end:
+                raise ValueError("GSC start_date must not follow end_date")
+            snapshot.update(page_url=url(source.get("page_url")), start_date=start.isoformat(),
+                            end_date=end.isoformat(), filters=string(source.get("filters")))
+            if "canonical_ref" in source:
+                snapshot["canonical_ref"] = string(source["canonical_ref"])
+        sources.append(snapshot)
 
     def refs(value: object, required_kind: str | None = None) -> list[str]:
         result = strings(value)
@@ -91,14 +101,23 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
             raise ValueError(f"Research requires a {required_kind} evidence reference")
         return result
 
+    gsc_pages: dict[str, set[str]] = {}
+    for snapshot in sources:
+        if snapshot["kind"] == "gsc":
+            pages = {snapshot["page_url"]}
+            if "canonical_ref" in snapshot:
+                refs([snapshot["canonical_ref"]], "site")
+                pages.add(url(context["target_url"]))
+            gsc_pages[snapshot["id"]] = pages
+
     library = object_value(research.get("library"))
     independent = library.get("coverage") == "unavailable" and "unavailable_reason" in library
     if independent:
         gaps.append("未取得用户行业词库：" + string(library["unavailable_reason"]))
         if any(library.get(k) for k in ("source_refs", "source_kinds", "competitors")) or "library" in kinds.values():
             raise ValueError("Independent research cannot claim customer library inputs")
-        if not {"serp", "competitor"}.intersection(kinds.values()) or not {"site", "business"}.intersection(kinds.values()):
-            raise ValueError("Independent research needs external observations and site or business evidence")
+        if not {"serp", "competitor", "gsc"}.intersection(kinds.values()) or not {"site", "business"}.intersection(kinds.values()):
+            raise ValueError("Independent research needs observed queries or competitor evidence plus site or business evidence")
     else:
         refs(library.get("source_refs"), "library")
         origins = set(strings(library.get("source_kinds")))
@@ -196,7 +215,7 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     keywords: list[dict[str, str]] = []
     included: set[str] = set()
     seen: set[str] = set()
-    observed_web_candidate = False
+    observed_candidate = False
     for item in items(research.get("keyword_decisions")):
         decision = object_value(item)
         keyword = string(decision.get("keyword"))
@@ -205,11 +224,11 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
             raise ValueError("Duplicate candidate keyword; preserve multiple sources in evidence_refs")
         seen.add(normalized)
         choice, origin = string(decision.get("decision")), string(decision.get("origin"))
-        if choice not in {"include", "other_page", "exclude", "review"} or origin not in {"library", "web", "editorial"}:
+        if choice not in {"include", "other_page", "exclude", "review"} or origin not in {"library", "web", "editorial", "gsc"}:
             raise ValueError("Invalid keyword decision/origin")
-        citations = refs(decision.get("evidence_refs"), "library" if origin == "library" else None)
+        citations = refs(decision.get("evidence_refs"), origin if origin in {"library", "gsc"} else None)
         if origin == "web" and any(kinds[ref.split("#", 1)[0]] in {"serp", "competitor"} for ref in citations):
-            observed_web_candidate = True
+            observed_candidate = True
         targets = strings(decision.get("module_ids", []))
         if not set(targets) <= modules or (choice == "include" and not targets):
             raise ValueError("Included keywords need existing brief module_ids")
@@ -222,14 +241,21 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         if (other_target or other_role) and choice != "other_page":
             raise ValueError("Other target URL/role only belongs to an other_page decision")
         metrics = object_value(decision["metrics"]) if "metrics" in decision else {}
+        measured_pages = {page for ref in citations for page in gsc_pages.get(ref.split("#", 1)[0], ())}
+        if measured_pages and (origin == "gsc" or choice == "include" or "gsc" in metrics):
+            target_page = string(context["target_url"])
+            if measured_pages.isdisjoint({target_page, other_target}):
+                raise ValueError("GSC query evidence must identify the current page or the explicit other_page URL")
+            if choice == "include" and target_page in measured_pages:
+                observed_candidate = True
         keywords.append({"keyword": keyword, "origin": origin, "decision": choice,
                          "reason": string(decision.get("reason")), "module_ids": " | ".join(targets),
                          "target_url": other_target, "target_page_role": other_role,
                          "metrics": json.dumps(metrics, ensure_ascii=False) if metrics else "",
                          "evidence_refs": " | ".join(citations)})
     if independent:
-        if not observed_web_candidate:
-            raise ValueError("Independent research needs an externally observed candidate with matching evidence")
+        if not observed_candidate:
+            raise ValueError("Independent research needs an externally observed candidate or an included GSC query for this page")
     elif not any(row["origin"] == "library" for row in keywords):
         if not library.get("no_match_reason"):
             raise ValueError("Research must evaluate candidates from the industry library")

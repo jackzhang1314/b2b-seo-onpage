@@ -1,41 +1,42 @@
 {
   "schema_version": 1,
   "name": "b2b-seo-onpage",
-  "version": "2.6.0",
-  "release_ref": "v2.6.0",
+  "version": "2.7.0-rc.1",
+  "release_ref": "codex/onpage-query-placement-candidate",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-22T09:36:36+08:00",
+  "prepared_at": "2026-11-22T10:11:05+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
-    "branch": "main",
+    "branch": "codex/onpage-query-placement-candidate",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "v2.4.0",
-    "commit": "095983dfcaac134259f760e1def502c989cd4d95"
+    "release_ref": "v2.6.0",
+    "commit": "2dbbc59c4edb370e0dc04873bb4b9013ddce95e7"
   },
-  "runtime_file_count": 16,
-  "file_count_excluding_manifest": 17,
+  "runtime_file_count": 17,
+  "file_count_excluding_manifest": 18,
   "files_sha256": {
-    "README.md": "a0496a3bc00c15ceda634066b605152f37b6ee15892140f8e1f059897395624f",
-    "skills/b2b-seo-onpage/SKILL.md": "93567e03bb58a2b3d18d254b4b7c87dea4c782ee273769feaaf0cf5372454cb0",
+    "README.md": "72bd9ab23f74949bd2bf0fd7689abb16bef3ada26c608561137824907dba509d",
+    "skills/b2b-seo-onpage/SKILL.md": "72922bbf5ad05f37fa5e174e5c53075716c9440d9a53f5890a5aff9ea03b160c",
     "skills/b2b-seo-onpage/agents/openai.yaml": "560e2590e60573811f7c4972e3f9d0ae391cb6c385f6bbc3b5b138ce2c71e537",
     "skills/b2b-seo-onpage/references/architecture-to-page.md": "8000bcafdef7df0129407cdc20962b9f988bf5f5e19d7d008e19352f0f25e290",
     "skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv": "a1439f35852fa63106905821ce7f36720e039c2d5dcd545adb7af0312ff95388",
     "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
-    "skills/b2b-seo-onpage/references/category-modifier-research.md": "7b2b3865d11f6c7ec7f272d20a124c6945f2e91979c1a90462ea3a833bf2f6b3",
+    "skills/b2b-seo-onpage/references/category-modifier-research.md": "9312d3838ed4b9aecb7184e5ae16b10239aacff64e3670368be0f66a149823cf",
     "skills/b2b-seo-onpage/references/data-and-commands.md": "02a01bb3c79b8589e5a4ddf8a45665bfa0f9c9a0b043e57b745f32b7f3edb5dd",
     "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "41da1ce838f792ac69bb60f721ebd5e216f5ec4256698627a421442289984170",
-    "skills/b2b-seo-onpage/references/research-contract.md": "72af6f7b88c5039cf910a12cf9ae821bd40c4f221211c7706bbdc2c6e6bdaaa6",
+    "skills/b2b-seo-onpage/references/query-placement.md": "fcfa660cd0d21870154f633e0477fce385a0dc5c58e8be5bee8e70530f0323cc",
+    "skills/b2b-seo-onpage/references/research-contract.md": "38928bc83aed941e5c738464232a98c98664168be64eeab6fc6ed74ab6ced485",
     "skills/b2b-seo-onpage/references/research-workflow.md": "3feb4b3fbb77c95df227d59b80dcb2b6d8d47f4c30ee0db6797d6d201c05641e",
     "skills/b2b-seo-onpage/references/title-and-snippet.md": "35068e338ee11fadfcfff58388212c42906ef10c9b2aa3d33dd8996ecbbcf0a7",
-    "skills/b2b-seo-onpage/references/upstream.md": "9510ff87f87b26e5dcd965085b82e28ee81d4e738de26455436dfdd7ee3781f4",
+    "skills/b2b-seo-onpage/references/upstream.md": "4483b33ffab8c32c59505211ae0c9b371cdbc8ee68f7dd1fcf0d0f978d679233",
     "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "b824601f7dc3f30e502a2454737d14f60bfe5e1f8c0f13987d88b1801c8d44fc",
     "skills/b2b-seo-onpage/scripts/architecture_page.py": "edc77de5cdeb2d4b7d219f47093863a2d113b521a60e72b4f6b26bb63532baa9",
-    "skills/b2b-seo-onpage/scripts/onpage.py": "a5f21c0f8efb1cc00dd277394c3b1a94d686f30c0a7a47218aea67b10f667c97",
-    "skills/b2b-seo-onpage/scripts/onpage_research.py": "564b9901e367f1904f15029ffbcab0e43abeb0ebef6a6d7e17f94b7f4e16b4ea"
+    "skills/b2b-seo-onpage/scripts/onpage.py": "58a69787307147f131566fddfaccdbb6284798b7b8cde60a476806c5661d61e7",
+    "skills/b2b-seo-onpage/scripts/onpage_research.py": "11547b7e18efc63528bcc168a9eaac5686c6c79f9eada465f577892f3334c18b"
   },
   "manifest_self_excluded": true,
   "wordpress_harness_contract": {
@@ -44,36 +45,23 @@
     "reviewed_distribution_revision": 19,
     "availability": "Reuse actual installed Harness and current site contract; Harness is not bundled or installed by this package."
   },
-  "verification_scope": "Two noindex Hostinger demos with CMS and anonymous public HTML readback and restoration. Search outcomes were not measured.",
+  "verification_scope": "Local candidate. First-party query evidence and a side-by-side editorial exercise; no live CMS or traffic measurement in this iteration.",
   "verification": {
-    "existing_regressions": 24,
-    "new_cli_regressions": 4,
+    "previous_regressions": 28,
+    "new_cli_regressions": 1,
     "strict_mypy_source_files_including_tests": 4,
     "ruff": "passed",
     "skill_format": "passed",
-    "local_markdown_links": 37,
-    "upstream_architecture": {
-      "version": "0.4.1",
-      "commit": "bb52b6894887ca72ba72490fad50641d9ccdec76"
-    },
-    "live_test": {
-      "sites": 2,
-      "restored_public_pages": 5,
-      "drafts_saved": 1,
-      "checks": "CMS + anonymous public HTML; authenticated admin editor reopening and visual review were not recorded",
-      "draft_repeat": "same ID, no changes",
-      "target_market_google": "verification page; supplier observations via general search",
-      "customer_industry_library": "unavailable for these two demo sites"
-    },
-    "offline_editorial_trial": "Five page roles plus partial inputs, synthetic industry and architecture data."
+    "local_markdown_links": 40,
+    "editorial_comparison": "Independent uses of each skill with the same synthetic company, source material and request. Both retained the logo intent and answered the order minimum.",
+    "cli_case": "The candidate preserved a mixed-source query plan, separated category and guide, and kept the case labelled simulation."
   },
-  "distribution": "github-release",
+  "distribution": "local-candidate",
   "modifier_library": {
     "terms": 273,
     "groups": 14,
     "source_linked_terms": 221,
     "editorial_search_seeds": 52,
     "distinct_source_urls": 79
-  },
-  "verified_runtime_commit": "d6c3380134ee2e93a1bd4da8e2d8654ae91af045"
+  }
 }
