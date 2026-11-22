@@ -2,24 +2,24 @@
   "schema_version": 1,
   "name": "b2b-seo-onpage",
   "version": "2.6.0",
-  "release_ref": "codex/onpage-architecture-live-v2.6.0",
+  "release_ref": "v2.6.0",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-22T00:03:58+08:00",
+  "prepared_at": "2026-11-22T09:36:36+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
-    "branch": "codex/onpage-architecture-live-v2.6.0",
+    "branch": "main",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "codex/onpage-category-research-v2.5.0",
-    "commit": "69a097b666493fd5fbcd6b9653b9d2f782abcbef"
+    "release_ref": "v2.4.0",
+    "commit": "095983dfcaac134259f760e1def502c989cd4d95"
   },
   "runtime_file_count": 16,
   "file_count_excluding_manifest": 17,
   "files_sha256": {
-    "README.md": "73b3b2290333d2a7e9fdca36e52a987819872a76b41b4561d8988d56eadd627d",
+    "README.md": "a0496a3bc00c15ceda634066b605152f37b6ee15892140f8e1f059897395624f",
     "skills/b2b-seo-onpage/SKILL.md": "93567e03bb58a2b3d18d254b4b7c87dea4c782ee273769feaaf0cf5372454cb0",
     "skills/b2b-seo-onpage/agents/openai.yaml": "560e2590e60573811f7c4972e3f9d0ae391cb6c385f6bbc3b5b138ce2c71e537",
     "skills/b2b-seo-onpage/references/architecture-to-page.md": "8000bcafdef7df0129407cdc20962b9f988bf5f5e19d7d008e19352f0f25e290",
@@ -44,7 +44,7 @@
     "reviewed_distribution_revision": 19,
     "availability": "Reuse actual installed Harness and current site contract; Harness is not bundled or installed by this package."
   },
-  "verification_scope": "Standalone local build. Two noindex Hostinger demos; per-page CMS and anonymous HTTP HTML readback and restoration. Search outcomes were not measured.",
+  "verification_scope": "Two noindex Hostinger demos with CMS and anonymous public HTML readback and restoration. Search outcomes were not measured.",
   "verification": {
     "existing_regressions": 24,
     "new_cli_regressions": 4,
@@ -67,12 +67,13 @@
     },
     "offline_editorial_trial": "Five page roles plus partial inputs, synthetic industry and architecture data."
   },
-  "distribution": "local",
+  "distribution": "github-release",
   "modifier_library": {
     "terms": 273,
     "groups": 14,
     "source_linked_terms": 221,
     "editorial_search_seeds": 52,
     "distinct_source_urls": 79
-  }
+  },
+  "verified_runtime_commit": "d6c3380134ee2e93a1bd4da8e2d8654ae91af045"
 }

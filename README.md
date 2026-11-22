@@ -2,19 +2,29 @@
 
 从目标关键词和页面开始，结合行业词库、目标市场 SERP 与竞品内容，完成页面简报、Title、描述、H 标签、正文和内链改稿。需要修改 WordPress 页面时，与已有 WordPress Build Harness 配合完成保存和回读。
 
-**本地版本 v2.6.0。** Codex 先从你提供的行业词库找本品类的 B 端属性词，然后用产品和可能的采购用语做 Google 搜索，找到外贸 B2B 同行独立站，实读首页、产品集合页和详情页，再根据本页业务推荐标题。也支持文章、能力和应用页的简报与改稿。需要写入 WordPress 时复用已有 Build Harness 和站点项目。
+**当前版本 v2.6.0，可独立安装。** Codex 先从你的行业词库找采购用语，再用“产品＋候选属性词”去 Google 找同行独立站，按页型查看实际标题。它会结合企业能接的订单，把相容的属性写进同一个 SEO 标题，并将相关查询安排到 H1、H2/H3 和对应段落。已有网站架构时，可直接提供架构目录、HTML 或 Markdown。
 
 ## 安装
 
-把本版 ZIP 或其解压目录交给 Codex，发送这段话即可安装本地版本。
+把下面这段发给 Codex 即可安装固定版本。
 
 ```text
-请从我给你的本地包安装 skills/b2b-seo-onpage，核对 RELEASE.json 中的版本和文件摘要。
-已有相同内容就复用。升级时先备份同名旧版和本地定制，保留较新版本。
-安装后核对本机能调用的版本，告诉我怎样开始。
+请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.6.0/skills/b2b-seo-onpage
+已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
+安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库，网页工具和站点权限沿用当前环境。上个公开版本另有[固定版安装说明](https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.4.0)。
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.6.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.6.0/b2b-seo-onpage-2.6.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.6.0/b2b-seo-onpage-2.6.0.zip.sha256)
+
+也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
+
+```sh
+python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.6.0 --path skills/b2b-seo-onpage
+```
+
+宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
 
 ## 第一次使用，提供什么
 
@@ -65,6 +75,8 @@
 
 可以直接说“用 $b2b-seo-onpage。架构、行业词库和公司资料在这个文件夹，目标页面是这个 URL。请尽量把相容的采购属性自然组合进一个 SEO Title，给出 H1、H2/H3 和实际段落。已有归属的主词沿用；没有架构就自行研究这一页。” 查看[架构交接和 H 标签实例](skills/b2b-seo-onpage/references/architecture-to-page.md)以及[五种页型的标题示例](skills/b2b-seo-onpage/references/title-and-snippet.md)。
 
+例如，一家按买家设计印刷、接受批量订单的邮寄盒厂家，可以把集合页的 SEO 标题写为 `Custom Printed Mailer Box Manufacturer for Bulk Orders`。H1 用 `Custom Printed Mailer Boxes` 点明类目。H2 `Planning a Bulk Mailer Box Order` 说明询价需要哪些资料，下面的 H3 `Artwork and Box Dimensions` 给出图稿和尺寸要求。
+
 ## 配合 WordPress Build Harness 使用
 
 On-page负责判断“应该怎样改、为什么”；Harness负责找到该站真实的编辑位置、实施与验收。Codex在同一个任务里衔接，你不需要手动在几个Skill之间搬运文案。
@@ -86,6 +98,8 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 ```
 
 上例授权本地实施。只要文案时改成“这次只交改稿”；需要线上修改时说明线上目标和范围。Codex会沿用同一任务已有授权。已有模板不一定读取主编辑器，所以会先核实际字段；单页优化不会默认重置全站SEO、开放索引、重新建站或覆盖数据库。详细分工见[WordPress协作与实施](skills/b2b-seo-onpage/references/wordpress-harness-handoff.md)。
+
+已上线的网站可以这样说：“用 `$b2b-seo-onpage` 和这个项目的 WordPress Build Harness，更新【原网址】的 SEO 标题、采购指南 H2 和对应段落。词库和企业资料在【目录】。改完请读回 WordPress 字段和该网址实际显示的内容。” 如果要新增文章，可以指定“在【站点项目】把【选题】保存成草稿，给我后台编辑链接”。
 
 也可以从Harness开始：“用WordPress Build Harness继续这个网站，本页SEO研究与改稿使用已安装的 `$b2b-seo-onpage`，然后在刚才约定的目标完成修改和回读。”已有Content/Design负责人继续持有站点任务，SEO Skill提供研究和文案，不让流程重新开始。
 
@@ -109,8 +123,6 @@ v2.6.0 接收站点架构交付，按页型组合多个采购属性，给出 H �
 
 v2.5.0 引入 14 组、273 个英文候选表达。221 个附有原页对应表达，52 个为编辑提出的检索种子。品类研究从你的行业词库开始，再用 Google 找同行、按页型读实际页面。安装文件和验证范围见 [RELEASE.json](RELEASE.json)。
 
-2.4.0已通过24项On-page回归、两个脚本的严格类型检查、lint、Skill格式及文档链接检查。协作说明对照Harness 2.39.24、分发修订19的实际接口编写。完整WordPress端到端实测尚未完成，不宣称本版已通过完整CMS实施验收。2.3.0的公开安装与资料引导已单独演练；此前9个离线合成场景及35项语义核对属于2.3.0基础版本。这些检查均不证明真实客户排名或询盘增长。
-
-更新说明：2.4明确SEO研究与WordPress实施的分工、字段映射、实际写入和回读；研究与改稿数据接口不变。2.3的按页型写Title/摘要、竞品内容取舍及效果解释继续保留。方法来源及取舍见 [references/upstream.md](skills/b2b-seo-onpage/references/upstream.md)。
+v2.4.0 确立了 WordPress Harness 协作方式，当时完成了 24 项 On-page 回归、类型、代码及文档链接检查。v2.3.0 演练过公开安装和资料引导。此前版本的标题、摘要及竞品分析方法继续沿用。[方法来源与取舍](skills/b2b-seo-onpage/references/upstream.md)
 
 后续安装优先使用固定版本，发布记录见 [Releases](https://github.com/jackzhang1314/b2b-seo-onpage/releases)。
