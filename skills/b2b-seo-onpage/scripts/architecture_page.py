@@ -4,6 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 import csv
 import json
+import re
 from pathlib import Path
 from typing import Iterator
 from unicodedata import normalize
@@ -135,6 +136,67 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
     return result
 
 
+def id_list(value: str) -> list[str]:
+    """List cells in architecture exports use newlines; normalized customer tables may use separators."""
+    return [part.strip() for part in re.split(r"[\n,;|]", value) if part.strip()]
+
+
+def page_design(directory: Path, page: dict[str, str], market: str, language: str) -> dict[str, object]:
+    template = page.get("template_id", "")
+    page_id = page["id"]
+    offerings = set(id_list(page.get("offering_ids", "")))
+    gaps: list[str] = []
+
+    def selected_rows(name: str) -> Iterator[dict[str, str]]:
+        path = directory / (name + ".csv")
+        if not path.is_file():
+            return
+        for row in rows(path, {"id"}):
+            if not in_plan_scope(row, market, language):
+                continue
+            if row.get("page_id") and row["page_id"] != page_id:
+                continue
+            if row.get("variants") and page.get("variant", "") not in id_list(row["variants"]):
+                continue
+            if row.get("offering_ids") and offerings.isdisjoint(id_list(row["offering_ids"])):
+                continue
+            yield row
+
+    def this_template(row: dict[str, str]) -> bool:
+        return (row.get("template_id") == template and bool(template)
+                or row.get("page_id") == page_id and not row.get("template_id"))
+
+    modules = [row for row in selected_rows("design-modules") if this_template(row)]
+    modules.sort(key=lambda row: int(row["order"]) if row.get("order", "").isdigit() else 10**9)
+    linked_fields = {fid for module in modules for fid in id_list(module.get("field_ids", ""))}
+    attributes: list[dict[str, str]] = []
+    for row in selected_rows("product-attributes"):
+        bindings = json.loads(row.get("detail_bindings") or "[]")
+        if not isinstance(bindings, list) or not all(isinstance(b, dict) for b in bindings):
+            raise ValueError(f"Invalid detail_bindings at {row['source_file']} row {row['source_row']}")
+        detail = [b for b in bindings if template and b.get("template_id") == template
+                  and (not b.get("page_id") or b["page_id"] == page_id)]
+        catalog = page_id in id_list(row.get("filter_page_ids", ""))
+        if catalog or detail or row.get("page_id") == page_id:
+            attrs = {**row, "page_usage": " | ".join(kind for kind, applies in
+                     (("filter", catalog), ("detail", bool(detail)), ("page", row.get("page_id") == page_id)) if applies),
+                     "page_detail_fields": "\n".join(str(b["field_id"]) for b in detail if b.get("field_id"))}
+            attributes.append(attrs)
+            linked_fields.update(id_list(attrs["page_detail_fields"]))
+    module_table = (directory / "design-modules.csv").is_file()
+    fields = [row for row in selected_rows("design-fields")
+              if (this_template(row) and (not module_table or row.get("page_id") == page_id or row["id"] in linked_fields)
+                  or row.get("template_id") == "SITE" and row["id"] in linked_fields)]
+    missing = linked_fields - {row["id"] for row in fields}
+    if missing:
+        gaps.append("模块或产品属性引用了未取得的字段：" + "、".join(sorted(missing)))
+    for label, selected in (("module", modules), ("field", fields), ("attribute", attributes)):
+        ids = [row["id"] for row in selected]
+        if not all(ids) or len(set(ids)) != len(ids):
+            raise ValueError(f"Ambiguous {label} IDs for planned page {page_id}")
+    return {"modules": modules, "fields": fields, "attributes": attributes, "gaps": gaps}
+
+
 def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_map: Path | None = None,
               library: Path | None = None, market: str | None = None, language: str | None = None,
               ranking_files: list[Path] | None = None, peer_urls: list[str] | None = None,
@@ -188,6 +250,8 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
     result: dict[str, object] = {"source_directory": str(directory.resolve()), "matched_by": "page_id" if page_id else "planned_url",
                                  "project": project, "upstream_research_complete": complete, "page": selected,
                                  "keyword_decisions": decisions, "gaps": gaps}
+    if any((directory / name).is_file() for name in ("design-modules.csv", "design-fields.csv", "product-attributes.csv")):
+        result["page_design"] = page_design(directory, selected, target_market, target_language)
     if ranking_files and not peer_urls:
         raise ValueError("--rankings requires at least one qualified --peer-url")
     if library_terms and not library:

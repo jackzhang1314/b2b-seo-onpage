@@ -185,6 +185,167 @@ class KeywordResearchTest(unittest.TestCase):
         self.save("page.json", evidence)
         self.check(plan, "Record the visible hero")
 
+    def section_plan(self) -> dict[str, Any]:
+        plan = self.research_plan()
+        ev = self.read("page.json")
+        ev.update(headings=[{"tag": "h1", "text": "Phone Cases"}, {"tag": "h2", "text": "Materials"},
+                            {"tag": "h2", "text": "Print options"}],
+                  content_blocks=[{"block_id": "body-1", "heading_index": "2", "text": "TPU is available."},
+                                  {"block_id": "body-2", "heading_index": "3", "text": "We print your logo on the case."}],
+                  text="Phone Cases Materials TPU is available. Print options We print your logo on the case.")
+        self.save("page.json", ev)
+        modules = plan["research"]["brief"]["modules"]
+        modules[0]["source_heading_index"] = 1
+        modules.extend([{"id": mid, "source_heading_index": idx, "heading": title, "task": task, "evidence_refs": ["page_plan"]}
+                        for mid, idx, title, task in [("materials", 2, "Materials", "Select material"),
+                                                    ("printing", 3, "Print options", "Specify branding")]])
+        plan["changes"][0]["module_id"] = "hero"
+        keyword = "private label phone case manufacturer"
+        plan["focus"]["secondary_keywords"].append(keyword)
+        plan["research"]["keyword_decisions"].append({"keyword": keyword, "origin": "web", "decision": "include",
+            "intent_group": "manufacturer with branding", "module_ids": ["hero", "printing"], "answer_kind": "detail",
+            "reason": "Supplier identity and branding", "evidence_refs": ["competitor#hero"]})
+        plan["keyword_placement"].append({"keyword": keyword, "role": "secondary", "location": "h2",
+            "source_ref": "page#heading-3", "heading_index": 3, "expression": "Print options", "answer_block_id": "body-2",
+            "answer_quote": "print your logo", "reason": "Explains what the buyer can brand"})
+        return plan
+
+    def coverage(self) -> dict[str, dict[str, str]]:
+        with (self.root / "report/keyword-coverage.csv").open(encoding="utf-8-sig") as stream:
+            return {row["keyword"].casefold(): row for row in csv.DictReader(stream)}
+
+    def test_retained_h1_cannot_survive_replacement_or_retagging(self) -> None:
+        plan = self.section_plan()
+        change = {"change_id": "new-h1", "field": "h1", "heading_index": 1, "before": "Phone Cases",
+                  "after": "Our Collection", "reason": "Change the hero", "priority": "P1", "copy_state": "ready",
+                  "evidence_refs": ["page_plan"]}
+        plan["changes"].append(change)
+        self.check(plan, "missing or ambiguous in final copy")
+        change.update(after="Phone Cases", after_tag="h2")
+        self.check(plan, "missing or ambiguous in final copy")
+        self.assertFalse((self.root / "report").exists())
+
+    def test_label_query_cannot_point_to_materials(self) -> None:
+        plan = self.section_plan()
+        row = plan["keyword_placement"][-1]
+        row.update(heading_index=2, expression="Materials")
+        self.check(plan, "wrong brief module")
+        row.update(heading_index=3, expression="Print options", answer_block_id="body-1")
+        self.check(plan, "same brief module")
+        row.update(answer_block_id="body-2", answer_quote="orders of 500")
+        self.check(plan, "Answer quote not found")
+
+    def test_a_heading_alone_and_half_a_compound_query_are_not_answers(self) -> None:
+        plan = self.section_plan()
+        row = plan["keyword_placement"][-1]
+        del row["answer_block_id"], row["answer_quote"]
+        self.check(plan)
+        coverage = self.coverage()[row["keyword"]]
+        self.assertEqual((coverage["source_pool"], coverage["copy_status"], coverage["answer_state"]),
+                         ("research_only", "incomplete_answer", "heading_only"))
+        self.assertEqual(set(coverage["missing_answers"].split(" | ")), {"hero", "printing"})
+        self.assertEqual(coverage["observed_peer_urls"], PEER)
+
+    def test_compound_phrase_uses_both_final_answers_and_respects_private_copy(self) -> None:
+        plan = self.section_plan()
+        keyword = plan["keyword_placement"][-1]["keyword"]
+        subtitle = plan["changes"][0]
+        subtitle.update(after=subtitle["after"] + " We manufacture the cases.", copy_state="blocked")
+        plan["keyword_placement"].append({"keyword": keyword, "role": "secondary", "location": "subtitle",
+            "expression": "We manufacture the cases.", "change_id": "subtitle", "reason": "Identifies manufacturer"})
+        self.check(plan)
+        row = self.coverage()[keyword]
+        self.assertEqual(row["copy_status"], "draft_pending_confirmation")
+        self.assertFalse(row["missing_answers"])
+        self.assertIn("print your logo", row["answer_text"])
+        self.assertIn("We manufacture the cases.", row["answer_text"])
+        self.assertEqual(row["metrics"], "")
+        draft = (self.root / "report/page-copy.md").read_text()
+        self.assertLess(draft.index("TPU is available."), draft.index("We print your logo on the case."))
+        self.assertIn("We manufacture the cases.", draft)
+        with ZipFile(self.root / "report/keyword-coverage.xlsx") as book:
+            self.assertIn(keyword.encode(), book.read("xl/worksheets/sheet1.xml"))
+
+    def test_answer_cannot_point_to_a_different_heading_in_the_same_brief_module(self) -> None:
+        plan = self.section_plan()
+        ev = self.read("page.json")
+        ev["headings"].append({"tag": "h3", "text": "Box sizes"})
+        ev["content_blocks"].append({"block_id": "body-3", "heading_index": "4", "text": "Choose a box size."})
+        self.save("page.json", ev)
+        plan["keyword_placement"][-1].update(answer_block_id="body-3", answer_quote="box")
+        self.check(plan, "same brief module")
+
+    def test_replaced_body_cannot_be_used_as_a_retained_answer(self) -> None:
+        plan = self.section_plan()
+        plan["changes"].append({"change_id": "rewrite-print", "module_id": "printing", "field": "body", "source_block_id": "body-2",
+            "before": "We print your logo on the case.", "after": "Ask us about branding.", "priority": "P1",
+            "copy_state": "ready", "reason": "Replace the original detail", "evidence_refs": ["page_plan"]})
+        self.check(plan, "same brief module")
+
+    def test_design_handoff_scopes_modules_fields_and_attributes_to_the_page(self) -> None:
+        self.table("pages.csv", [["id", "url", "page_type", "template_id", "variant", "market", "language"],
+                                ["P1", PAGE, "collection", "CASE", "made-to-order", "US", "en"]])
+        self.table("design-modules.csv", [["template_id", "id", "order", "variants", "field_ids", "condition"],
+                  ["CASE", "print", "2", "made-to-order", "logo", "Confirmed service"], ["CASE", "hero", "1", "", "quote", ""],
+                  ["CASE", "stock", "1", "stock", "stock-level", ""], ["OTHER", "unrelated", "1", "", "colour", ""]])
+        self.table("design-fields.csv", [["template_id", "id", "value_status"], ["CASE", "logo", "internal"],
+                   ["SITE", "quote", "missing"], ["CASE", "stock-level", "missing"], ["OTHER", "colour", ""]])
+        self.table("product-attributes.csv", [["id", "filter_page_ids", "detail_bindings"], ["material", "P1", ""],
+                   ["case-depth", "", '[{"template_id":"OTHER","field_id":"depth"}]']])
+        plan = self.research_plan()
+        d = self.read("input/architecture-page.json")["page_design"]
+        self.assertEqual([r["id"] for r in d["modules"]], ["hero", "print"])
+        self.assertEqual({r["id"] for r in d["fields"]}, {"logo", "quote"})
+        self.assertEqual([r["id"] for r in d["attributes"]], ["material"])
+        plan["changes"][0].update(module_id="hero", field_ids=["logo"])
+        self.check(plan, "does not belong to this page/module")
+        plan["changes"][0].update(field_ids=["quote"], attribute_ids=["case-depth"])
+        self.check(plan, "does not belong to this page")
+        plan["changes"][0].update(attribute_ids=["material"], copy_state="blocked")
+        self.check(plan)
+        with (self.root / "report/page-design-coverage.csv").open(encoding="utf-8-sig") as stream:
+            rows = {row["id"]: row for row in csv.DictReader(stream)}
+        self.assertEqual(rows["logo"]["copy_status"], "content_gap")
+        self.assertEqual(rows["quote"]["copy_status"], "draft_pending_confirmation")
+        self.assertIn("private label covers", rows["material"]["keywords"])
+        self.assertIn("Private label covers", rows["quote"]["final_text"])
+        with ZipFile(self.root / "report/keyword-coverage.xlsx") as book:
+            self.assertIn("上游模块与字段".encode(), book.read("xl/workbook.xml"))
+            self.assertIn(b"design-fields.csv#3", book.read("xl/worksheets/sheet2.xml"))
+        row = self.coverage()["private label covers"]
+        self.assertEqual((row["design_module_id"], row["field_ids"], row["attribute_ids"]), ("hero", "quote", "material"))
+
+    def test_shared_template_without_eligible_modules_does_not_leak_fields(self) -> None:
+        self.table("pages.csv", [["id", "url", "page_type", "template_id", "variant"], ["P1", PAGE, "collection", "T", "custom"]])
+        self.table("design-modules.csv", [["id","template_id","variants","field_ids"], ["stock","T","stock","stock_qty"]])
+        self.table("design-fields.csv", [["id","template_id"], ["stock_qty","T"]])
+        self.run_cli("architecture-page", "--source", ".", "--page-id", "P1", "--out", "input")
+        result = self.read("input/architecture-page.json")["page_design"]
+        self.assertEqual((result["fields"], result["modules"]), ([], []))
+
+    def test_kept_private_fact_is_pending_for_all_queries_and_the_design_sheet(self) -> None:
+        plan = self.section_plan()
+        snapshot = self.read("input/architecture-page.json")
+        snapshot["page_design"] = {"modules": [{"id":"printing","field_ids":"logo","source_file":"design-modules.csv","source_row":"2"}],
+                                   "fields": [{"id":"logo","value_status":"internal_only","source_file":"design-fields.csv","source_row":"2"}]}
+        self.save("input/architecture-page.json", snapshot)
+        plan["claims"] = [{"claim_id":"print","text":"We print on cases.","source_ref":"page_plan#production",
+                           "verification_state":"user_provided","public_use_state":"internal_only"}]
+        for name in ("logo printing", "logo printed cases"):
+            plan["focus"]["secondary_keywords"].append(name)
+            plan["research"]["keyword_decisions"].append({"keyword":name,"origin":"web","decision":"include","intent_group":"printing",
+                 "module_ids":["printing"],"reason":"Check printing","evidence_refs":["competitor#hero"]})
+            plan["keyword_placement"].append({"keyword":name,"role":"secondary","location":"body","block_id":"body-2",
+                 "expression":"print your logo","source_ref":"page#body-2","reason":"Existing draft",
+                 **({"claim_ids":["print"],"field_ids":["logo"]} if name=="logo printed cases" else {})})
+        self.check(plan)
+        coverage = self.coverage()
+        for name in ("logo printing","logo printed cases"):
+            self.assertEqual(coverage[name]["copy_status"], "draft_pending_confirmation")
+        with (self.root / "report/page-design-coverage.csv").open(encoding="utf-8-sig") as f:
+            self.assertEqual({row["copy_status"] for row in csv.DictReader(f)}, {"draft_pending_confirmation"})
+        self.assertIn("**正文**（待确认稿） · body-2", (self.root / "report/page-copy.md").read_text())
+
     def test_original_group_cannot_disappear_before_copywriting(self) -> None:
         plan = self.research_plan()
         plan["research"]["keyword_decisions"].pop(1)

@@ -21,8 +21,9 @@ from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
 from onpage_research import reconcile_inventory, validate_research
+from page_copy import DESIGN_COLUMNS, PLACEMENT_DETAIL, PageCopy
 
-VERSION = "2.8.1"
+VERSION = "2.9.0"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
@@ -32,10 +33,22 @@ TEXT_BREAK_TAGS = HEADING_TAGS | {
 }
 CHANGE_FIELDS = {"title", "description", "subtitle", "body", "link", "image_alt", "schema", "other"} | HEADING_TAGS
 CHANGE_COLUMNS = ["change_id", "field", "heading_index", "after_tag", "parent_heading", "placement", "before", "proposed_after",
-                  "reason", "priority", "copy_state", "apply_state", "claim_ids", "evidence_refs"]
+                  "reason", "priority", "copy_state", "apply_state", "claim_ids", "evidence_refs",
+                  "module_id", "source_block_id", "under_heading", "field_ids", "attribute_ids"]
 
 
-def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
+Sheet = tuple[str, list[dict[str, str]], list[str]]
+
+
+def column_letter(number: int) -> str:
+    result = ""
+    while number:
+        number, rest = divmod(number - 1, 26)
+        result = chr(65 + rest) + result
+    return result
+
+
+def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
     """Spreadsheet reading copy: explicit text cells, no formulas or external links.
 
     The sibling CSV remains the exact machine input. XML-incompatible control
@@ -43,33 +56,64 @@ def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str]) -> 
     """
     main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
     rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    sheets: list[Sheet] = [("逐词覆盖" if companion else "阅读表", rows, fields)]
+    if companion:
+        sheets.append(companion)
     with ZipFile(path.with_suffix(".xlsx"), "w", ZIP_DEFLATED) as book:
         book.writestr("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
                       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
                       '<Default Extension="xml" ContentType="application/xml"/>'
+                      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
                       '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-                      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>')
+                      + "".join(f'<Override PartName="/xl/worksheets/sheet{i}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+                                for i in range(1, len(sheets) + 1)) + '</Types>')
         book.writestr("_rels/.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
                       f'<Relationship Id="rId1" Type="{rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>')
         book.writestr("xl/workbook.xml", f'<workbook xmlns="{main}" xmlns:r="{rel}">'
-                      '<sheets><sheet name="阅读表" sheetId="1" r:id="rId1"/></sheets></workbook>')
+                      '<bookViews><workbookView/></bookViews><sheets>' + "".join(f'<sheet name="{name}" sheetId="{i}" r:id="rId{i}"/>'
+                                          for i, (name, _, _) in enumerate(sheets, 1)) + '</sheets></workbook>')
         book.writestr("xl/_rels/workbook.xml.rels", '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-                      f'<Relationship Id="rId1" Type="{rel}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>')
-        with book.open("xl/worksheets/sheet1.xml", "w") as sheet:
-            sheet.write(f'<worksheet xmlns="{main}"><sheetViews><sheetView workbookViewId="0">'
-                        '<pane ySplit="1" topLeftCell="A2" state="frozen"/></sheetView></sheetViews><sheetData>'.encode())
-            values = chain([fields], ([row.get(key, "") for key in fields] for row in rows))
-            for index, row_values in enumerate(values, 1):
-                sheet.write(f'<row r="{index}">'.encode())
-                for value in row_values:
-                    clean = "".join(c if c in "\t\n\r" or 0x20 <= ord(c) <= 0xD7FF or
-                                    0xE000 <= ord(c) <= 0xFFFD or ord(c) >= 0x10000 else "\uFFFD" for c in value)
-                    if len(clean) > 32767:
-                        clean = clean[:32700] + "…[阅读截断；完整值见CSV]"
-                    sheet.write(('<c t="inlineStr"><is><t xml:space="preserve">' +
-                                 escape(clean).replace("\r", "&#13;") + '</t></is></c>').encode("utf-8"))
-                sheet.write(b'</row>')
-            sheet.write(b'</sheetData></worksheet>')
+                      f'<Relationship Id="rStyles" Type="{rel}/styles" Target="styles.xml"/>'
+                      + "".join(f'<Relationship Id="rId{i}" Type="{rel}/worksheet" Target="worksheets/sheet{i}.xml"/>'
+                                for i in range(1, len(sheets) + 1)) + '</Relationships>')
+        book.writestr("xl/styles.xml", f'<styleSheet xmlns="{main}">'
+                      '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
+                      '<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>'
+                      '<fill><patternFill patternType="solid"><fgColor rgb="FFDAEBE7"/><bgColor indexed="64"/></patternFill></fill></fills>'
+                      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+                      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+                      '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
+                      '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFill="1" applyFont="1" applyAlignment="1">'
+                      '<alignment vertical="center" wrapText="1"/></xf>'
+                      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1">'
+                      '<alignment vertical="top" wrapText="1"/></xf></cellXfs>'
+                      '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>')
+        for sheet_id, (_, rows, fields) in enumerate(sheets, 1):
+            letters = [column_letter(i) for i in range(1, len(fields) + 1)]
+            widths = [58 if f in {"answer_text", "final_text", "final_placements", "reason", "other_target", "proposed_after"}
+                      else 36 if f in {"keyword", "page_url", "source_ref", "expressions", "name"} else max(18, len(f) + 3)
+                      for f in fields]
+            table_range = f"A1:{letters[-1]}{len(rows) + 1}"
+            with book.open(f"xl/worksheets/sheet{sheet_id}.xml", "w") as sheet:
+                cols = "".join(f'<col min="{i}" max="{i}" width="{width}" customWidth="1"/>' for i, width in enumerate(widths, 1))
+                sheet.write((f'<worksheet xmlns="{main}"><dimension ref="{table_range}"/><sheetViews><sheetView workbookViewId="0">'
+                             '<pane xSplit="1" ySplit="1" topLeftCell="B2" activePane="bottomRight" state="frozen"/>'
+                             f'</sheetView></sheetViews><cols>{cols}</cols><sheetData>').encode())
+                values = chain([fields], ([row.get(key, "") for key in fields] for row in rows))
+                for index, row_values in enumerate(values, 1):
+                    lines = max(sum(max(1, (len(line) + width - 1) // width) for line in value.splitlines())
+                                for value, width in zip(row_values[:7], widths))
+                    height = 30 if index == 1 else min(120, max(32, 16 * lines))
+                    sheet.write(f'<row r="{index}" ht="{height}" customHeight="1">'.encode())
+                    for letter, value in zip(letters, row_values):
+                        clean = "".join(c if c in "\t\n\r" or 0x20 <= ord(c) <= 0xD7FF or
+                                        0xE000 <= ord(c) <= 0xFFFD or ord(c) >= 0x10000 else "\uFFFD" for c in value)
+                        if len(clean) > 32767:
+                            clean = clean[:32700] + "…[阅读截断；完整值见CSV]"
+                        sheet.write((f'<c r="{letter}{index}" s="{1 if index == 1 else 2}" t="inlineStr"><is><t xml:space="preserve">' +
+                                     escape(clean).replace("\r", "&#13;") + '</t></is></c>').encode("utf-8"))
+                    sheet.write(b'</row>')
+                sheet.write(f'</sheetData><autoFilter ref="{table_range}"/></worksheet>'.encode())
 
 
 def obj(value: object) -> dict[str, object]:
@@ -105,6 +149,11 @@ def compact(value: str) -> str:
     return " ".join(value.split())
 
 
+def public_claim(claim: dict[str, object]) -> bool:
+    return (claim["verification_state"] in {"page_observed", "user_provided", "verified"} and
+            claim["public_use_state"] in {"public_observed", "approved_public"})
+
+
 def valid_url(url: str) -> str:
     p = urlsplit(url)
     if p.scheme not in {"http", "https"} or not p.hostname or p.username or p.password:
@@ -116,12 +165,16 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
+def csv_file(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
     with path.open("w", encoding="utf-8-sig", newline="") as stream:
         writer = csv.DictWriter(stream, fields)
         writer.writeheader()
         writer.writerows(rows)
-    text_workbook(path, rows, fields)
+
+
+def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
+    csv_file(path, rows, fields)
+    text_workbook(path, rows, fields, companion)
 
 
 def digest(path: Path) -> dict[str, str]:
@@ -159,6 +212,10 @@ class PageParser(HTMLParser):
         self.images: list[dict[str, str]] = []
         self.schemas: list[dict[str, object]] = []
         self.fragments: list[str] = []
+        self.content_blocks: list[dict[str, str]] = []
+        self.block_parts: list[str] = []
+        self.section_index = 0
+        self.chrome: list[tuple[str, int]] = []
         self.active: list[tuple[str, dict[str, str], list[str]]] = []
         self.skips: list[str] = []
         self.script: dict[str, str] | None = None
@@ -170,6 +227,19 @@ class PageParser(HTMLParser):
             fragments.append(" ")
         if not self.in_head:
             self.fragments.append(" ")
+
+    def block_break(self, tag: str) -> None:
+        if tag in {"td", "th", "br"}:
+            self.block_parts.append(" ")
+        elif tag in TEXT_BREAK_TAGS:
+            self.flush_block()
+
+    def flush_block(self) -> None:
+        value = compact("".join(self.block_parts))
+        self.block_parts.clear()
+        if value:
+            self.content_blocks.append({"block_id": f"body-{len(self.content_blocks) + 1}",
+                                        "heading_index": str(self.section_index), "text": value})
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag == "iframe":
@@ -189,6 +259,9 @@ class PageParser(HTMLParser):
             self.skips.append(tag)
         if self.skips:
             return
+        self.block_break(tag)
+        if tag in {"nav", "footer", "aside"}:
+            self.chrome.append((tag, self.section_index))
         if tag in TEXT_BREAK_TAGS:
             self.text_break()
         if self.in_head and tag == "base" and "href" in values and not self.base_seen:
@@ -205,7 +278,8 @@ class PageParser(HTMLParser):
         if tag == "title" and self.in_head:
             self.active.append(("title", {"line": line}, []))
         if re.fullmatch("h[1-6]", tag):
-            self.active.append((tag, {"line": line, "id": values.get("id", "")}, []))
+            self.active.append((tag, {"line": line, "id": values.get("id", ""),
+                                      "content_scope": "navigation" if self.chrome else "page"}, []))
         if tag == "a" and "href" in values:
             self.active.append(("a", {"line": line, **values}, []))
         if tag == "img":
@@ -235,6 +309,7 @@ class PageParser(HTMLParser):
             index = len(self.skips) - 1 - self.skips[::-1].index(tag)
             del self.skips[index:]
         if not self.skips:
+            self.block_break(tag)
             for index in range(len(self.active) - 1, -1, -1):
                 kind, values, fragments = self.active[index]
                 if kind == tag:
@@ -246,9 +321,13 @@ class PageParser(HTMLParser):
                         self.links.append({**values, "text": text, "resolved_href": urljoin(self.base, values["href"])})
                     else:
                         self.headings.append({**values, "tag": kind, "text": text})
+                        if not self.chrome:
+                            self.section_index = len(self.headings)
                     break
             if tag in TEXT_BREAK_TAGS:
                 self.text_break()
+            if self.chrome and self.chrome[-1][0] == tag:
+                _, self.section_index = self.chrome.pop()
         if tag == "head":
             self.in_head = False
 
@@ -263,6 +342,8 @@ class PageParser(HTMLParser):
             fragments.append(data)
         if not self.in_head:
             self.fragments.append(data)
+            if not self.chrome and not any(tag in HEADING_TAGS for tag, _, _ in self.active):
+                self.block_parts.append(data)
 
 
 def schema_types(value: object) -> set[str]:
@@ -324,6 +405,8 @@ def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, l
         parser = PageParser(url)
         parser.feed(raw)
         parser.close()
+        parser.flush_block()
+        evidence["content_blocks"] = parser.content_blocks
         parents = outline_parents(parser.headings)
         for index, (heading, parent) in enumerate(zip(parser.headings, parents), 1):
             heading["heading_index"] = str(index)
@@ -367,6 +450,8 @@ def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, l
         if rendered_head_path:
             raise ValueError("Use rendered head observations with HTML evidence; text-only stays text-only")
         body = raw
+        evidence["content_blocks"] = [{"block_id": f"body-{idx}", "heading_index": "0", "text": para}
+                                      for idx, para in enumerate((p.strip() for p in re.split(r"\n\s*\n", raw) if p.strip()), 1)]
         evidence["head"] = None
         observations.append({"check": "technical_metadata", "state": "not_observed", "detail": "Text/Markdown cannot establish canonical, robots, schema or image attributes", "source": "input_scope"})
     if subtitle_path:
@@ -421,8 +506,8 @@ def heading_before(change: dict[str, object], evidence: dict[str, object]) -> No
             raise ValueError("Expected parent must have a higher heading level than the proposed heading")
 
 
-def placement_rows(plan: dict[str, object], evidence: dict[str, object],
-                   changes: list[dict[str, str]]) -> list[dict[str, str]]:
+def placement_rows(plan: dict[str, object], page: PageCopy, changes: list[dict[str, str]],
+                   decisions: dict[str, dict[str, str]]) -> list[dict[str, str]]:
     """Check analyst-written placement references; never enforce keyword density or exact-match use."""
     if "focus" not in plan:
         if plan.get("keyword_placement"):
@@ -464,46 +549,20 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
         heading_index = row.get("heading_index")
         if heading_index is not None and (type(heading_index) is not int or heading_index < 1 or location not in HEADING_TAGS or not source_ref):
             raise ValueError("A retained heading_index requires a one-based position, heading location and source_ref")
-        state = "not_used"
         if location == "not_used":
-            if expression or change_id or source_ref:
+            if expression or change_id or source_ref or any(row.get(key) for key in ("answer_change_id", "answer_block_id", "block_id")):
                 raise ValueError("Unused terms have a reason, not a claimed placement")
         else:
             string(expression)
             if bool(change_id) == bool(source_ref):
                 raise ValueError("Placement needs exactly one change_id or source_ref")
-            if change_id:
-                if change_id not in changes_by_id:
-                    raise ValueError("Placement references unknown change_id")
-                change = changes_by_id[change_id]
-                effective_field = change["after_tag"] or change["field"]
-                if effective_field != ("body" if location == "intro" else location):
-                    raise ValueError("Placement location differs from referenced change field")
-                if compact(expression).casefold() not in compact(change["proposed_after"]).casefold():
-                    raise ValueError("Placement expression not found in proposed copy")
-                state = change["copy_state"]
-            else:
-                if location in {"title", "description"}:
-                    head = obj(evidence["head"]) if evidence.get("head") is not None else {}
-                    samples = head_texts(head.get(location, []))
-                elif location == "subtitle":
-                    samples = [str(obj(evidence.get("subtitle", {})).get("text", ""))]
-                elif location in HEADING_TAGS:
-                    headings = [obj(h) for h in arr(evidence.get("headings", []))]
-                    if isinstance(heading_index, int):
-                        headings = headings[heading_index - 1:heading_index]
-                    samples = [str(h.get("text", "")) for h in headings if h.get("tag") == location]
-                elif location in {"link", "image_alt"}:
-                    key, attribute = ("links", "text") if location == "link" else ("images", "alt")
-                    samples = [str(obj(item).get(attribute, "")) for item in arr(evidence.get(key, []))]
-                else:
-                    samples = [str(evidence.get("text", ""))]
-                if not any(compact(expression).casefold() in compact(s).casefold() for s in samples):
-                    raise ValueError("Preserved placement expression not found in saved evidence")
-                state = "preserved_snapshot_text"
+        decision = decisions.get(compact(keyword).casefold(), {})
+        targets = set(decision.get("module_ids", "").split(" | ")) - {""}
+        detail = page.placement(row, "body" if location == "intro" else location, expression, change_id,
+                                targets, decision.get("answer_kind", ""))
         result.append({"keyword": keyword, "role": role, "location": location, "expression": expression,
                        "heading_index": str(heading_index or changes_by_id.get(change_id, {}).get("heading_index", "")),
-                       "change_id": change_id, "source_ref": source_ref, "reason": reason, "copy_state": state})
+                       "change_id": change_id, "source_ref": source_ref, "reason": reason, **detail})
     if focus["scope"] == "full_page" and not any(r["role"] == "primary" for r in result):
         raise ValueError("Full-page focus needs a primary placement or an explained not_used record")
     if focus["scope"] == "full_page":
@@ -513,38 +572,11 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
     return result
 
 
-def page_copy_preview(changes: list[dict[str, str]], evidence: dict[str, object],
-                      placements: list[dict[str, str]]) -> list[str]:
-    """Show full proposed or retained wording before the detailed change rationale."""
+def page_copy_preview(page: PageCopy) -> list[str]:
     fields = {"title": "SEO Title", "h1": "H1", "subtitle": "Subtitle", "h2": "H2"}
-    proposed: dict[str, list[tuple[str, str]]] = {field: [] for field in fields}
-    for change in changes:
-        field = change["after_tag"] or change["field"]
-        if field in proposed:
-            state = "可用稿" if change["copy_state"] == "ready" else "待确认稿"
-            proposed[field].append((state, change["proposed_after"]))
-    if not any(c["field"] == "title" for c in changes) and evidence.get("head_seen"):
-        titles = head_texts(obj(evidence["head"]).get("title", []))
-        if len(titles) == 1:
-            proposed["title"].append(("原页", titles[0]))
-    if not any(c["field"] == "subtitle" for c in changes):
-        subtitle = obj(evidence.get("subtitle", {})).get("text")
-        if isinstance(subtitle, str) and subtitle:
-            proposed["subtitle"].append(("原页", subtitle))
-    headings = [obj(h) for h in arr(evidence.get("headings", []))]
-    single_h1 = sum(h["tag"] == "h1" for h in headings) == 1
-    for index, heading in enumerate(headings, 1):
-        tag, value = str(heading["tag"]), str(heading["text"])
-        if tag not in {"h1", "h2"}:
-            continue
-        if any(c["field"] == tag and c["before"] == value and c["heading_index"] in {"", str(index)} for c in changes):
-            continue
-        retained = any(p["location"] == tag and p["copy_state"] == "preserved_snapshot_text"
-                       and p["heading_index"] in {"", str(index)}
-                       and compact(p["expression"]).casefold() in compact(value).casefold() for p in placements)
-        if retained or (tag == "h1" and single_h1):
-            proposed[tag].append(("原页", value))
-    lines = [f"- **{label}**（{state}） {value}" for field, label in fields.items() for state, value in proposed[field]]
+    states = {"ready": "可用稿", "blocked": "待确认稿", "preserved_snapshot_text": "原页"}
+    lines = [f"- **{label}**（{states[block.state]}） {block.text}" for kind, label in fields.items()
+             for block in page.blocks if block.kind == kind and block.text and block.key not in page.parts_of_subtitle]
     return ["## 本页标题与首屏文案", "", *lines, ""] if lines else []
 
 
@@ -623,13 +655,17 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             if claim_id not in claims:
                 raise ValueError("Unknown claim_id")
             claim = claims[claim_id]
-            ready = claim["verification_state"] in {"page_observed", "user_provided", "verified"} and claim["public_use_state"] in {"public_observed", "approved_public"}
-            if change["copy_state"] == "ready" and not ready:
+            if change["copy_state"] == "ready" and not public_claim(claim):
                 raise ValueError("Ready copy references an unverified/contradicted/private claim")
         evidence_refs = texts(change.get("evidence_refs"))
         if not evidence_refs:
             raise ValueError("Change requires evidence_refs")
-        rows.append({"change_id": cid, "field": field, "heading_index": str(change.get("heading_index", "")),
+        rows.append({"change_id": cid, "field": field, "module_id": string(change["module_id"]) if "module_id" in change else "",
+                     "source_block_id": string(change["source_block_id"]) if "source_block_id" in change else "",
+                     "under_heading": string(change["under_heading"]) if "under_heading" in change else "",
+                     "field_ids": " | ".join(texts(change.get("field_ids", []))),
+                     "attribute_ids": " | ".join(texts(change.get("attribute_ids", []))),
+                     "heading_index": str(change.get("heading_index", "")),
                      "parent_heading": json.dumps(change["parent_heading"], ensure_ascii=False) if "parent_heading" in change else "",
                      "after_tag": str(change.get("after_tag", field if field in HEADING_TAGS else "")),
                      "placement": str(change.get("placement", "")), "before": before, "proposed_after": after,
@@ -643,7 +679,6 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
         string(plan.get("retention_reason"))
     elif plan.get("review_outcome") == "retain":
         raise ValueError("retain cannot include proposed changes")
-    placements = placement_rows(plan, evidence, rows)
     gaps = texts(plan.get("fact_gaps", []))
     focus = obj(plan.get("focus", {}))
     if focus.get("scope") == "full_page" and "research" not in plan:
@@ -651,14 +686,33 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
     research = validate_research(plan["research"], plan, focus, plan_path.parent) if "research" in plan else None
     coverage_rows: list[dict[str, str]] = []
     coverage_summary: dict[str, int | None] = {}
+    snapshot = obj(json.loads(architecture_path.read_text(encoding="utf-8-sig"))) if architecture_path else {}
+    if evidence.get("input_kind") == "html" and "content_blocks" not in evidence:
+        original = obj(evidence.get("input", {}))
+        path = Path(str(original.get("path", "")))
+        if path.is_file() and digest(path)["sha256"] == original.get("sha256"):
+            parser = PageParser(str(evidence["target_url"]))
+            parser.feed(path.read_text(encoding="utf-8-sig"))
+            parser.close()
+            parser.flush_block()
+            evidence["content_blocks"] = parser.content_blocks
+    brief = obj(obj(plan.get("research", {})).get("brief", {}))
+    project_copy = focus.get("scope") == "full_page" or bool(plan.get("keyword_placement"))
+    page = PageCopy(evidence, rows if project_copy else [], brief, obj(snapshot.get("page_design", {})),
+                    {cid: public_claim(claim) for cid, claim in claims.items()})
+    page.prepare_placements([obj(p) for p in arr(plan.get("keyword_placement", []))])
+    decisions = {compact(r["keyword"]).casefold(): r for r in research.keywords} if research else {}
+    placements = placement_rows(plan, page, rows, decisions)
+    design_rows = page.design_coverage(placements)
     if architecture_path:
         if research is None:
             raise ValueError("An architecture inventory requires keyword decisions in research")
-        snapshot = obj(json.loads(architecture_path.read_text(encoding="utf-8-sig")))
         source_mode = str(obj(snapshot.get("project", {})).get("mode", "")).lower()
         if source_mode in {"mock", "simulation", "synthetic"} and obj(plan["research"])["evidence_class"] != "simulation":
             raise ValueError("A simulated architecture inventory requires simulation research")
+    if research is not None and (architecture_path or focus.get("scope") == "full_page"):
         coverage_rows, coverage_summary = reconcile_inventory(snapshot, plan, research, placements)
+    if research is not None and "keyword_inventory" in snapshot:
         inventory = obj(snapshot["keyword_inventory"])
         if inventory.get("unresolved_ranking_rows"):
             research.gaps.append("排名明细中有尚未还原的原词，见页面词清单")
@@ -689,8 +743,11 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                          "research_evidence_class": str(obj(plan.get("research", {})).get("evidence_class", "not_declared")),
                          "research_status": research.status if research is not None else "not_checked"}
 
-        def plan_table(name: str, values: list[dict[str, str]], fields: list[str]) -> None:
-            write_csv(destination / name, [{**table_context, **value} for value in values], [*table_context, *fields])
+        def plan_table(name: str, values: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
+            first = (["keyword", "source_pool", "copy_status", "final_placements", "answer_text", "other_target", "reason"]
+                     if name == "keyword-coverage.csv" else [])
+            columns = list(dict.fromkeys([*first, *table_context, *fields]))
+            write_csv(destination / name, [{**table_context, **value} for value in values], columns, companion)
 
         if research is not None:
             exported_research = dict(obj(plan["research"]))
@@ -699,7 +756,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             write_json(destination / "research.json", exported_research)
             write_json(destination / "research-sources.json", research.sources)
             plan_table("keyword-selection.csv", research.keywords,
-                      ["keyword", "origin", "decision", "intent_group", "ownership_override_ref", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs",
+                      ["keyword", "origin", "decision", "intent_group", "answer_kind", "ownership_override_ref", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs",
                        *PLANNING_COLUMNS])
             plan_table("serp-results.csv", research.serp,
                       ["query", "source", "actual_market", "actual_language", "collected_at", "position_kind", "position",
@@ -709,11 +766,19 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                        "search_observations", "requested_url",
                        "url", "page_type", "read_state", "seo_title", "h1", "subtitle", "subtitle_tag", "h2",
                        "selection_reason", "observed_strengths", "page_gap", "recommendation", "evidence_refs"])
-            if architecture_path:
+            if coverage_summary:
+                companion: Sheet | None = None
+                if design_rows:
+                    design_table = [{**table_context, **row} for row in design_rows]
+                    design_columns = list(dict.fromkeys(["kind", "id", "name", "copy_status", "final_text", "keywords",
+                                                         *DESIGN_COLUMNS, *table_context]))
+                    csv_file(destination / "page-design-coverage.csv", design_table, design_columns)
+                    companion = ("上游模块与字段", design_table, design_columns)
                 plan_table("keyword-coverage.csv", coverage_rows,
                            ["keyword", "assigned", "ownership", "decision", "intent_group", "reason", "copy_status", "copy_states",
                             "locations", "expressions", "planning_refs", "library_refs", "peer_urls", "ranking_refs",
-                            "owners", "other_target", "evidence_refs"])
+                            "owners", "other_target", "evidence_refs", "source_pool", "origin", "metrics", "observed_peer_urls",
+                            "required_modules", "missing_answers", *PLACEMENT_DETAIL, *PLANNING_COLUMNS], companion)
             (destination / "page-brief.md").write_text(research.brief, encoding="utf-8")
         write_json(destination / "plan.json", exported_plan)
         if serp["source"] != "not_requested":
@@ -730,7 +795,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                 placement_export.append({**item, **planning, "selection_evidence": decision.get("evidence_refs", "")})
             plan_table("keyword-placement.csv", placement_export,
                       ["keyword", "role", "location", "heading_index", "expression", "change_id", "source_ref", "reason", "copy_state",
-                       *PLANNING_COLUMNS, "selection_evidence"])
+                       *PLACEMENT_DETAIL, *PLANNING_COLUMNS, "selection_evidence"])
         review = [f"# On-page · {plan['keyword']}", "", f"页面：{plan['target_url']}",
                   f"市场/语言：{plan['market']} / {plan['language']}",
                   f"意图匹配：{plan['intent_fit']}；{plan['intent_reason']}",
@@ -741,7 +806,9 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             review += ["研究记录：未校验完整研究链。本次为局部/旧接口改稿，不代表完整 On-page 研究。", ""]
 
         if focus.get("scope") == "full_page":
-            review += page_copy_preview(rows, evidence, placements)
+            (destination / "page-copy.md").write_text(page.render(design_rows), encoding="utf-8")
+            review += ["[按阅读顺序查看最终页面稿及上游字段](page-copy.md)", ""]
+            review += page_copy_preview(page)
         title_changes = [row for row in rows if row["field"] == "title"]
         recommended = title_changes[0] if len(title_changes) == 1 and title_changes[0]["copy_state"] == "ready" else None
         if not title_changes and focus.get("scope") in ("full_page", "metadata") and head is not None and evidence.get("head_seen"):
@@ -766,18 +833,27 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             for item in placements:
                 review += [f"- {item['keyword']} → {item['location']}：{item['expression'] or '本次不用'}；{item['reason']}"]
             review += [""]
-        if architecture_path:
+        if coverage_summary:
             def intent_count(key: str) -> str:
                 count = coverage_summary[key]
                 return str(count) if count is not None else "未完整分组，暂不计数"
 
+            pools = {key: sum(row["source_pool"] == key for row in coverage_rows)
+                     for key in ("planned", "library_or_rankings", "research_only", "planning_record")}
             review += ["## 页面词库核对", "",
-                       f"- 原规划共 {coverage_summary['planned_terms']} 词，已判断 {coverage_summary['evaluated_planned_terms']} 词。"
-                       f"现有或拟写文案承接 {coverage_summary['planned_with_text']} 词，其中可用或已在原页出现 {coverage_summary['placed_planned_terms']} 词。",
-                       f"- 分组外补词共 {coverage_summary['added_with_text']} 词有原句或拟稿，其中 {coverage_summary['added_placed_terms']} 词已有可用文案"
-                       f"（原稿已承接 {coverage_summary['already_in_copy']}，本次可用的新文案承接 {coverage_summary['new_copy_terms']}）。",
-                       f"- 新增意图数（含待确认稿）{intent_count('draft_added_intents')}。已有可用文案的新增意图数 {intent_count('added_intents')}。",
-                       "", "[查看逐词依据与文案](keyword-coverage.xlsx)", ""]
+                       f"- 逐词去向分为原分配 {pools['planned']} 条、词库或排名补查 {pools['library_or_rankings']} 条、"
+                       f"独立研究记录 {pools['research_only']} 条。正文答案和来源可在同一行回查。",
+                       ]
+            if pools["planning_record"]:
+                review.append(f"- 另有 {pools['planning_record']} 条规划记录尚待与完整分配清单核对。")
+            if "keyword_inventory" in snapshot:
+                review += [f"- 原规划共 {coverage_summary['planned_terms']} 词，已判断 {coverage_summary['evaluated_planned_terms']} 词。"
+                           f"有原句或拟稿 {coverage_summary['planned_with_text']} 词，完整且可用 {coverage_summary['placed_planned_terms']} 词。",
+                           f"- 分组外有原句或拟稿 {coverage_summary['added_with_text']} 词，完整且可用 {coverage_summary['added_placed_terms']} 词。",
+                           f"- 新增意图数（含待确认稿）{intent_count('draft_added_intents')}。已有可用答案的新增意图数 {intent_count('added_intents')}。"]
+            else:
+                review += ["本次核对已取得的逐词研究决定，原规划词与净增意图的总数未知。"]
+            review += ["", "[查看逐词依据、模块与最终答案](keyword-coverage.xlsx)", ""]
         if research is not None and research.gaps:
             review += ["## 研究缺口", "", *[f"- {gap}" for gap in research.gaps], ""]
         review += ["## 资料缺口", "", *[f"- {gap}" for gap in gaps], "",
@@ -785,7 +861,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
         write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "changes": len(rows),
                    "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path), *([digest(architecture_path)] if architecture_path else [])],
-                   "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if architecture_path else "not_supplied",
+                   "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if "keyword_inventory" in snapshot else "decisions_only" if coverage_summary else "not_supplied",
                    "research_status": research.status if research is not None else "not_checked",
                    "research_gaps": research.gaps if research is not None else [],
                    "research_sources": research.sources if research is not None else [],

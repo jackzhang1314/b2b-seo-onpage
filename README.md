@@ -2,28 +2,28 @@
 
 **把客户已有的网站规划和关键词分组落实到每一个页面。** 给 Codex 行业词库、网站页面规划、关键词分组表和目标 URL 或页面编号，它会找出分配给这页的组及成员，回查原词，再交付一个 SEO 标题、H 标题和可替换的正文。需要修改 WordPress 页面时，可以接已有 WordPress Build Harness 完成保存和回读。
 
-v2.8.1 从客户已经规划的页面开始。它先取全本页分组，再用合格外贸 B2B 同行的具体 URL 反查排名明细，把原分组里漏掉的别称、工艺、采购方式和行业用词带回本页。最终交 SEO Title、H1、首屏副标题、H2 和可替换正文。[页面规划、分组与总库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
+v2.9.0 从客户确认的页面规划和分组取全本页成员，再按合格外贸 B2B 同行的具体 URL 反查排名词，补查产品加采购属性的搜索表达。整页交付给出 SEO Title、H1、可见副标题、H2 和各小节的正文。打开最终稿与覆盖表，就能从一个采购词找到实际回答它的那句话。[上游规划与客户词库](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
 已有页面还可以附上该 URL 的 Google Search Console 查询导出，保留确实带来相关展现或点击的买家用语。新页从已有架构、词库和产品资料开始。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
 
-## 安装 v2.8.1
+## 安装 v2.9.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.8.1/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.9.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.8.1 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.1/b2b-seo-onpage-2.8.1.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.1/b2b-seo-onpage-2.8.1.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.9.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.9.0/b2b-seo-onpage-2.9.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.9.0/b2b-seo-onpage-2.9.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.8.1 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.9.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
@@ -75,7 +75,9 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 
 例如搜 `phone case factory`，靠前的结果可能是品牌名带 Factory 的零售店。跳过这些结果，向后查或换搜 `private label phone case manufacturer`，直到找到经营同类业务、能核实海外企业供货的独立站。搜索命中工厂首页时，再去它真正的手机壳批发集合页读 Title、H1、副标题和正文 H2，用集合页自己的 URL 回查排名表。
 
-在 `keyword-coverage.xlsx` 可以看到原分组每个词的去向、新增词的依据、实际放在哪一句，以及哪些词留给其他页。多个同义词可以共用一句，新增意图按组计数。报告开头汇总 SEO Title、H1、副标题和有改动或明确保留的 H2；词库核对分列已有或拟写的文案，以及其中可用的文案。[同行筛选和标题示例](skills/b2b-seo-onpage/references/category-modifier-research.md)
+打开 `page-copy.md` 看按阅读顺序排好的页面稿。再在 `keyword-coverage.xlsx` 搜任意一个词，就能看到它来自客户原分配、总库及排名补查，还是独立研究，以及实际模块、最终原句、回答和可用状态。上游有模块与字段表时，同一工作簿另有一张“上游模块与字段”表，逐项列出落点和缺口。[同行筛选方法](skills/b2b-seo-onpage/references/category-modifier-research.md)
+
+以 `private label phone case manufacturer` 为例，首屏“我们为品牌生产手机壳”回答谁生产，包装小节“壳体可以印你的标志，包装可以用你的品牌”回答贴牌怎样交付。两个必需条件都找到对应原句后，才按各段实际公开状态计入可用或待确认稿。被替换的旧 H1、材料小节里的印标词，以及只有小标题的需求，都能在校验或覆盖状态中识别。[记录格式与示例](skills/b2b-seo-onpage/references/research-contract.md)
 
 ## 给已有页面布局关键词
 
@@ -136,6 +138,8 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 报告保留搜索服务的实际返回顺序。仅在核到目标地区 Google 自然排名时才标记为 Google 名次。账号、密码和会话信息留在授权环境内。
 
 ## 版本与验证范围
+
+v2.9.0 将改后的最终段落、上游模块和字段接入逐词验收。手机壳集合页用模拟客户资料及已保存的同行实页完成回放，覆盖旧 H1、错放小节、复合词的两处答案、公开状态和相邻现货页归属。验证范围见 [RELEASE.json](RELEASE.json)。
 
 v2.8.1 将首屏副标题 `subtitle` 补入完整改稿字段清单，示例、命令和使用说明可以逐项对照。[改稿字段及用法](skills/b2b-seo-onpage/references/data-and-commands.md)
 

@@ -57,9 +57,15 @@ python3 SKILL_DIR/scripts/onpage.py architecture-page --source ARCH --page-id P1
 | HTML 或 Markdown | 从 `index.html` 的对应页面或文章条目，以及收到的规划、设计交接或研究笔记中，摘取明确写出的路径、主题、主辅词、上级、模块和证据状态；注明文件、标题或页面锚点。仅有架构图时可确认层级，关键词归属缺失的部分再查词库和实页。 |
 | 仅有计划 JSON | 读取 `architecture-plan.json` 的 project、pages、decisions、templates。按 ID 关联；关键词只有 ID 时到所给词表取对应原词。记录来源与缺口。 |
 
-完整表格可选用 `onpage.py architecture-page --source <架构目录> --url <规划URL> --out <新目录>`。输出的 `architecture-page.json` 只取一页及其词项，保留原表的数据行序号、架构 mode 和研究覆盖。文章同样可用此命令。URL 不同而已有可靠的旧新映射时，用 `--page-id <架构ID>` 读取规划，并在本页简报记录为何对应线上 URL。出现多个匹配先核身份。只有文档也可直接阅读，不要求重新导出表格。
+完整表格可选用 `onpage.py architecture-page --source <架构目录> --url <规划URL> --out <新目录>`。输出的 `architecture-page.json` 提取目标页、词项和可用的模块、字段与产品属性，保留原表的数据行序号、架构 mode 和研究覆盖。文章同样可用此命令。URL 不同而已有可靠的旧新映射时，用 `--page-id <架构ID>` 读取规划，并在本页简报记录为何对应线上 URL。出现多个匹配先核身份。只有文档也可直接阅读，不要求重新导出表格。
 
 保留已确认主词和页面职责。上游 `state=proposed/conditional`、`mode=simulation`、`research_complete=false` 或缺企业事实时，把相应状态带进本页。架构能说明计划由谁承接某个词；当前企业能否接单须有本企业依据。
+
+### 将上游模块和字段用于成稿
+
+`architecture-page` 会从 `design-modules.csv`、`design-fields.csv`、`product-attributes.csv` 提取本页的 `page_design`。按页面、市场、模板、变体和产品范围筛选，带入原行、模块顺序、适用条件、引用字段、值状态和属性的筛选页或详情字段绑定。共用站点字段按本页模块的实际引用读取。只有规划或分组表时，按已有资料继续。Excel 用户仍可提供原始工作簿，由编辑对照工作表并转为已有约定的 CSV。
+
+简报模块的 `design_module_id` 连接上游模块，同 ID 可自动连接。改动里的 `field_ids` 和 `attribute_ids` 只填该句或参数行实际使用的字段。在本企业资料里核实规格与公开状态。交付时核对覆盖工作簿的“上游模块与字段”工作表，其中每项都有源行和改后文案，缺少答案的资料有独立状态。纯 CSV 阅读版为 `page-design-coverage.csv`。
 
 ## 从分配到标题、H 标签和正文
 

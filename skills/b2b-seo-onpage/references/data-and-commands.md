@@ -56,7 +56,7 @@ title/description 的 before 与 head 证据匹配。H1–H6 要有 HTML 证据�
 
 claim verification_state：page_observed/user_provided/verified/unverified/contradicted。public_use_state：public_observed/approved_public/internal_only/pending。ready 引用未经确认、矛盾或内部主张会失败。**未登记的虚构主张不能被脚本穷尽检测**，Codex 仍需逐句审阅，数字/认证/承诺尤其要登记。
 
-产出 onpage-review.md、page-changes.csv、claims.json、plan.json 和 run.json；有实际 SERP 才输出 serp-brief.json。修改后重新保存证据并检查实际改动；实现回执另记 before/after 哈希、授权范围、实际修改位置、预览/线上核验，不能用 proposal 文件充当发布凭证。
+完整任务另给 `page-copy.md`、`keyword-coverage.xlsx` 和对应 CSV，含上游模块与字段时在同一工作簿附逐项核对。通用输出包括 onpage-review.md、page-changes.csv、claims.json、plan.json 和 run.json。有实际 SERP 才输出 serp-brief.json。修改后重新保存证据并检查实际改动；实现回执另记 before/after 哈希、授权范围、实际修改位置、预览/线上核验，不能用 proposal 文件充当发布凭证。
 
 ## 3. 页面目标与关键词安排
 

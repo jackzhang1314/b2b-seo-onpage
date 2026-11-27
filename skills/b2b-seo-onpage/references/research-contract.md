@@ -64,6 +64,28 @@ brief.modules 每项为 `id`、`heading`、`task`、`evidence_refs`。task 写�
 - `research.json`：原始研究判断及归一来源路径；`research-sources.json`：来源哈希与时间。
 - `keyword-selection.csv/.xlsx`、`serp-results.csv/.xlsx`、`competitor-comparison.csv/.xlsx`：选词取舍、实际搜索结果和竞品对照。未定排名样本的位置保持空值。选词、SERP、竞品对照、改稿与关键词安排表逐行带 page_url、primary_keyword、target_market、content_language、research_evidence_class 和 research_status，单独转发表格也保留模拟与市场语境。
 - `page-brief.md`：受众、意图、差异、模块任务、模块选词及缺口；`onpage-review.md` 链接到它。
-- `run.json` 记录来源、实际缺口、状态和本页的词库核对计数。`keyword-coverage.csv/.xlsx` 给出原行、实际表达、归属、位置及文案状态。`planned_with_text` 和 `added_with_text` 含待确认稿，`placed_planned_terms` 和 `added_placed_terms` 只数原页已有或可用文案。后者分为 `already_in_copy` 与 `new_copy_terms`。`draft_added_intents` 与 `added_intents` 分别按两种口径去重；缺少判断所需的意图归组时留空。`simulation` 表示模拟，`documented` 表示已登记和通过结构核对。
+- `run.json` 记录来源、实际缺口、状态和本页的词库核对计数。`keyword-coverage.csv/.xlsx` 给出原行、实际表达、归属、位置及文案状态。`planned_with_text` 和 `added_with_text` 含待确认稿，`placed_planned_terms` 和 `added_placed_terms` 只数各必需模块均有最终可用答案的词。后者分为 `already_in_copy` 与 `new_copy_terms`。`draft_added_intents` 与 `added_intents` 分别按两种口径去重；缺少判断所需的意图归组时留空。`simulation` 表示模拟，`documented` 表示已登记和通过结构核对。
 
 局部改稿完成、完整研究、可公开文案、已保存/已上线及效果分别验收。不得通过省略 focus 或改成 metadata 来掩盖本次实际是完整页任务。
+
+
+## 最终稿和覆盖表使用同一段内容
+
+给 `research.brief.modules[]` 中的模块稳定的 `id`。沿用已有页面时，用一基的 `source_heading_index` 标出原章节，可用 `source_block_ids` 标出无标题但可定位的原段。接上游模块时填 `design_module_id`。HTML 的 `inspect` 产出 `content_blocks`，列出每段和规格行的 `block_id` 及所属原始标题。能取得原件且摘要匹配时，旧 HTML 快照可补取这些定位信息。
+
+给 `changes[]` 指定相应 `module_id`，可附本句用到的 `field_ids`、`attribute_ids`。模块下有多个 H2/H3 时，新增正文用 `under_heading` 引用改后的标题 change_id 或原有 `heading-N`。同名原段用 `source_block_id` 区分。脚本优先复用能确定的既有标题位置。最终稿和覆盖表都使用这份合并后的文案。
+
+在 `keyword_decisions[].module_ids` 只列**必须回答**的模块。两种同义说法可共用一个模块。复合采购词可用多行 placement 分别落实每个条件。给需要解释具体能力的查询用 `answer_kind=detail`，产品身份可用 `identity`。同义词可用自然表达，编辑负责判断原句是否完整回答了查询、是否适用于该产品范围。
+
+`keyword_placement[]` 沿用改稿的 `change_id` 或保留原文的 `source_ref`。保留段可用 `block_id` 精确定位。用 H2/H3 承接需求时，引用该标题下的 `answer_change_id` 或 `answer_block_id`，可附从最终正文逐字取出的 `answer_quote`。也可直接为同一词另登记该小节的正文。示例展示同一贴牌制造商查询的两处落点，假设简报已给它分配 identity 和 packaging：
+
+```json
+[
+  {"keyword":"private label phone case manufacturer","role":"secondary","location":"subtitle","change_id":"hero-copy","expression":"We manufacture phone cases","reason":"交代谁生产"},
+  {"keyword":"private label phone case manufacturer","role":"secondary","location":"h2","change_id":"pack-title","expression":"Private-Label Packaging","answer_change_id":"pack-copy","answer_quote":"your branding on the packaging","reason":"说明品牌可以用在哪里"}
+]
+```
+
+保留原句也要核企业事实。使用内部样稿时，可在 placement 的 `claim_ids` 指明本段主张，在 `answer_claim_ids` 指明所引答案段的主张；字段仍按 `field_ids` 回查。内部主张或受限字段会使同一段的全部落点显示为待确认。已有公开批准的更新依据可随该段一并登记。
+
+检查 `page-copy.md` 的最终段落，再查 `keyword-coverage.xlsx`。表中 `placed` 表示该词各必需模块都有可用或保留的答案，`draft_pending_confirmation` 表示答案写全且仍有待确认内容，`incomplete_answer` 表示已提到但缺少模块或小节答案，`content_gap` 表示尚无文案。`required_modules`、`missing_answers`、`answer_ref` 和 `answer_text` 可定位问题。清单以外的来源留在独立研究记录，表中的 `origin`、同行实读 URL 和实际排名 URL 分列。没有指标时保留空值。上游字段与产品属性的原始状态也随工作簿保存。

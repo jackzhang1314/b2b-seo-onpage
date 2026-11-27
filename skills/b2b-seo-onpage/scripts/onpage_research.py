@@ -321,7 +321,10 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
             override = refs([decision["ownership_override_ref"]])[0]
             if kinds[override.split("#", 1)[0]] not in {"page_plan", "keyword_group"}:
                 raise ValueError("An ownership override needs an approved planning source")
-        keywords.append({"keyword": keyword, "origin": origin, "decision": choice,
+        answer_kind = str(decision.get("answer_kind", ""))
+        if answer_kind not in {"", "identity", "detail"}:
+            raise ValueError("answer_kind must be identity or detail")
+        keywords.append({"keyword": keyword, "origin": origin, "decision": choice, "answer_kind": answer_kind,
                          "keyword_id": string(decision["keyword_id"]) if "keyword_id" in decision else "",
                          "intent_group": str(decision.get("intent_group", "")),
                          "ownership_override_ref": override,
@@ -352,8 +355,8 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
 
 def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object], review: ResearchReview,
                         placements: list[dict[str, str]]) -> tuple[list[dict[str, str]], dict[str, int | None]]:
-    inventory = object_value(snapshot.get("keyword_inventory"))
-    page = object_value(snapshot.get("page"))
+    inventory = object_value(snapshot.get("keyword_inventory", {}))
+    page = object_value(snapshot.get("page", {}))
     focus = object_value(context.get("focus"))
     same_id = bool(page.get("id")) and page["id"] == focus.get("planned_page_id")
     mapped = str(focus.get("page_url_mapping_ref", "")).split("#", 1)[0]
@@ -361,9 +364,9 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
     if page.get("url"):
         if url_key(string(page["url"])) != url_key(string(context.get("target_url"))) and not verified_mapping:
             raise ValueError("Architecture page URL differs from the selected page")
-    elif not same_id:
+    elif snapshot and not same_id:
         raise ValueError("A planned page without a URL requires its confirmed focus.planned_page_id")
-    if inventory.get("page_id") != page.get("id") or inventory.get("page_url", "") != page.get("url", ""):
+    if inventory and (inventory.get("page_id") != page.get("id") or inventory.get("page_url", "") != page.get("url", "")):
         raise ValueError("Inventory belongs to another planned page")
     planned_primary = str(page.get("primary_keyword") or "").strip()
     if planned_primary and query_key(planned_primary) != query_key(string(context.get("keyword"))):
@@ -371,7 +374,8 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
         if not any(s["id"] == ref and s["kind"] in {"page_plan", "keyword_group"} for s in review.sources):
             raise ValueError("A different planned primary keyword requires a confirmed planning reference")
     for name in ("market", "language"):
-        if query_key(string(inventory.get(name))) != query_key(string(context.get(name))):
+        observed = inventory.get(name) if inventory else page.get(name)
+        if (inventory or observed) and query_key(string(observed)) != query_key(string(context.get(name))):
             raise ValueError(f"Inventory {name} differs from the selected page")
     decisions = {query_key(r["keyword"]): r for r in review.keywords}
     locations: dict[str, list[dict[str, str]]] = {}
@@ -383,6 +387,16 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
     drafted_groups: set[str] = set()
     peer_evidence = {ranking_url(row["url"]) for row in review.competitors
                      if row["read_state"] == "read" and row["site_type"] in {"export_b2b_independent", "mixed_b2b_page"}}
+    peer_by_ref: dict[str, set[str]] = {}
+    peer_by_source: dict[str, set[str]] = {}
+    competitor_sources = {src["id"] for src in review.sources if src["kind"] == "competitor"}
+    for peer in review.competitors:
+        for ref in peer["evidence_refs"].split(" | "):
+            sid = ref.split("#", 1)[0]
+            if sid in competitor_sources:
+                peer_by_ref.setdefault(ref, set()).add(peer["url"])
+                peer_by_source.setdefault(sid, set()).add(peer["url"])
+
     def source_line(record: dict[str, object]) -> str:
         file = record.get("input_csv_path") or record.get("input_csv_file") or record.get("source_file", "")
         number = record.get("input_csv_row") or record.get("source_row", "")
@@ -399,8 +413,11 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
     planned = added = covered = retained_additions = 0
     planned_with_text = added_with_text = 0
     checked: set[str] = set()
-    for value in items(inventory.get("candidates")):
-        candidate = object_value(value)
+    candidates = [object_value(v) for v in items(inventory.get("candidates", []))]
+    from_inventory = {query_key(string(c.get("keyword"))) for c in candidates}
+    candidates.extend({"keyword": row["keyword"], "ownership": "research_only"} for key, row in decisions.items()
+                      if key not in from_inventory)
+    for candidate in candidates:
         phrase = string(candidate.get("keyword"))
         key = query_key(phrase)
         if key in checked:
@@ -414,7 +431,7 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
         if decision["decision"] == "include" and ownership in {"other_page", "review"} and not decision["ownership_override_ref"]:
             raise ValueError(f"Existing ownership needs review before inclusion: {phrase}")
         uses = locations.get(key, [])
-        if decision["decision"] == "include" and not uses:
+        if key in from_inventory and decision["decision"] == "include" and not uses:
             raise ValueError(f"Included inventory keyword needs an actual placement or an explained not_used: {phrase}")
         ranking_rows = [object_value(r) for r in items(candidate.get("rankings", []))]
         if ranking_rows and not assigned and decision["decision"] == "include":
@@ -424,7 +441,13 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
         group = decision["intent_group"].strip()
         states = {r["copy_state"] for r in uses if r["location"] != "not_used"}
         has_text = bool(states)
-        placed = bool(states & {"ready", "preserved_snapshot_text"})
+        required = set(decision["module_ids"].split(" | ")) - {""}
+        def answering(accepted: set[str]) -> set[str]:
+            return {r["module_id"] for r in uses if r["answer_state"] in accepted and r["module_id"]}
+        ready_modules = answering({"ready", "preserved_snapshot_text"})
+        draft_modules = ready_modules | answering({"blocked"})
+        placed = bool(required) and required <= ready_modules
+        complete_draft = bool(required) and required <= draft_modules
         if decision["decision"] != "include" and has_text:
             raise ValueError(f"Placement contradicts the keyword decision: {phrase}")
         if assigned:
@@ -434,23 +457,51 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
             original_groups.add(group)
         elif has_text:
             added_with_text += 1
-            drafted_groups.add(group)
+            if complete_draft:
+                drafted_groups.add(group)
             if placed:
                 added += 1
-                retained_additions += int("preserved_snapshot_text" in states)
+                retained_additions += int(required <= answering({"preserved_snapshot_text"}))
                 added_groups.add(group)
         if placed:
             copy_status = "placed"
-        elif has_text:
+        elif complete_draft:
             copy_status = "draft_pending_confirmation"
+        elif has_text:
+            copy_status = "incomplete_answer"
         else:
             copy_status = "content_gap" if decision["decision"] == "include" else "not_placed"
-        result.append({"keyword": phrase, "assigned": str(assigned).lower(), "ownership": ownership,
+        def values(column: str) -> str:
+            return "\n".join(dict.fromkeys(r[column] for r in uses if r[column]))
+        citations = set(decision["evidence_refs"].split(" | "))
+        source_ids = {ref.split("#", 1)[0] for ref in citations}
+        observed_pages = {address for ref in citations for address in peer_by_ref.get(ref, set())
+                          if len(peer_by_ref[ref]) == 1}
+        observed_pages.update(address for sid in source_ids for address in peer_by_source.get(sid, set())
+                              if len(peer_by_source[sid]) == 1)
+        final_placements = "\n".join(f"{r['location']} · {r['module_id']} · {r['change_id'] or r['block_id']} → "
+                                     f"{r['answer_ref'] or '待补答案'} · {r['answer_state']}" for r in uses if r["location"] != "not_used")
+        pool = ("planned" if assigned else "library_or_rankings" if key in from_inventory or decision["origin"] == "library"
+                else "planning_record" if decision["origin"] == "planning" else "research_only")
+        planning = [object_value(r) for r in items(candidate.get("planning", []))]
+        def planned_values(column: str, original: str) -> str:
+            entries = decision[column].split(" | ") + [str(r[original]) for r in planning if r.get(original)]
+            return " | ".join(dict.fromkeys(value for value in entries if value))
+        result.append({"keyword": phrase, "assigned": str(assigned).lower() if key in from_inventory else "", "ownership": ownership,
+                       "source_pool": pool, "final_placements": final_placements,
+                       "keyword_id": planned_values("keyword_id", "keyword_id"), "group_ids": planned_values("group_ids", "group_id"),
+                       "planned_role": planned_values("planned_role", "disposition"), "group_labels": planned_values("group_labels", "group_label"),
+                       "planned_page_id": decision["planned_page_id"] or (str(page.get("id", "")) if assigned else ""),
+                       "origin": decision["origin"], "metrics": decision["metrics"],
+                       "observed_peer_urls": " | ".join(sorted(u for u in observed_pages if ranking_url(u) in peer_evidence)),
+                       "required_modules": decision["module_ids"], "missing_answers": " | ".join(sorted(required - draft_modules)),
+                       **{column: values(column) for column in ("module_id", "design_module_id", "block_id", "final_text", "answer_ref",
+                           "answer_text", "answer_state", "field_ids", "attribute_ids", "design_refs")},
                        "decision": decision["decision"], "intent_group": group, "reason": decision["reason"],
                        "copy_status": copy_status, "copy_states": " | ".join(sorted(states)),
                        "locations": " | ".join(dict.fromkeys(r["location"] for r in uses)),
                        "expressions": " | ".join(dict.fromkeys(r["expression"] for r in uses if r["expression"])),
-                       "planning_refs": " | ".join(source_line(object_value(r)) for r in items(candidate.get("planning", []))),
+                       "planning_refs": " | ".join(source_line(r) for r in planning),
                        "library_refs": " | ".join(source_line(object_value(r)) for r in items(candidate.get("library_matches", []))),
                        "peer_urls": " | ".join(dict.fromkeys(string(r["ranking_url"]) for r in ranking_rows)),
                        "ranking_refs": "\n".join(ranking_reference(r) for r in ranking_rows),
@@ -459,11 +510,11 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
                        "other_target": decision["target_url"] or decision["target_page_role"],
                        "evidence_refs": decision["evidence_refs"]})
     def distinct_new(groups: set[str]) -> int | None:
-        if groups and ("" in original_groups or "" in groups):
+        if not inventory or groups and ("" in original_groups or "" in groups):
             return None
         return len(groups - original_groups)
 
-    return result, {"planned_terms": planned, "evaluated_planned_terms": planned, "planned_with_text": planned_with_text,
+    return result, {"planned_terms": planned if inventory else None, "evaluated_planned_terms": planned if inventory else None, "planned_with_text": planned_with_text,
                     "placed_planned_terms": covered, "added_with_text": added_with_text, "added_placed_terms": added,
                     "already_in_copy": retained_additions, "new_copy_terms": added - retained_additions,
                     "draft_added_intents": distinct_new(drafted_groups), "added_intents": distinct_new(added_groups)}

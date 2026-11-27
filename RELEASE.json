@@ -1,43 +1,44 @@
 {
   "schema_version": 1,
   "name": "b2b-seo-onpage",
-  "version": "2.8.1",
-  "release_ref": "v2.8.1",
+  "version": "2.9.0",
+  "release_ref": "v2.9.0",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-27T12:07:19+08:00",
+  "prepared_at": "2026-11-28T01:32:06+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
     "branch": "main",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "v2.8.0",
-    "commit": "85fc9353c988dc2f9d6063f2a2de8af7b6d73a48"
+    "release_ref": "v2.8.1",
+    "commit": "5e7b75febb3571682cac3484994cb8d873cccf3b"
   },
-  "runtime_file_count": 18,
-  "file_count_excluding_manifest": 19,
+  "runtime_file_count": 19,
+  "file_count_excluding_manifest": 20,
   "files_sha256": {
-    "README.md": "2126d1701e78cafb01e7ee897f9f0bd9cfff6eb4a7a8ae262d45a6123f593fcf",
-    "skills/b2b-seo-onpage/SKILL.md": "17e112e11ff4a415d10e882a87d85b5bd2c57ac0220a6f0908ec1b135df14b3e",
-    "skills/b2b-seo-onpage/agents/openai.yaml": "bb38dcbc58fe3ec385adc6eac8fc9a24c36a7561afdc919bdf5f4ce20c19a17e",
-    "skills/b2b-seo-onpage/references/architecture-to-page.md": "2aff19b2a62708f5255c57e052bc4a65f402047719ac9e9cabc227885624f965",
+    "README.md": "21e8fe13b13b808c364b0b6038bf1d7eb90d075a37de9dd883d4b2c114e4b6fc",
+    "skills/b2b-seo-onpage/SKILL.md": "64b6ed8627b8799adfff8eb423453b53a5eb74b1d14e34e6cfa726b09a6c54db",
+    "skills/b2b-seo-onpage/agents/openai.yaml": "4f23b49a1669a4c3909135f17d3958d352bf19fda133ec02ce4da7dfc3d12a03",
+    "skills/b2b-seo-onpage/references/architecture-to-page.md": "bbd1ef5ba66fa118b6469cfc7abf44c03c4f059efa759eed50b1a41600a16969",
     "skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv": "a1439f35852fa63106905821ce7f36720e039c2d5dcd545adb7af0312ff95388",
     "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
     "skills/b2b-seo-onpage/references/category-modifier-research.md": "fdf6aae0a54d9381437244b301cc2c79354c2fa49b711332330839f2cc6763a9",
-    "skills/b2b-seo-onpage/references/data-and-commands.md": "4b9cf2db546d5a8ada262775816e9301240c91971acaf14fae5b8c209e9191ad",
+    "skills/b2b-seo-onpage/references/data-and-commands.md": "a662e9cfca29b9a4444acfc143ef31b73dc2af6e26b4737b4cc0ab270fb09bc5",
     "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "1d11ce7b6456647ea48660767f9213abefec89eddd6e0a46d0162397f1057efa",
     "skills/b2b-seo-onpage/references/query-placement.md": "eb54e338eff17b004aa5137dc10eab06765fa69e0b74aed203f1da8c7f2ec7d8",
-    "skills/b2b-seo-onpage/references/research-contract.md": "58e27373bcb0110be68f4068da45cca21184d75b5fa651209d4ef26ba98179a8",
+    "skills/b2b-seo-onpage/references/research-contract.md": "53cc754f9160d448a2f9219feb20983c03ee9e9abf0b0abcfb1071abbdcd1d0b",
     "skills/b2b-seo-onpage/references/research-workflow.md": "42da0489575ece2521779a1ff9637695204c568a5c02c6e5288248c035fd68e4",
     "skills/b2b-seo-onpage/references/title-and-snippet.md": "10920a46deec5c34c365db41a30276465b50df06ad57dbbb247d899c65d6c458",
     "skills/b2b-seo-onpage/references/upstream.md": "f4a3008a867222dc1cfffc36f6fefaa73fdd5d3d12af43984e41f1946d3957b8",
     "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "b824601f7dc3f30e502a2454737d14f60bfe5e1f8c0f13987d88b1801c8d44fc",
-    "skills/b2b-seo-onpage/scripts/architecture_page.py": "74ec61662e1880145c83b7ffbe1e0ba3357ee96bbeedbb8613dd512c0dfbb906",
+    "skills/b2b-seo-onpage/scripts/architecture_page.py": "84be8da130980e4c53a22a3855b5b21a58ca6222f61cb55ca4abb8c7d8fc2f46",
     "skills/b2b-seo-onpage/scripts/keyword_discovery.py": "d1e500ac09b1c033a600b2a727bf3aa2c7b0038711613fddea3f9169924424ca",
-    "skills/b2b-seo-onpage/scripts/onpage.py": "f8c5aa57220d64e0a2dcbd335ab649b0bad1f922218393dee1ed1919519c65da",
-    "skills/b2b-seo-onpage/scripts/onpage_research.py": "95d9c37d9ffb6ad6a7c8525d2542e2f28a4b9dead847410864d8bc27f8db838b"
+    "skills/b2b-seo-onpage/scripts/onpage.py": "4a9f194f8e19f10b833ae10aba6095508cbb11991d94fd5a6f7a7386273c7576",
+    "skills/b2b-seo-onpage/scripts/onpage_research.py": "9d2e1988b0c8f072eb25fb40433ff4d132daff7048ecc894a528452a582c6ad4",
+    "skills/b2b-seo-onpage/scripts/page_copy.py": "023f70681f28c73b21d7107a6767df8ed8ffde67c5a9478193fabea5e6b2c3a6"
   },
   "manifest_self_excluded": true,
   "wordpress_harness_contract": {
@@ -46,41 +47,43 @@
     "reviewed_distribution_revision": 19,
     "availability": "Reuse actual installed Harness and current site contract; Harness is not bundled or installed by this package."
   },
-  "verification_scope": "Page-level keyword recovery and editorial delivery for export B2B sites. Customer workbooks and business facts used in workflow tests were simulated.",
+  "verification_scope": "Final-page keyword placement, scoped architecture handoff, qualified B2B research additions and workbook delivery. Customer data and business facts in the phone case replay are simulated.",
   "verification": {
-    "regression_tests_passed": 23,
+    "regression_tests_passed": 32,
     "static_checks": [
-      "mypy",
-      "ruff",
+      "mypy .",
+      "ruff check .",
       "Codex Skill structure"
     ],
-    "scale_fixture": {
-      "library_rows": 50000,
-      "ranking_rows": 100000,
-      "scoped_peer_rows": 3,
-      "distinct_candidates": 4
+    "phone_case_replay": {
+      "planned_terms": 3,
+      "library_or_rankings_candidates": 8,
+      "research_only_candidates": 2,
+      "included_terms_with_copy": 6,
+      "planned_terms_with_usable_answers": 1,
+      "added_terms_with_copy": 3,
+      "added_terms_ready": 0,
+      "added_draft_intents": 1,
+      "added_ready_intents": 0,
+      "design_modules": 4,
+      "design_fields": 4,
+      "product_attributes": 1,
+      "checked": [
+        "Rejected replaced H1 and wrong-section placements previously accepted by v2.8.1",
+        "One manufacturer/private-label query links supplier identity and packaging copy",
+        "Kept a restricted source paragraph pending across draft, terms and design fields",
+        "Preserved neighboring stock-page and guide ownership"
+      ]
     },
-    "source_page_html": [
-      "https://www.chinaift.com/excavator/",
-      "https://www.gz-champions.com/custom/",
-      "https://www.pcbway.com/rapid-prototyping/cnc-machining/"
-    ],
-    "independent_forward_trial": {
-      "page": "synthetic branded phone case collection",
-      "planned_terms_with_text": 3,
-      "extra_terms_with_text": 2,
-      "extra_draft_intents": 1,
-      "extra_terms_ready_for_public_use": 0,
-      "notes": "Actual peer pages and separately labelled provider search observations. Business-claim drafts await public approval."
-    },
-    "architecture_handoff": "Replayed an upstream simulated excavator architecture with a Chinese competitor URL ranking export.",
+    "independent_forward_trial": "Rebuilt the simulated phone-case inputs and checked the private retained-material variant. Imported both workbook sheets with SpreadsheetFile; cells matched their CSV reading copies.",
+    "workbook": "Reopened the final workbook with openpyxl and compared the full contents of both sheets against CSV.",
+    "native_architecture_replay": "Read a scoped upstream excavator detail template with five modules, nine fields and five bound product attributes.",
     "unverified": [
-      "Real customer workbook outcomes",
-      "Google organic positions for the provider-order observations",
-      "Post-publication traffic, inquiries or ranking effects",
+      "Customer production datasets",
+      "Current organic positions and ranking changes",
+      "Post-publication traffic and inquiries",
       "WordPress writes in this release"
-    ],
-    "command_documentation": "The documented change.field values match all 14 fields accepted by the CLI."
+    ]
   },
   "distribution": "github-release",
   "modifier_library": {
