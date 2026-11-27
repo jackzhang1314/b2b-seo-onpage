@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Iterator
 from unicodedata import normalize
 from urllib.parse import urlsplit
+from project_sources import comparable_pages, context as project_context, indexed_files
 
 
 @contextmanager
@@ -200,12 +201,14 @@ def page_design(directory: Path, page: dict[str, str], market: str, language: st
 def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_map: Path | None = None,
               library: Path | None = None, market: str | None = None, language: str | None = None,
               ranking_files: list[Path] | None = None, peer_urls: list[str] | None = None,
-              library_terms: list[str] | None = None, ranking_date: str | None = None) -> dict[str, object]:
+              library_terms: list[str] | None = None, ranking_date: str | None = None,
+              registered: tuple[Path, Path] | None = None) -> dict[str, object]:
     if bool(url) == bool(page_id):
         raise ValueError("Select exactly one planned URL or page ID")
     wanted = url_key(url) if url else None
     matches: list[dict[str, str]] = []
     gaps: list[str] = []
+    files = indexed_files(registered[1]) if registered else {}
     for name in ("pages.csv", "content-plan.csv"):
         path = directory / name
         if not path.is_file():
@@ -252,6 +255,14 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
                                  "keyword_decisions": decisions, "gaps": gaps}
     if any((directory / name).is_file() for name in ("design-modules.csv", "design-fields.csv", "product-attributes.csv")):
         result["page_design"] = page_design(directory, selected, target_market, target_language)
+    if registered:
+        reviews = comparable_pages(files.get("comparables"), selected["id"], project.get("mode"))
+        peer_urls = peer_urls if peer_urls is not None else list(dict.fromkeys(r["url"] for r in reviews))
+        library = library or files["library"]
+        if peer_urls and not ranking_files and "rankings" in files:
+            ranking_files = [files["rankings"]]
+        result["project_context"] = project_context(*registered, files, selected, target_market, target_language,
+                                                    peer_urls, reviews, ranking_date)
     if ranking_files and not peer_urls:
         raise ValueError("--rankings requires at least one qualified --peer-url")
     if library_terms and not library:

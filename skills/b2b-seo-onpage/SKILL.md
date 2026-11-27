@@ -2,7 +2,7 @@
 name: b2b-seo-onpage
 description: 按客户的页面规划、关键词分组与大词库为外贸 B2B 独立站逐页布词。按可比同行的具体排名 URL 与产品加 B 端属性的搜索补词，结合上游模块和字段给出 SEO Title、H1、副标题、H2 及正文，逐词核对最终页面稿。支持已有页、规划页和 WordPress 实施交接。
 metadata:
-  version: "2.9.0"
+  version: "2.10.0"
 ---
 
 # B2B 单页 SEO 优化
@@ -10,6 +10,10 @@ metadata:
 从客户已有的**行业词库、网站页面规划和关键词分组表**定位目标页面。取全分组成员，再沿可比外贸同行的具体 URL 反查排名词，补查总库和同行标题中的表达。交稿说明哪些词原已分配、哪些适合补到本页、哪些归别页，并给出实际文案。只改一个标题或段落时按用户范围交付。
 
 本 Skill 负责 SEO 研究、编辑判断与改稿；WordPress Build Harness 负责站点身份、内容/模板归属、实际写入与相应验收。用户提到 Harness，或目标是已有 Harness 管理的 WordPress 项目时，读 [WordPress 协作与实施](references/wordpress-harness-handoff.md)，在同一任务中衔接 `wordpress-builder`，按实际变更调用 Content、Design、Delivery。仅交改稿无需启动或配置 WordPress；已有实施授权则完成到约定目标的回读，不停在让用户再调用另一个 Skill。
+
+## 从网站项目的新会话开始
+
+先读当前客户网站根目录的 `AGENTS.md`。沿其中的 “SEO project index” 选择与站点、市场和语言匹配的工作台，再按页号或 URL 读页面规划、清洗后的行业词库、逐词归属、同行排名及 Top Pages。原始输入可沿同一索引核对。已有 Harness 的网站同时复用该项目登记的实际 CLI、Router 与当前摘要。用户只说“优化 M04”或给真实 URL 即可。显式提供另一份资料时先确认它对应本页；只做改稿可直接继续，实施由已有授权和目标站点决定。
 
 ## 从用户已有的信息开始
 

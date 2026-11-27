@@ -2,6 +2,8 @@
 
 用于已有 WordPress 项目的页面优化，或用户明确要求配合 Build Harness 实施。这里定义 SEO 与 WordPress 的交接；具体命令、字段与恢复步骤以本机实际 Harness、当前站点入口及已安装插件为准。不要复制一份 Harness、另建部署器，或把作者机器上的路径当用户环境。
 
+已运行网站架构 Skill 的项目，从根 `AGENTS.md` 同时取得当前网站摘要、共享 Harness 入口及 SEO 架构索引。用页号或 URL 读取该市场的工作台、原词与同行证据，保留相邻页归属，再由 Harness 将成稿定位到实际 WordPress 记录及字段。架构 Skill 维护 SEO 区段。On-page 和 Harness 读取这份登记。[项目入口与单页资料](architecture-to-page.md)
+
 ## 分工与继续工作的责任
 
 | 工作 | 负责的 Skill | 带入及带回的信息 |

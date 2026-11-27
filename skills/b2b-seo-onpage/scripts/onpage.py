@@ -20,6 +20,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
+from project_sources import discover
 from onpage_research import reconcile_inventory, validate_research
 from page_copy import DESIGN_COLUMNS, PLACEMENT_DETAIL, PageCopy
 
@@ -974,7 +975,10 @@ def main() -> int:
     compare.add_argument("--out", type=Path, required=True)
     compare.add_argument("--local-simulation", action="store_true", help="Read blocked copy only in a supplied local simulation; public-use state is unchanged")
     architecture = commands.add_parser("architecture-page", help="Read one page and its keyword assignments from an architecture delivery")
-    architecture.add_argument("--source", type=Path, required=True)
+    location = architecture.add_mutually_exclusive_group()
+    location.add_argument("--source", type=Path, help="Use this architecture delivery directly")
+    location.add_argument("--project-root", type=Path, help="Read the website AGENTS.md; default: current project")
+    architecture.add_argument("--mode", choices=("real", "simulation"), help="Select a registered real or simulation scope")
     match = architecture.add_mutually_exclusive_group(required=True)
     match.add_argument("--url")
     match.add_argument("--page-id")
@@ -990,9 +994,14 @@ def main() -> int:
     args = parser.parse_args()
     try:
         if args.command == "architecture-page":
-            page_note = read_page(args.source, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
+            if args.source and args.mode:
+                raise ValueError("--mode selects a registered workbench; use it without --source")
+            registered = None if args.source else discover(args.project_root, args.url, args.market, args.language, args.mode)
+            source_folder = registered[1].parent if registered else args.source
+            page_note = read_page(source_folder, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
                                   market=args.market, language=args.language, ranking_files=args.rankings,
-                                  peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date)
+                                  peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date,
+                                  registered=registered)
             with output_dir(args.out) as destination:
                 write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":

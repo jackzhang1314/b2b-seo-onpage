@@ -6,24 +6,26 @@ v2.9.0 从客户确认的页面规划和分组取全本页成员，再按合格�
 
 已有页面还可以附上该 URL 的 Google Search Console 查询导出，保留确实带来相关展现或点击的买家用语。新页从已有架构、词库和产品资料开始。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
 
-## 安装 v2.9.0
+v2.10.0 支持从客户网站根目录 AGENTS.md 找回已有行业词库、竞品 Top Pages、逐词排名与架构工作台。在该项目打开新会话，告诉 Codex 页号或 URL 即可。[项目入口与单页读取](skills/b2b-seo-onpage/references/architecture-to-page.md)
+
+## 安装 v2.10.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.9.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.10.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.9.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.9.0/b2b-seo-onpage-2.9.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.9.0/b2b-seo-onpage-2.9.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.10.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.10.0/b2b-seo-onpage-2.10.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.10.0/b2b-seo-onpage-2.10.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.9.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.10.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
