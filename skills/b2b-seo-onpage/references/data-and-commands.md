@@ -48,7 +48,7 @@ python3 SKILL_DIR/scripts/onpage.py check-plan --evidence /绝对路径/证据�
 
 上下文必须与证据相同。`intent_fit`：fit/mixed/mismatch/unknown。局部/旧接口的 `serp` 可省略，此时明确未校验完整研究链。`focus.scope=full_page` 必须提供 `research`，使用客户词库时登记可读原件；缺少词库时走有真实来源的独立研究并标记 partial（模拟仍标 simulation）；详见[研究接口](research-contract.md)。研究中的 SERP 作为整页报告来源；局部旧接口 results 每项有 url/page_type/evidence_ref，排名仅实际取得时记录，空结果配真实限制。
 
-change field：title/description/h1/h2/h3/h4/h5/h6/body/link/image_alt/schema/other。priority：P1/P2/P3。copy_state：ready/blocked。导出只接受 proposed；不能把校验成功设为已改站。
+`change.field` 可选 `title`、`description`、`h1`、`h2`、`h3`、`h4`、`h5`、`h6`、`subtitle`、`body`、`link`、`image_alt`、`schema`、`other`。首屏副标题或导语使用 `subtitle`，改前先登记上文的首屏观察。`priority` 可选 P1/P2/P3，`copy_state` 可选 ready/blocked。改稿导出的实施状态为 proposed。
 
 title/description 的 before 与 head 证据匹配。H1–H6 要有 HTML 证据，before 按标签及原文定位；同文同级出现多次时必须给 `heading_index`（全部标题按序，从1开始），并核对原文和级别。可用 `after_tag` 调整级别；新增同级标题需要 `placement` 说明插入位置。保留既有 H 标签时可在关键词安排中给 `heading_index` 以核确切位置。改后的同文若仅在另一位置出现，带编号的比较会要求人工复核模块。正文替换的 before 要能在提取文本定位。link/image_alt/schema/other 仍由 Codex 核具体位置，脚本不做完整 DOM 校验。
 

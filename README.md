@@ -2,28 +2,28 @@
 
 **把客户已有的网站规划和关键词分组落实到每一个页面。** 给 Codex 行业词库、网站页面规划、关键词分组表和目标 URL 或页面编号，它会找出分配给这页的组及成员，回查原词，再交付一个 SEO 标题、H 标题和可替换的正文。需要修改 WordPress 页面时，可以接已有 WordPress Build Harness 完成保存和回读。
 
-v2.8.0 从客户已经规划的页面开始。它先取全本页分组，再用合格外贸 B2B 同行的具体 URL 反查排名明细，把原分组里漏掉的别称、工艺、采购方式和行业用词带回本页。最终交 SEO Title、H1、首屏副标题、H2 和可替换正文。[页面规划、分组与总库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
+v2.8.1 从客户已经规划的页面开始。它先取全本页分组，再用合格外贸 B2B 同行的具体 URL 反查排名明细，把原分组里漏掉的别称、工艺、采购方式和行业用词带回本页。最终交 SEO Title、H1、首屏副标题、H2 和可替换正文。[页面规划、分组与总库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
 已有页面还可以附上该 URL 的 Google Search Console 查询导出，保留确实带来相关展现或点击的买家用语。新页从已有架构、词库和产品资料开始。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
 
-## 安装 v2.8.0
+## 安装 v2.8.1
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.8.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.8.1/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.8.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.0/b2b-seo-onpage-2.8.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.0/b2b-seo-onpage-2.8.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.8.1 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.1/b2b-seo-onpage-2.8.1.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.1/b2b-seo-onpage-2.8.1.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.8.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.8.1 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
@@ -136,6 +136,8 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 报告保留搜索服务的实际返回顺序。仅在核到目标地区 Google 自然排名时才标记为 Google 名次。账号、密码和会话信息留在授权环境内。
 
 ## 版本与验证范围
+
+v2.8.1 将首屏副标题 `subtitle` 补入完整改稿字段清单，示例、命令和使用说明可以逐项对照。[改稿字段及用法](skills/b2b-seo-onpage/references/data-and-commands.md)
 
 v2.8.0 用一张模拟的品牌定制手机壳集合页，从原始规划、分组和排名明细走到实际改稿。原分配的 3 个词都有文案；从分组外采用了 2 个词，共新增 1 个采购意图。现货词归现货集合页，选购词归指南。样稿开头保留原 H1，列出建议 Title、副标题和 H2，逐项注明可用或待确认。
 

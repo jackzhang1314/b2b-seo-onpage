@@ -22,7 +22,7 @@ from urllib.parse import urljoin, urlsplit
 from architecture_page import read_page
 from onpage_research import reconcile_inventory, validate_research
 
-VERSION = "2.8.0"
+VERSION = "2.8.1"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {

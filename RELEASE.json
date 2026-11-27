@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
   "name": "b2b-seo-onpage",
-  "version": "2.8.0",
-  "release_ref": "v2.8.0",
+  "version": "2.8.1",
+  "release_ref": "v2.8.1",
   "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
   "skill_path": "skills/b2b-seo-onpage",
   "runtime_python": "3.11+ standard library",
-  "prepared_at": "2026-11-27T12:04:27+08:00",
+  "prepared_at": "2026-11-27T12:07:19+08:00",
   "maintenance_source": {
     "repository": "https://github.com/jackzhang1314/b2b-seo-onpage",
     "branch": "main",
     "path": "skills/b2b-seo-onpage"
   },
   "based_on": {
-    "release_ref": "v2.7.0",
-    "commit": "3233f08c6f0f4e4a5dd10eadd8facb5a49c65cb1"
+    "release_ref": "v2.8.0",
+    "commit": "85fc9353c988dc2f9d6063f2a2de8af7b6d73a48"
   },
   "runtime_file_count": 18,
   "file_count_excluding_manifest": 19,
   "files_sha256": {
-    "README.md": "e5d79d7e7ffee27a15a4f8abb3c7d310ccfcd4a5e321b60dd4ae0b74feebf7dd",
-    "skills/b2b-seo-onpage/SKILL.md": "a8670b2fcae617d6475b1988345a460ebca9f022657c38bafd37a3fee07c68b6",
+    "README.md": "2126d1701e78cafb01e7ee897f9f0bd9cfff6eb4a7a8ae262d45a6123f593fcf",
+    "skills/b2b-seo-onpage/SKILL.md": "17e112e11ff4a415d10e882a87d85b5bd2c57ac0220a6f0908ec1b135df14b3e",
     "skills/b2b-seo-onpage/agents/openai.yaml": "bb38dcbc58fe3ec385adc6eac8fc9a24c36a7561afdc919bdf5f4ce20c19a17e",
     "skills/b2b-seo-onpage/references/architecture-to-page.md": "2aff19b2a62708f5255c57e052bc4a65f402047719ac9e9cabc227885624f965",
     "skills/b2b-seo-onpage/references/b2b-buying-modifiers.csv": "a1439f35852fa63106905821ce7f36720e039c2d5dcd545adb7af0312ff95388",
     "skills/b2b-seo-onpage/references/b2b-checks.md": "df18d9bc551fdd05728e856659610a383e873be94e941ea4abd6d324bf9dc454",
     "skills/b2b-seo-onpage/references/category-modifier-research.md": "fdf6aae0a54d9381437244b301cc2c79354c2fa49b711332330839f2cc6763a9",
-    "skills/b2b-seo-onpage/references/data-and-commands.md": "33e522c5d3a55b12dd3d70050e03e06794e0006536d901349f67c340425beb7e",
+    "skills/b2b-seo-onpage/references/data-and-commands.md": "4b9cf2db546d5a8ada262775816e9301240c91971acaf14fae5b8c209e9191ad",
     "skills/b2b-seo-onpage/references/keyword-and-heading-workflow.md": "1d11ce7b6456647ea48660767f9213abefec89eddd6e0a46d0162397f1057efa",
     "skills/b2b-seo-onpage/references/query-placement.md": "eb54e338eff17b004aa5137dc10eab06765fa69e0b74aed203f1da8c7f2ec7d8",
     "skills/b2b-seo-onpage/references/research-contract.md": "58e27373bcb0110be68f4068da45cca21184d75b5fa651209d4ef26ba98179a8",
@@ -36,7 +36,7 @@
     "skills/b2b-seo-onpage/references/wordpress-harness-handoff.md": "b824601f7dc3f30e502a2454737d14f60bfe5e1f8c0f13987d88b1801c8d44fc",
     "skills/b2b-seo-onpage/scripts/architecture_page.py": "74ec61662e1880145c83b7ffbe1e0ba3357ee96bbeedbb8613dd512c0dfbb906",
     "skills/b2b-seo-onpage/scripts/keyword_discovery.py": "d1e500ac09b1c033a600b2a727bf3aa2c7b0038711613fddea3f9169924424ca",
-    "skills/b2b-seo-onpage/scripts/onpage.py": "e5a2e12d8f0ca40711766ea5315186362a4a7b95e5cc0b8ea8bb5ce884b0cec1",
+    "skills/b2b-seo-onpage/scripts/onpage.py": "f8c5aa57220d64e0a2dcbd335ab649b0bad1f922218393dee1ed1919519c65da",
     "skills/b2b-seo-onpage/scripts/onpage_research.py": "95d9c37d9ffb6ad6a7c8525d2542e2f28a4b9dead847410864d8bc27f8db838b"
   },
   "manifest_self_excluded": true,
@@ -79,7 +79,8 @@
       "Google organic positions for the provider-order observations",
       "Post-publication traffic, inquiries or ranking effects",
       "WordPress writes in this release"
-    ]
+    ],
+    "command_documentation": "The documented change.field values match all 14 fields accepted by the CLI."
   },
   "distribution": "github-release",
   "modifier_library": {

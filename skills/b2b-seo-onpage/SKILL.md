@@ -2,7 +2,7 @@
 name: b2b-seo-onpage
 description: 按客户的页面规划、关键词分组与大词库为外贸 B2B 独立站逐页布词。按可比同行的具体排名 URL 反查漏词，研究产品加 B 端属性的搜索及页面原文，给出 SEO Title、H1、Subtitle、H2 和可替换正文。支持已有页、规划页和 WordPress 实施交接。
 metadata:
-  version: "2.8.0"
+  version: "2.8.1"
 ---
 
 # B2B 单页 SEO 优化
