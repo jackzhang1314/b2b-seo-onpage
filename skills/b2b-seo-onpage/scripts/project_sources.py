@@ -11,7 +11,7 @@ from seo_project import index_paths, load_index, local_file, local_path, project
 
 def delivery_folder(source: Path) -> Path:
     source = source.resolve()
-    if source.is_file() and source.name in {"index.html", "seo-project-index.json"}:
+    if source.is_file() and source.name in {"index.html", "design.html", "workbench-handoff.json", "seo-project-index.json"}:
         source = source.parent
     if not source.is_dir() or not any((source / f).is_file() for f in ("pages.csv", "content-plan.csv")):
         raise ValueError("Use the complete architecture workbench or its index.html together with the companion page tables.")

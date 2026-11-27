@@ -1,8 +1,8 @@
 ---
 name: b2b-seo-onpage
-description: 从已采用的网站架构工作台优化外贸 B2B 独立站的整站或指定 URL。按词库、竞品排名页和采购属性研究重写商业页 Title、H1、分节与正文，通过 WordPress Builder Harness 在获准的本地或线上目标保存并回读。
+description: 按网站架构工作台的 SEO 选择优化外贸 B2B 独立站的整站或指定 URL。按词库、竞品排名页和采购属性研究重写商业页 Title、H1、分节与正文，通过 WordPress Builder Harness 在获准的本地或线上目标保存并回读。
 metadata:
-  version: "2.11.0"
+  version: "2.12.0"
 ---
 
 # 外贸 B2B 网站 On-page SEO
@@ -11,11 +11,11 @@ metadata:
 
 ## 选择整站或一个 URL
 
-- **优化整站。** 用 `site-queue` 列出工作台内的全部页面，保存本轮清单。用户要优化整个现网站时，通过 Harness 读取其公开页面清单，用 `--site-inventory` 对照工作台；已上线却没有规划行的商业页走同站新增 URL 流程。用户仅点名工作台内页面时按该范围。按实际站点、市场、语言和页面归属逐页研究、改稿、实施与回读。已上线的现有页、已规划但尚未建的页和待核页分别记明实际进度。一页缺资料继续处理其他页，续跑先读取已有清单和保存回执。
+- **优化整站。** 用 `site-queue` 从工作台读出本轮要做 SEO 的页面。支持独立勾选的工作台只执行 `seo_eligible=true`，可一次勾选全站。用户选哪一版就固定哪一版。仅选择建页、尚待考虑或暂缓 SEO 的页面仍保留规划和词组。用户要优化整个现网站时，通过 Harness 读取其公开页面清单，用 `--site-inventory` 对照工作台；已上线却没有规划行的商业页列入范围说明，被用户单独点名时走新增 URL 流程。用户仅点名工作台内页面时按该范围。按实际站点、市场、语言和页面归属逐页研究、改稿、实施与回读。已上线的现有页、已规划但尚未建的页和待核页分别记明实际进度。一页缺资料继续处理其他页，续跑先读取已有清单和保存回执。
 - **优化一个 URL。** 读取对应规划行和该页现状。新建页还没有规划行时，用 `architecture-page --url … --allow-unplanned` 取同站资料，核实际用途和相邻页，提出本页主词。只把本次指定页纳入写入范围。
 - **决定主词时先查 B 端属性。** 查看已定主词包含哪些采购表达。即使目标主词只是产品名，仍保留其规划归属，另查“该品类＋当地行业常用的供方或订单词”，核实本企业所能提供的条件。搜索量缺失时保留原状。
 - **首页、产品集合页和产品详情页的两处硬要求。** SEO Title 和可见主 H1 **各自**写明本页品类，并自然包含至少一项有业务依据的 B 端表达。详情页同时保留型号或款式。两处可以选不同说法。额外修饰词有独立含义才写，其他适用词放入副标题、H2 和有答案的正文。`custom` 表示定制，`customer` 表示客户。Article、About 等按实际职责编辑。
-- **改稿与写入。** 旧 AI 文案可整段重写或补模块。完整商业页用 `check-plan --require-b2b-headings` 检查两个最终字段。用户授权实施时，Content 按真实字段保存，Delivery 在目标 URL 回读，用 `compare --reviewed-headings … --require-b2b-headings` 核对原样保留及新写的标题。缺乏可公开的企业事实时保留该页为待核，交付其他可完成部分。[双标题方法、命令与整站进度](references/commercial-page-workflow.md)
+- **改稿与写入。** 旧 AI 文案可整段重写或补模块。完整商业页用 `check-plan --require-b2b-headings` 检查两个最终字段。在已勾选的工作台优化任务加 `--sync-workbench`，保存并回读改稿后记「已优化」。用户授权实施时，Content 按真实字段保存，Delivery 在目标 URL 回读，用 `compare --reviewed-headings … --require-b2b-headings` 核对原样保留及新写的标题。对该目标已发布且回读一致的记录，附两次真实 CMS 回执并加 `--sync-workbench`，由架构 Skill 的共享写回器记「已发布」。缺乏可公开的企业事实时保留该页为待核，交付其他可完成部分。[商业页与双标题](references/commercial-page-workflow.md) · [工作台勾选与状态写回](references/workbench-progress.md)
 
 ## 从网站项目的新会话开始
 

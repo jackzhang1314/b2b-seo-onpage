@@ -5,7 +5,7 @@
 WordPress 页面保存走[Harness 协作流程](wordpress-harness-handoff.md)。本文件的 `plan.json` 是 SEO 改稿协议，不是 Harness REST `content-plan` 的输入；先查实际记录/字段，由对应实施方生成该适配器的请求，再把真实 WordPress 改后输出交回这里核对。
 
 
-整站工作清单、指定新增 URL、双标题检查和核准稿回读的完整命令见[商业页工作流程](commercial-page-workflow.md)。
+整站工作清单、指定新增 URL、双标题检查和核准稿回读的完整命令见[商业页工作流程](commercial-page-workflow.md)。工作台勾选、实际写回和重试命令见[工作台进度](workbench-progress.md)。
 
 ## 1. 页面证据
 

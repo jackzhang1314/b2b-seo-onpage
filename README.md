@@ -5,12 +5,14 @@
 ## 两种上课可直接用的调用
 
 ```text
-使用 $b2b-seo-onpage，按这个网站已采用的架构工作台优化整站。用 WordPress Builder Harness 更新已上线页面，并逐页回读。
+使用 $b2b-seo-onpage，按这个网站工作台里勾选「做 SEO」的页面优化整站。用 WordPress Builder Harness 更新已上线页面，并逐页回读。
 ```
 
 ```text
 使用 $b2b-seo-onpage，结合这个项目的工作台，只优化【页面 URL】。用 WordPress Builder Harness 保存并回读这页。
 ```
+
+工作台把「建页」和「做 SEO」分别勾选。要整站优化，可以一次选中全部目标页；已经上线的页面也可以单独勾选。稿件通过检查并保存后，工作台显示「已优化」。WordPress 真正保存发布、后台和前台都读回预期内容后，才显示「已发布」。只给一个新 URL 或旧版工作台，也可以单页优化。[工作台选择与进度](skills/b2b-seo-onpage/references/workbench-progress.md)
 
 首页、产品集合页和详情页的 SEO Title 和主 H1 **每处都要有本页品类和至少一个合适的 B 端属性词**。已有主词继续沿用。比如工厂能定制玻璃瓶，可选 `custom glass bottle manufacturer`；仅做批发，就用真实的 `wholesale` 或 `supplier`。Semrush / Ahrefs 查不到组合量时，仍可按真实交易方式研究和采用，搜索量留空。详情页还会保留型号。完整改稿的覆盖表可直接翻到「SEO Title 与主 H1」查看两处实际文案和企业依据。可以直接要求“只交稿”，也可以指定已经新增、尚未进入工作台的 URL。[整站、单页和双标题示例](skills/b2b-seo-onpage/references/commercial-page-workflow.md)
 
@@ -20,24 +22,24 @@ v2.9.0 从客户确认的页面规划和分组取全本页成员，再按合格�
 
 v2.10.0 支持从客户网站根目录 AGENTS.md 找回已有行业词库、竞品 Top Pages、逐词排名与架构工作台。在该项目打开新会话，告诉 Codex 页号或 URL 即可。[项目入口与单页读取](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
-## 安装 v2.11.0
+## 安装 v2.12.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.11.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.12.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.11.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.11.0/b2b-seo-onpage-2.11.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.11.0/b2b-seo-onpage-2.11.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.12.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.12.0/b2b-seo-onpage-2.12.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.12.0/b2b-seo-onpage-2.12.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.11.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.12.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
@@ -152,6 +154,8 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 报告保留搜索服务的实际返回顺序。仅在核到目标地区 Google 自然排名时才标记为 Google 名次。账号、密码和会话信息留在授权环境内。
 
 ## 版本与验证范围
+
+v2.12.0 接入架构工作台的独立 SEO 选择与执行回执。指定工作台固定该版本，勾选的整站任务分别记录已优化和已发布，重试复用同一事件。手机壳本地 WordPress 回读和测试范围见 [版本验证](RELEASE.json)。
 
 v2.11.0 新增整站工作清单和同站新增 URL 入口。首页、集合页、详情页分别校验实际 SEO Title 与主 H1 中的品类和有公开依据的采购表达，前台回读可逐字对照已核准稿。旧 AI 页面可按上游模块重写。测试和公开发布范围见 [版本清单](RELEASE.json)。
 

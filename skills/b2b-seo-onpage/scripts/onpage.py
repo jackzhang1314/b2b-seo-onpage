@@ -11,6 +11,7 @@ import re
 import sys
 from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -20,13 +21,14 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
-from project_sources import delivery_folder, discover, url_key
+from project_sources import url_key
+from workbench_bridge import handoff_file, locate, page_binding, read_selection, select_jobs, shared_cli, sync
 from commercial_headings import audit as audit_headings, compare_reviewed, coverage_sheet
 from site_queue import COLUMNS as QUEUE_COLUMNS, site_queue
 from onpage_research import check_architecture_target, reconcile_inventory, validate_research
 from page_copy import DESIGN_COLUMNS, PLACEMENT_DETAIL, PageCopy
 
-VERSION = "2.11.0"
+VERSION = "2.12.0"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
@@ -710,9 +712,11 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
     headings = audit_headings(plan, page.blocks, snapshot)
     if architecture_path:
         if research is None:
-            raise ValueError("An architecture inventory requires keyword decisions in research")
+            if not snapshot.get("workbench_progress") or focus.get("scope") not in {"metadata", "headings", "section"}:
+                raise ValueError("An architecture inventory requires keyword decisions in research")
+            check_architecture_target(snapshot, plan, [])
         source_mode = str(obj(snapshot.get("project", {})).get("mode", "")).lower()
-        if source_mode in {"mock", "simulation", "synthetic"} and obj(plan["research"])["evidence_class"] != "simulation":
+        if source_mode in {"mock", "simulation", "synthetic"} and research is not None and obj(plan["research"])["evidence_class"] != "simulation":
             raise ValueError("A simulated architecture inventory requires simulation research")
     if research is not None and (architecture_path or focus.get("scope") == "full_page"):
         coverage_rows, coverage_summary = reconcile_inventory(snapshot, plan, research, placements)
@@ -872,7 +876,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
         review += ["## 资料缺口", "", *[f"- {gap}" for gap in gaps], "",
                    "状态：改稿建议。脚本只校验引用、上下文和部分现状匹配，不能自动证明事实完整、语义正确或排名提升。"]
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
-        write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "changes": len(rows),
+        write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "completed_at": datetime.now(timezone.utc).isoformat(), "changes": len(rows),
                    "commercial_headings": headings["status"],
                    "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path), *([digest(architecture_path)] if architecture_path else [])],
                    "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if "keyword_inventory" in snapshot else "decisions_only" if coverage_summary else "not_supplied",
@@ -1029,6 +1033,19 @@ def main() -> int:
     architecture.add_argument("--rankings", type=Path, action="append", help="Competitor ranking CSV, repeatable")
     architecture.add_argument("--library-term", action="append", help="Product alias or scoped modifier phrase to find, repeatable")
     architecture.add_argument("--allow-unplanned", action="store_true", help="Research a new same-site URL without borrowing an upstream page assignment")
+    replay = commands.add_parser("workbench-sync", help="Retry an existing checked review to its pinned workbench revision")
+    replay.add_argument("--out", required=True, type=Path, help="Existing check-plan or compare output to re-read")
+    replay.add_argument("--architecture-page", required=True, type=Path)
+    replay.add_argument("--plan", required=True, type=Path)
+    replay.add_argument("--after", type=Path)
+    replay.add_argument("--reviewed-headings", type=Path)
+    for command in (queue, architecture, plan, compare, replay):
+        command.add_argument("--architecture-skill", type=Path, help="Explicit local architecture Skill install for isolated integration")
+    for command in (plan, compare):
+        command.add_argument("--sync-workbench", action="store_true", help="Record this eligible page's verified outcome via the shared writer")
+    for command in (compare, replay):
+        command.add_argument("--cms-save", type=Path, help="Successful native WordPress Harness content-apply JSON")
+        command.add_argument("--cms-readback", type=Path, help="Independent native read-content JSON of the same published record")
     args = parser.parse_args()
     try:
         review: dict[str, object] = {}
@@ -1036,21 +1053,24 @@ def main() -> int:
             if args.source and args.mode:
                 raise ValueError("--mode selects a registered workbench; use it without --source")
             target = args.url if args.command == "architecture-page" else args.site_url
-            registered = None if args.source else discover(args.project_root, target, args.market, args.language, args.mode)
-            source_folder = registered[1].parent if registered else delivery_folder(args.source)
+            writer = shared_cli(args.architecture_skill)
+            source_folder, registered = locate(args.source, args.project_root, target, args.market, args.language, args.mode, writer)
+            selection = read_selection(source_folder, writer)
             if args.command == "site-queue":
                 scope, jobs = site_queue(source_folder, args.market, args.language, args.site_inventory)
                 if args.site_url and scope["site_url"] and url_key(args.site_url) != url_key(scope["site_url"]):
                     raise ValueError("The selected site URL differs from the site in the workbench")
+                jobs, selection_summary = select_jobs(jobs, selection)
                 with output_dir(args.out) as destination:
                     csv_file(destination / "site-queue.csv", jobs, QUEUE_COLUMNS)
                     inputs = [digest(source_folder / name) for name in ("architecture-plan.json", "pages.csv", "content-plan.csv")
                               if (source_folder / name).is_file()]
-                    if args.site_inventory:
-                        inputs.append(digest(args.site_inventory))
+                    for source_file in (args.site_inventory, handoff_file(source_folder)):
+                        if source_file:
+                            inputs.append(digest(source_file))
                     write_json(destination / "run.json", {"version": VERSION, "command": "site-queue", "project": scope,
                                "workbench": str(source_folder), "selection": "registered" if registered else "explicit",
-                               "pages": len(jobs), "inputs": inputs, "deployment_verified": False})
+                               "pages": len(jobs), "seo_selection": selection_summary, "inputs": inputs, "deployment_verified": False})
             else:
                 if args.allow_unplanned and not args.url:
                     raise ValueError("--allow-unplanned requires a URL")
@@ -1058,6 +1078,8 @@ def main() -> int:
                                       market=args.market, language=args.language, ranking_files=args.rankings,
                                       peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date,
                                       registered=registered, allow_unplanned=args.allow_unplanned)
+                if selection:
+                    page_note["workbench_progress"] = page_binding(selection, str(obj(page_note["page"])["id"]))
                 with output_dir(args.out) as destination:
                     write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":
@@ -1065,11 +1087,18 @@ def main() -> int:
                          args.market, args.language, args.collected_at, args.stage, args.capture, args.out, args.rendered_head, args.subtitle)
         elif args.command == "check-plan":
             review = check_plan(args.evidence, args.plan, args.out, args.architecture_page)
-        else:
+        elif args.command == "compare":
             review = compare_snapshots(args.plan, args.after, args.out, args.local_simulation, args.architecture_page, args.reviewed_headings)
         if review.get("status") == "needs_review" and (review.get("policy_declared") or args.require_b2b_headings):
             print(f"Commercial headings need review. See {args.out / 'commercial-headings.json'}", file=sys.stderr)
             return 2
+        if args.command == "workbench-sync" or getattr(args, "sync_workbench", False):
+            if not args.architecture_page:
+                raise ValueError("Working back to the workbench requires --architecture-page")
+            receipt = sync(args.architecture_page, args.plan, args.out, shared_cli(args.architecture_skill),
+                           after=getattr(args, "after", None), reviewed=getattr(args, "reviewed_headings", None),
+                           saved=getattr(args, "cms_save", None), reopened=getattr(args, "cms_readback", None))
+            write_json(args.out / "workbench-event.json", receipt)
     except (ValueError, OSError, csv.Error) as exc:
         print(str(exc), file=sys.stderr)
         return 1
