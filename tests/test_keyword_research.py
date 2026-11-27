@@ -312,6 +312,8 @@ class KeywordResearchTest(unittest.TestCase):
         with ZipFile(self.root / "report/keyword-coverage.xlsx") as book:
             self.assertIn("上游模块与字段".encode(), book.read("xl/workbook.xml"))
             self.assertIn(b"design-fields.csv#3", book.read("xl/worksheets/sheet2.xml"))
+            self.assertIn("SEO Title 与主 H1".encode(), book.read("xl/workbook.xml"))
+            self.assertIn("规划主词".encode(), book.read("xl/worksheets/sheet3.xml"))
         row = self.coverage()["private label covers"]
         self.assertEqual((row["design_module_id"], row["field_ids"], row["attribute_ids"]), ("hero", "quote", "material"))
 

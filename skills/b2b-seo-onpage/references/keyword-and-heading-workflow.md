@@ -16,7 +16,7 @@
 
 ## H1–H6 与正文结构
 
-按[架构与关键词落点](architecture-to-page.md)同时查看原词、页型、所属模块、标题与段落。H1 尽量自然表达整页主词；H2 把相容的相关查询变成采购问题；H3 交代本组的尺寸、选项、样品或报价资料。需要几级取决于实际内容。核真实 HTML 中的标签，保留父标题及位置，检查每句话后面有对应答案。
+按[架构与关键词落点](architecture-to-page.md)同时查看原词、页型、所属模块、标题与段落。首页、集合页和详情页的主 H1 同时表达品类与已核实的采购属性，其余页面按实际主题写 H1；H2 把相容的相关查询变成采购问题；H3 交代本组的尺寸、选项、样品或报价资料。需要几级取决于实际内容。核真实 HTML 中的标签，保留父标题及位置，检查每句话后面有对应答案。
 
 先列真实页面标题大纲，区分内容主标题、导航/弹窗/页脚标题与隐藏控件。源 HTML 不等于最终可见页面。
 
@@ -75,10 +75,10 @@
 
 ## 示例（虚构教学情境）
 
-假设：企业经确认销售新小型挖掘机；目标页是产品目录，主词 `mini excavators`。这个例子没有实际品牌、型号和数值。
+假设：企业经确认向经销商供应新小型挖掘机；目标页是产品目录，主词 `mini excavators`。这个例子没有实际品牌、型号和数值。
 
-- Title：`Mini Excavators: Models and Selection Guide | [Brand]`（仅当页面确实有型号目录和选型内容；品牌需替换）
-- H1：`Mini Excavators`
+- Title：`Mini Excavators for Dealers | [Brand]`（页面列出该系列供应给经销商的型号；品牌需替换）
+- H1：`Mini Excavators for Distributors`
 - H2：`Compare Available Models` → 用已核型号与可比较参数展示选择。
 - H2：`Choose a Machine for Your Worksite`
 - H3：`Check Access Width and Operating Weight` → 给出条件说明和真实参数入口。

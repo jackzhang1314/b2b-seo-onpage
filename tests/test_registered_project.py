@@ -99,7 +99,9 @@ class RegisteredProjectTest(unittest.TestCase):
         self.call("--page-id", "P", "--source", str(ca.parent), "--out", "explicit")
         result = json.loads((self.cwd / "explicit/architecture-page.json").read_bytes())
         self.assertEqual(result["project"]["market"], "CA")
-        self.assertNotIn("project_context", result)
+        self.assertEqual(result["workbench_selection"], "explicit")
+        self.assertEqual(result["project_context"]["market"], "CA")
+        self.assertEqual(result["keyword_inventory"]["peer_url_matches"], {PEER: 1})
 
     def test_missing_or_external_index_cannot_silently_use_a_different_project(self) -> None:
         index = self.delivery("US")
@@ -111,3 +113,75 @@ class RegisteredProjectTest(unittest.TestCase):
         index.write_text(json.dumps(data))
         self.assertIn("project-relative", self.call("--project-root", str(self.project), "--page-id", "P",
                                                    "--out", "escape", fail=True).stderr)
+
+
+    def test_full_workbench_queue_retains_hidden_conflicts_and_article_rows(self) -> None:
+        index = self.delivery("CA")
+        folder = index.parent
+        self.publish_entry(index)
+        self.table(folder / "content-plan.csv", ["id", "url", "page_type", "market"], [
+            ["H", "https://demo.example/", "home", "CA"],
+            ["A", "https://demo.example/guide", "article", "CA"],
+            ["D", TARGET.rstrip("/"), "product", "CA"],
+            ["X", "https://other.example/", "product", "CA"],
+            ["U", "https://demo.example/us", "product", "US"]])
+        (folder / "index.html").write_text("<title>Workbench</title>")
+        run = subprocess.run([sys.executable, "-B", str(CLI), "site-queue", "--source", str(folder / "index.html"),
+                              "--market", "CA", "--out", "queue"], cwd=self.cwd, capture_output=True, text=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        with (self.cwd / "queue/site-queue.csv").open(encoding="utf-8-sig", newline="") as stream:
+            jobs = {row["page_id"]: row for row in csv.DictReader(stream)}
+        self.assertEqual(set(jobs), {"P", "H", "A", "D", "X"})
+        self.assertEqual({pid for pid, row in jobs.items() if row["next_step"] == "resolve_target"}, {"P", "D", "X"})
+        self.assertEqual(jobs["H"]["heading_policy"], "title_and_h1")
+        self.assertEqual(jobs["A"]["heading_policy"], "by_intent")
+        manifest = json.loads((self.cwd / "queue/run.json").read_bytes())
+        self.assertEqual(manifest["project"]["mode"], "simulation")
+        self.assertFalse(manifest["deployment_verified"])
+
+    def test_new_url_uses_clean_inputs_and_protects_neighboring_terms(self) -> None:
+        index = self.delivery("US")
+        self.publish_entry(index)
+        new_url = "https://demo.example/new-pins/"
+        self.call("--url", new_url, "--out", "ordinary", fail=True)
+        self.call("--url", new_url, "--allow-unplanned", "--library-term", "steel", "--peer-url", PEER, "--out", "new")
+        data = json.loads((self.cwd / "new/architecture-page.json").read_bytes())
+        self.assertEqual(data["matched_by"], "unplanned_url")
+        self.assertEqual(data["page"]["primary_keyword"], "")
+        self.assertEqual(data["keyword_decisions"], [])
+        self.assertNotIn("page_design", data)
+        self.assertEqual({r["ownership"] for r in data["keyword_inventory"]["candidates"]}, {"other_page"})
+        self.call("--source", str(index), "--url", "https://other.example/new/", "--allow-unplanned", "--out", "foreign", fail=True)
+        self.call("--url", TARGET, "--allow-unplanned", "--out", "existing")
+        self.assertEqual(json.loads((self.cwd / "existing/architecture-page.json").read_bytes())["matched_by"], "planned_url")
+
+    def test_draft_only_index_requires_explicit_selection(self) -> None:
+        index = self.delivery("US")
+        self.publish_entry(index)
+        agents = self.project / "AGENTS.md"
+        agents.write_text(agents.read_text().replace("- SEO project index:", "- SEO draft index:"))
+        self.assertIn("Only draft", self.call("--page-id", "P", "--out", "detected", fail=True).stderr)
+        self.call("--source", str(index), "--page-id", "P", "--out", "explicit")
+
+
+    def test_site_inventory_matches_existing_and_finds_unplanned_live_pages(self) -> None:
+        index = self.delivery("US", mode="real")
+        live = self.cwd / "wordpress.csv"
+        self.table(live, ["url", "page_type", "cms_record", "status"], [
+            [TARGET, "collection", "page:10", "publish"], [TARGET.rstrip("/"), "category", "page:10", "publish"],
+            ["https://demo.example/new-item/", "product", "product:11", "publish"],
+            ["https://demo.example/draft/", "product", "product:12", "draft"],
+            ["https://outside.example/x/", "product", "product:13", "publish"],
+            ["https://demo.example/alias1/", "category", "page:14", "publish"],
+            ["https://demo.example/alias2/", "category", "page:14", "publish"]])
+        result = subprocess.run([sys.executable, "-B", str(CLI), "site-queue", "--source", str(index),
+                                 "--site-inventory", str(live), "--out", "queue"], cwd=self.cwd, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        with (self.cwd / "queue/site-queue.csv").open(encoding="utf-8-sig", newline="") as stream:
+            jobs = {row["url"]: row for row in csv.DictReader(stream)}
+        self.assertEqual(len(jobs), 4)
+        self.assertEqual((jobs[TARGET]["page_id"], jobs[TARGET]["cms_record"]), ("P", "page:10"))
+        added = jobs["https://demo.example/new-item/"]
+        self.assertEqual((added["page_id"], added["next_step"], added["heading_policy"]), ("", "research_unplanned_url", "title_and_h1"))
+        self.assertEqual(jobs["https://demo.example/alias1/"]["next_step"], "resolve_target")
+        self.assertEqual(jobs["https://demo.example/alias2/"]["next_step"], "resolve_target")

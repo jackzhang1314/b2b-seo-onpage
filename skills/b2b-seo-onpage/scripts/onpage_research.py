@@ -1,6 +1,7 @@
 """Validate analyst-written research and bind it to local evidence; no SEO inference or network."""
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 import hashlib
@@ -353,19 +354,26 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     return ResearchReview(status, gaps, sources, keywords, serp_rows, competitors, "\n".join(lines) + "\n")
 
 
-def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object], review: ResearchReview,
-                        placements: list[dict[str, str]]) -> tuple[list[dict[str, str]], dict[str, int | None]]:
-    inventory = object_value(snapshot.get("keyword_inventory", {}))
+def check_architecture_target(snapshot: dict[str, object], context: dict[str, object],
+                              sources: Sequence[Mapping[str, object]]) -> None:
     page = object_value(snapshot.get("page", {}))
-    focus = object_value(context.get("focus"))
+    focus = object_value(context.get("focus", {}))
     same_id = bool(page.get("id")) and page["id"] == focus.get("planned_page_id")
     mapped = str(focus.get("page_url_mapping_ref", "")).split("#", 1)[0]
-    verified_mapping = same_id and any(s["id"] == mapped and s["kind"] == "page_plan" for s in review.sources)
+    verified_mapping = same_id and any(s.get("id") == mapped and s.get("kind") == "page_plan" for s in sources)
     if page.get("url"):
         if url_key(string(page["url"])) != url_key(string(context.get("target_url"))) and not verified_mapping:
             raise ValueError("Architecture page URL differs from the selected page")
     elif snapshot and not same_id:
         raise ValueError("A planned page without a URL requires its confirmed focus.planned_page_id")
+
+
+def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object], review: ResearchReview,
+                        placements: list[dict[str, str]]) -> tuple[list[dict[str, str]], dict[str, int | None]]:
+    inventory = object_value(snapshot.get("keyword_inventory", {}))
+    page = object_value(snapshot.get("page", {}))
+    focus = object_value(context.get("focus"))
+    check_architecture_target(snapshot, context, review.sources)
     if inventory and (inventory.get("page_id") != page.get("id") or inventory.get("page_url", "") != page.get("url", "")):
         raise ValueError("Inventory belongs to another planned page")
     planned_primary = str(page.get("primary_keyword") or "").strip()

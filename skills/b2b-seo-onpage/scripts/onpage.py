@@ -20,11 +20,13 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
-from project_sources import discover
-from onpage_research import reconcile_inventory, validate_research
+from project_sources import delivery_folder, discover, url_key
+from commercial_headings import audit as audit_headings, compare_reviewed, coverage_sheet
+from site_queue import COLUMNS as QUEUE_COLUMNS, site_queue
+from onpage_research import check_architecture_target, reconcile_inventory, validate_research
 from page_copy import DESIGN_COLUMNS, PLACEMENT_DETAIL, PageCopy
 
-VERSION = "2.9.0"
+VERSION = "2.11.0"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
@@ -49,7 +51,7 @@ def column_letter(number: int) -> str:
     return result
 
 
-def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
+def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str], *companions: Sheet) -> None:
     """Spreadsheet reading copy: explicit text cells, no formulas or external links.
 
     The sibling CSV remains the exact machine input. XML-incompatible control
@@ -57,9 +59,7 @@ def text_workbook(path: Path, rows: list[dict[str, str]], fields: list[str], com
     """
     main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
     rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-    sheets: list[Sheet] = [("逐词覆盖" if companion else "阅读表", rows, fields)]
-    if companion:
-        sheets.append(companion)
+    sheets: list[Sheet] = [("逐词覆盖" if companions else "阅读表", rows, fields), *companions]
     with ZipFile(path.with_suffix(".xlsx"), "w", ZIP_DEFLATED) as book:
         book.writestr("[Content_Types].xml", '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
                       '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -173,9 +173,9 @@ def csv_file(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
         writer.writerows(rows)
 
 
-def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
+def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str], *companions: Sheet) -> None:
     csv_file(path, rows, fields)
-    text_workbook(path, rows, fields, companion)
+    text_workbook(path, rows, fields, *companions)
 
 
 def digest(path: Path) -> dict[str, str]:
@@ -581,7 +581,7 @@ def page_copy_preview(page: PageCopy) -> list[str]:
     return ["## 本页标题与首屏文案", "", *lines, ""] if lines else []
 
 
-def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_path: Path | None = None) -> None:
+def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_path: Path | None = None) -> dict[str, object]:
     evidence, plan = (obj(json.loads(p.read_text(encoding="utf-8"))) for p in (evidence_path, plan_path))
     for key in ("target_url", "keyword", "market", "language"):
         if plan.get(key) != evidence.get(key):
@@ -698,13 +698,16 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             parser.flush_block()
             evidence["content_blocks"] = parser.content_blocks
     brief = obj(obj(plan.get("research", {})).get("brief", {}))
-    project_copy = focus.get("scope") == "full_page" or bool(plan.get("keyword_placement"))
+    project_copy = bool(focus.get("scope") == "full_page" or plan.get("keyword_placement") or "commercial_headings" in plan)
+    if not project_copy:
+        project_copy = any(row["field"] in {"title", "h1"} or row.get("after_tag") == "h1" for row in rows)
     page = PageCopy(evidence, rows if project_copy else [], brief, obj(snapshot.get("page_design", {})),
                     {cid: public_claim(claim) for cid, claim in claims.items()})
     page.prepare_placements([obj(p) for p in arr(plan.get("keyword_placement", []))])
     decisions = {compact(r["keyword"]).casefold(): r for r in research.keywords} if research else {}
     placements = placement_rows(plan, page, rows, decisions)
     design_rows = page.design_coverage(placements)
+    headings = audit_headings(plan, page.blocks, snapshot)
     if architecture_path:
         if research is None:
             raise ValueError("An architecture inventory requires keyword decisions in research")
@@ -738,17 +741,18 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                 "results": [{**{k: v for k, v in row.items() if k != "position"}, "evidence_ref": row["evidence_refs"],
                              **({"position": int(row["position"])} if row["position"] else {})} for row in research.serp]}
     with output_dir(out) as destination:
+        write_json(destination / "commercial-headings.json", headings)
         exported_plan = dict(plan)
         table_context = {"page_url": str(plan["target_url"]), "primary_keyword": str(plan["keyword"]),
                          "target_market": str(plan["market"]), "content_language": str(plan["language"]),
                          "research_evidence_class": str(obj(plan.get("research", {})).get("evidence_class", "not_declared")),
                          "research_status": research.status if research is not None else "not_checked"}
 
-        def plan_table(name: str, values: list[dict[str, str]], fields: list[str], companion: Sheet | None = None) -> None:
+        def plan_table(name: str, values: list[dict[str, str]], fields: list[str], *companions: Sheet) -> None:
             first = (["keyword", "source_pool", "copy_status", "final_placements", "answer_text", "other_target", "reason"]
                      if name == "keyword-coverage.csv" else [])
             columns = list(dict.fromkeys([*first, *table_context, *fields]))
-            write_csv(destination / name, [{**table_context, **value} for value in values], columns, companion)
+            write_csv(destination / name, [{**table_context, **value} for value in values], columns, *companions)
 
         if research is not None:
             exported_research = dict(obj(plan["research"]))
@@ -768,18 +772,21 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                        "url", "page_type", "read_state", "seo_title", "h1", "subtitle", "subtitle_tag", "h2",
                        "selection_reason", "observed_strengths", "page_gap", "recommendation", "evidence_refs"])
             if coverage_summary:
-                companion: Sheet | None = None
+                sheets: list[Sheet] = []
                 if design_rows:
                     design_table = [{**table_context, **row} for row in design_rows]
                     design_columns = list(dict.fromkeys(["kind", "id", "name", "copy_status", "final_text", "keywords",
                                                          *DESIGN_COLUMNS, *table_context]))
                     csv_file(destination / "page-design-coverage.csv", design_table, design_columns)
-                    companion = ("上游模块与字段", design_table, design_columns)
+                    sheets.append(("上游模块与字段", design_table, design_columns))
+                heading_rows = coverage_sheet(headings)
+                if heading_rows:
+                    sheets.append(("SEO Title 与主 H1", heading_rows, list(heading_rows[0])))
                 plan_table("keyword-coverage.csv", coverage_rows,
                            ["keyword", "assigned", "ownership", "decision", "intent_group", "reason", "copy_status", "copy_states",
                             "locations", "expressions", "planning_refs", "library_refs", "peer_urls", "ranking_refs",
                             "owners", "other_target", "evidence_refs", "source_pool", "origin", "metrics", "observed_peer_urls",
-                            "required_modules", "missing_answers", *PLACEMENT_DETAIL, *PLANNING_COLUMNS], companion)
+                            "required_modules", "missing_answers", *PLACEMENT_DETAIL, *PLANNING_COLUMNS], *sheets)
             (destination / "page-brief.md").write_text(research.brief, encoding="utf-8")
         write_json(destination / "plan.json", exported_plan)
         if serp["source"] != "not_requested":
@@ -810,6 +817,11 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             (destination / "page-copy.md").write_text(page.render(design_rows), encoding="utf-8")
             review += ["[按阅读顺序查看最终页面稿及上游字段](page-copy.md)", ""]
             review += page_copy_preview(page)
+        if focus or "commercial_headings" in plan:
+            review += ["## 商业页面的品类词与采购属性", "",
+                       f"主词沿用 {headings['primary_keyword']}。双标题检查结果为 {headings['status']}。",
+                       *[f"- {problem}" for problem in arr(headings["issues"])],
+                       "[查看 Title 与 H1 的实际表达和企业依据](commercial-headings.json)", ""]
         title_changes = [row for row in rows if row["field"] == "title"]
         recommended = title_changes[0] if len(title_changes) == 1 and title_changes[0]["copy_state"] == "ready" else None
         if not title_changes and focus.get("scope") in ("full_page", "metadata") and head is not None and evidence.get("head_seen"):
@@ -861,6 +873,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                    "状态：改稿建议。脚本只校验引用、上下文和部分现状匹配，不能自动证明事实完整、语义正确或排名提升。"]
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
         write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "changes": len(rows),
+                   "commercial_headings": headings["status"],
                    "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path), *([digest(architecture_path)] if architecture_path else [])],
                    "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if "keyword_inventory" in snapshot else "decisions_only" if coverage_summary else "not_supplied",
                    "research_status": research.status if research is not None else "not_checked",
@@ -868,9 +881,11 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                    "research_sources": research.sources if research is not None else [],
                    "limits": ["Does not detect every unsupported statement in natural-language copy; Codex must review all claims.",
                               "Does not authenticate supplied citations, validate SERP completeness or apply website changes."]})
+    return headings
 
 
-def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simulation: bool = False) -> None:
+def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simulation: bool = False,
+                      architecture_path: Path | None = None, reviewed_headings: Path | None = None) -> dict[str, object]:
     """Observe proposed strings in a later snapshot, without certifying deployment or ranking."""
     plan, after = (obj(json.loads(p.read_text(encoding="utf-8"))) for p in (plan_path, after_path))
     if local_simulation and (obj(plan.get("research", {})).get("evidence_class") != "simulation"
@@ -907,10 +922,10 @@ def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simula
                     detail = f"Observed {len(samples)} {field} entries; verify which component owns the output"
                 if field in HEADING_TAGS and found and change.get("heading_index") is not None:
                     index = change["heading_index"]
-                    headings = arr(after.get("headings", []))
+                    saved_outline = arr(after.get("headings", []))
                     if type(index) is not int or index < 1:
                         raise ValueError("heading_index must be a positive one-based position")
-                    at_index = obj(headings[index - 1]) if index <= len(headings) else {}
+                    at_index = obj(saved_outline[index - 1]) if index <= len(saved_outline) else {}
                     if at_index.get("tag") == change.get("after_tag", field) and compact(str(at_index.get("text", ""))) == compact(text):
                         detail = f"Text and heading level observed at saved heading position {index}; check module and visibility"
                     else:
@@ -934,7 +949,17 @@ def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simula
                     detail += "; internal simulation only; original copy/public-use blocks remain unchanged"
         rows.append({"change_id": string(change.get("change_id")), "field": field, "proposed_after": text,
                      "copy_state": str(change.get("copy_state", "unknown")), "observation": status, "detail": detail})
+    architecture = obj(json.loads(architecture_path.read_bytes())) if architecture_path else {}
+    if architecture:
+        sources = [obj(item) for item in arr(obj(plan.get("research", {})).get("sources", []))]
+        check_architecture_target(architecture, plan, sources)
+    observed = PageCopy(after, [], {}, {}, {})
+    headings = audit_headings(plan, observed.blocks, architecture)
+    if reviewed_headings:
+        approved = obj(json.loads(reviewed_headings.read_bytes()))
+        compare_reviewed(headings, approved)
     with output_dir(out) as destination:
+        write_json(destination / "commercial-headings.json", headings)
         write_csv(destination / "implementation-observations.csv", rows,
                   ["change_id", "field", "proposed_after", "copy_state", "observation", "detail"])
         report = ["# 改后快照回读", "", f"页面：{after['target_url']}",
@@ -942,12 +967,15 @@ def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simula
         if local_simulation:
             report += ["本次只回读本地模拟稿；blocked 和 internal_only 保持原状态，文字出现不授权公开使用。", ""]
         report += [f"- {r['change_id']}（{r['field']}）：{r['observation']}" for r in rows]
+        report += ["", f"本次快照的双标题检查为 {headings['status']}。[逐项查看](commercial-headings.json)"]
         report += ["", "这是给定快照中的文字观察，不证明修改已上线、位置/视觉正确、Google采用或SEO效果。未观察到不等于确认线上缺失。"]
         (destination / "implementation-review.md").write_text("\n".join(report) + "\n", encoding="utf-8")
-        write_json(destination / "run.json", {"version": VERSION, "command": "compare", "inputs": [digest(plan_path), digest(after_path)],
+        write_json(destination / "run.json", {"version": VERSION, "command": "compare", "inputs": [digest(p) for p in (plan_path, after_path, architecture_path, reviewed_headings) if p],
+                   "commercial_headings": headings["status"],
                    "comparison_scope": "local_simulation" if local_simulation else "proposed_copy",
                    "content_stage": after.get("content_stage", "unknown"), "changes": len(rows),
                    "deployment_verified": False, "seo_outcomes_verified": False})
+    return headings
 
 
 def main() -> int:
@@ -971,14 +999,26 @@ def main() -> int:
     plan.add_argument("--out", type=Path, required=True)
     compare = commands.add_parser("compare", help="Observe proposed copy in a separately captured after snapshot")
     compare.add_argument("--plan", type=Path, required=True)
+    compare.add_argument("--reviewed-headings", type=Path, help="Compare both public texts with the reviewed commercial-headings.json")
     compare.add_argument("--after", type=Path, required=True)
     compare.add_argument("--out", type=Path, required=True)
+    compare.add_argument("--architecture-page", type=Path, help="Check the observed headings against this workbench page type")
+    for command in (plan, compare):
+        command.add_argument("--require-b2b-headings", action="store_true",
+                             help="Save the review and exit 2 when the commercial heading checks need attention")
     compare.add_argument("--local-simulation", action="store_true", help="Read blocked copy only in a supplied local simulation; public-use state is unchanged")
     architecture = commands.add_parser("architecture-page", help="Read one page and its keyword assignments from an architecture delivery")
-    location = architecture.add_mutually_exclusive_group()
-    location.add_argument("--source", type=Path, help="Use this architecture delivery directly")
-    location.add_argument("--project-root", type=Path, help="Read the website AGENTS.md; default: current project")
-    architecture.add_argument("--mode", choices=("real", "simulation"), help="Select a registered real or simulation scope")
+    queue = commands.add_parser("site-queue", help="Enumerate the selected workbench for whole-site On-page SEO")
+    queue.add_argument("--site-inventory", type=Path, help="Join the public WordPress page inventory to the workbench by actual URL")
+    queue.add_argument("--site-url", help="Select the registered site on a multi-site project")
+    for command in (queue, architecture):
+        location = command.add_mutually_exclusive_group()
+        location.add_argument("--source", type=Path, help="Complete workbench directory, index.html or project index")
+        location.add_argument("--project-root", type=Path, help="Read the website AGENTS.md; default: current project")
+        command.add_argument("--mode", choices=("real", "simulation"), help="Select a registered real or simulation scope")
+        command.add_argument("--market", help="Target market as recorded in the workbench")
+        command.add_argument("--language", help="Content language as recorded in the workbench")
+        command.add_argument("--out", type=Path, required=True)
     match = architecture.add_mutually_exclusive_group(required=True)
     match.add_argument("--url")
     match.add_argument("--page-id")
@@ -988,29 +1028,48 @@ def main() -> int:
     architecture.add_argument("--peer-url", action="append", help="Exact qualified peer page to look up, repeatable")
     architecture.add_argument("--rankings", type=Path, action="append", help="Competitor ranking CSV, repeatable")
     architecture.add_argument("--library-term", action="append", help="Product alias or scoped modifier phrase to find, repeatable")
-    architecture.add_argument("--market", help="Target market as recorded in the keyword map")
-    architecture.add_argument("--language", help="Content language as recorded in the keyword map")
-    architecture.add_argument("--out", type=Path, required=True)
+    architecture.add_argument("--allow-unplanned", action="store_true", help="Research a new same-site URL without borrowing an upstream page assignment")
     args = parser.parse_args()
     try:
-        if args.command == "architecture-page":
+        review: dict[str, object] = {}
+        if args.command in {"architecture-page", "site-queue"}:
             if args.source and args.mode:
                 raise ValueError("--mode selects a registered workbench; use it without --source")
-            registered = None if args.source else discover(args.project_root, args.url, args.market, args.language, args.mode)
-            source_folder = registered[1].parent if registered else args.source
-            page_note = read_page(source_folder, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
-                                  market=args.market, language=args.language, ranking_files=args.rankings,
-                                  peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date,
-                                  registered=registered)
-            with output_dir(args.out) as destination:
-                write_json(destination / "architecture-page.json", page_note)
+            target = args.url if args.command == "architecture-page" else args.site_url
+            registered = None if args.source else discover(args.project_root, target, args.market, args.language, args.mode)
+            source_folder = registered[1].parent if registered else delivery_folder(args.source)
+            if args.command == "site-queue":
+                scope, jobs = site_queue(source_folder, args.market, args.language, args.site_inventory)
+                if args.site_url and scope["site_url"] and url_key(args.site_url) != url_key(scope["site_url"]):
+                    raise ValueError("The selected site URL differs from the site in the workbench")
+                with output_dir(args.out) as destination:
+                    csv_file(destination / "site-queue.csv", jobs, QUEUE_COLUMNS)
+                    inputs = [digest(source_folder / name) for name in ("architecture-plan.json", "pages.csv", "content-plan.csv")
+                              if (source_folder / name).is_file()]
+                    if args.site_inventory:
+                        inputs.append(digest(args.site_inventory))
+                    write_json(destination / "run.json", {"version": VERSION, "command": "site-queue", "project": scope,
+                               "workbench": str(source_folder), "selection": "registered" if registered else "explicit",
+                               "pages": len(jobs), "inputs": inputs, "deployment_verified": False})
+            else:
+                if args.allow_unplanned and not args.url:
+                    raise ValueError("--allow-unplanned requires a URL")
+                page_note = read_page(source_folder, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
+                                      market=args.market, language=args.language, ranking_files=args.rankings,
+                                      peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date,
+                                      registered=registered, allow_unplanned=args.allow_unplanned)
+                with output_dir(args.out) as destination:
+                    write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":
             inspect_page(args.html or args.text, "html" if args.html else "text", args.url, args.keyword,
                          args.market, args.language, args.collected_at, args.stage, args.capture, args.out, args.rendered_head, args.subtitle)
         elif args.command == "check-plan":
-            check_plan(args.evidence, args.plan, args.out, args.architecture_page)
+            review = check_plan(args.evidence, args.plan, args.out, args.architecture_page)
         else:
-            compare_snapshots(args.plan, args.after, args.out, args.local_simulation)
+            review = compare_snapshots(args.plan, args.after, args.out, args.local_simulation, args.architecture_page, args.reviewed_headings)
+        if review.get("status") == "needs_review" and (review.get("policy_declared") or args.require_b2b_headings):
+            print(f"Commercial headings need review. See {args.out / 'commercial-headings.json'}", file=sys.stderr)
+            return 2
     except (ValueError, OSError, csv.Error) as exc:
         print(str(exc), file=sys.stderr)
         return 1

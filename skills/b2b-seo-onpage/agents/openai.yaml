@@ -1,4 +1,4 @@
 interface:
-  display_name: "B2B 单页 SEO 优化"
-  short_description: "按客户的页面规划、关键词分组和行业词库，为 B2B 单页写 SEO 标题与采购内容"
-  default_prompt: "使用 $b2b-seo-onpage，从当前建站项目的 AGENTS.md 或我提供的资料取得页面规划、分组、模块和行业词库，按外贸 B2B 同行的具体 URL 补词。给我最终 Title、H1、副标题、H2 和正文，以及每条采购查询的实际答案、来源和可用状态。"
+  display_name: "外贸 B2B 网站 On-page SEO"
+  short_description: "按架构工作台优化整站或单页，在商业页 Title 与 H1 落实采购属性，经 Harness 写入并回读"
+  default_prompt: "使用 $b2b-seo-onpage，按已采用的架构工作台处理我指定的整站或 URL，结合词库和可比 B2B 同行补词，重写标题与正文。首页、集合页和详情页的 Title 与主 H1 各含品类及真实采购属性。在已授权的 WordPress 目标保存并回读。"

@@ -8,8 +8,8 @@ import re
 from pathlib import Path
 from typing import Iterator
 from unicodedata import normalize
-from urllib.parse import urlsplit
-from project_sources import comparable_pages, context as project_context, indexed_files
+from project_sources import comparable_pages, context as project_context, delivery_folder, indexed_files, on_site, url_key as url_key
+from seo_project import INDEX, project_for
 
 
 @contextmanager
@@ -34,16 +34,6 @@ def rows(path: Path, required: set[str], *, coordinate: str = "source") -> Itera
             if None in row or any(value is None for value in row.values()):
                 raise ValueError(f"{path.name} has an uneven number of fields at record {number}")
             yield {**row, f"{coordinate}_row": str(number), f"{coordinate}_file": path.name}
-
-
-def url_key(value: str) -> tuple[str, str, int | None, str, str]:
-    parsed = urlsplit(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
-        raise ValueError("Expected an absolute planned HTTP(S) URL")
-    port = parsed.port
-    if port == (443 if parsed.scheme == "https" else 80):
-        port = None
-    return parsed.scheme, parsed.hostname, port, parsed.path.rstrip("/") or "/", parsed.query
 
 
 def query_key(value: str) -> str:
@@ -202,9 +192,13 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
               library: Path | None = None, market: str | None = None, language: str | None = None,
               ranking_files: list[Path] | None = None, peer_urls: list[str] | None = None,
               library_terms: list[str] | None = None, ranking_date: str | None = None,
-              registered: tuple[Path, Path] | None = None) -> dict[str, object]:
+              registered: tuple[Path, Path] | None = None, allow_unplanned: bool = False) -> dict[str, object]:
     if bool(url) == bool(page_id):
         raise ValueError("Select exactly one planned URL or page ID")
+    directory = delivery_folder(directory)
+    selection = "registered" if registered else "explicit"
+    if not registered and (directory / INDEX).is_file():
+        registered = (project_for(directory) or directory, directory / INDEX)
     wanted = url_key(url) if url else None
     matches: list[dict[str, str]] = []
     gaps: list[str] = []
@@ -221,9 +215,10 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
             matched = page["id"] == page_id if page_id else bool(page["url"]) and url_key(page["url"]) == wanted
             if matched:
                 matches.append(page)
-    if len(matches) != 1:
+    unplanned = not matches and bool(url) and allow_unplanned
+    if len(matches) != 1 and not unplanned:
         raise ValueError(f"Found {len(matches)} matching page rows. Check project, URL and page ID; consult the supplied HTML/Markdown when needed.")
-    selected = matches[0]
+    selected = matches[0] if matches else {"id": "", "url": str(url), "page_type": "", "primary_keyword": ""}
     project: dict[str, object] = {}
     plan_path = directory / "architecture-plan.json"
     if plan_path.is_file():
@@ -233,14 +228,21 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
         project = {k: plan["project"][k] for k in ("name", "site_url", "market", "language", "mode") if k in plan["project"]}
     if not project.get("mode"):
         gaps.append("架构资料性质未知，需核查来源和确认状态")
+    if unplanned:
+        if not project.get("site_url") or not on_site(selected["url"], str(project["site_url"])):
+            raise ValueError("An unplanned URL must belong to the selected workbench website and site path")
+        gaps.append("该 URL 尚未分配规划行或主词。按原页和同站资料另行选词，保留其他页面已有归属。")
     project_market, project_language = project.get("market"), project.get("language")
+    if any(c and expected and c.casefold() != str(expected).casefold()
+           for c, expected in ((market, project_market), (language, project_language))):
+        raise ValueError("Requested market/language differs from the selected architecture plan")
     target_market = market or selected.get("market") or (project_market if isinstance(project_market, str) else "")
     target_language = language or selected.get("language") or (project_language if isinstance(project_language, str) else "")
     decisions_path = directory / "keyword-decisions.csv"
     decisions: list[dict[str, str]] = []
     if decisions_path.is_file():
         decisions = [r for r in rows(decisions_path, {"page_id", "keyword", "disposition"})
-                     if r["page_id"] == selected["id"] and in_plan_scope(r, target_market, target_language)]
+                     if selected["id"] and r["page_id"] == selected["id"] and in_plan_scope(r, target_market, target_language)]
     elif keyword_map is None:
         gaps.append("缺少逐词去向，covered_keywords 不能区分整页词、章节词和筛选词")
     validation_path = directory / "validation.json"
@@ -252,22 +254,32 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
         gaps.append("上游架构研究覆盖不完整或未知")
     result: dict[str, object] = {"source_directory": str(directory.resolve()), "matched_by": "page_id" if page_id else "planned_url",
                                  "project": project, "upstream_research_complete": complete, "page": selected,
-                                 "keyword_decisions": decisions, "gaps": gaps}
-    if any((directory / name).is_file() for name in ("design-modules.csv", "design-fields.csv", "product-attributes.csv")):
+                                 "keyword_decisions": decisions, "gaps": gaps, "workbench_selection": selection}
+    if unplanned:
+        result["matched_by"] = "unplanned_url"
+    if not unplanned and any((directory / name).is_file() for name in ("design-modules.csv", "design-fields.csv", "product-attributes.csv")):
         result["page_design"] = page_design(directory, selected, target_market, target_language)
     if registered:
-        reviews = comparable_pages(files.get("comparables"), selected["id"], project.get("mode"))
+        reviews = comparable_pages(files.get("comparables"), selected["id"], project.get("mode")) if selected["id"] else []
         peer_urls = peer_urls if peer_urls is not None else list(dict.fromkeys(r["url"] for r in reviews))
         library = library or files["library"]
         if peer_urls and not ranking_files and "rankings" in files:
             ranking_files = [files["rankings"]]
         result["project_context"] = project_context(*registered, files, selected, target_market, target_language,
                                                     peer_urls, reviews, ranking_date)
+    else:
+        if not library and (directory / "clean-keywords.csv").is_file():
+            library = directory / "clean-keywords.csv"
+        if selected["id"] and peer_urls is None and (directory / "comparable-pages.csv").is_file():
+            known = comparable_pages(directory / "comparable-pages.csv", selected["id"], project.get("mode"))
+            peer_urls = list(dict.fromkeys(r["url"] for r in known))
+        if peer_urls and not ranking_files and (directory / "received-rankings.csv").is_file():
+            ranking_files = [directory / "received-rankings.csv"]
     if ranking_files and not peer_urls:
         raise ValueError("--rankings requires at least one qualified --peer-url")
     if library_terms and not library:
         raise ValueError("--library-term requires --library")
-    if keyword_map is not None:
+    if keyword_map is not None and not unplanned:
         if not target_market.strip() or not target_language.strip():
             raise ValueError("Supply the map's market and language via the page plan or --market and --language")
         result["planning_inputs"] = page_keyword_sources(selected, decisions, keyword_map, library, decisions_path,

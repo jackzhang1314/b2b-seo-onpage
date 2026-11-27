@@ -9,6 +9,30 @@ from urllib.parse import urlsplit
 from seo_project import index_paths, load_index, local_file, local_path, project_for
 
 
+def delivery_folder(source: Path) -> Path:
+    source = source.resolve()
+    if source.is_file() and source.name in {"index.html", "seo-project-index.json"}:
+        source = source.parent
+    if not source.is_dir() or not any((source / f).is_file() for f in ("pages.csv", "content-plan.csv")):
+        raise ValueError("Use the complete architecture workbench or its index.html together with the companion page tables.")
+    return source
+
+
+def url_key(value: str) -> tuple[str, str, int | None, str, str]:
+    parsed = urlsplit(value)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
+        raise ValueError("Expected an absolute planned HTTP(S) URL")
+    port = parsed.port
+    if port == (443 if parsed.scheme == "https" else 80):
+        port = None
+    return parsed.scheme, parsed.hostname, port, parsed.path.rstrip("/") or "/", parsed.query
+
+
+def on_site(url: str, site: str) -> bool:
+    address, base = url_key(url), url_key(site)
+    return address[:3] == base[:3] and (address[3] == base[3] or address[3].startswith(base[3].rstrip("/") + "/"))
+
+
 def discover(root: Path | None, url: str | None, market: str | None, language: str | None,
              mode: str | None = None) -> tuple[Path, Path]:
     root = root.resolve() if root else project_for(Path.cwd())
@@ -21,7 +45,7 @@ def discover(root: Path | None, url: str | None, market: str | None, language: s
         if any(value and value.casefold() != str(entry[field]).casefold()
                for field, value in (("market", market), ("language", language), ("mode", mode))):
             continue
-        if url and urlsplit(url).netloc and urlsplit(str(entry["site_url"])).netloc.casefold() != urlsplit(url).netloc.casefold():
+        if url and not on_site(url, str(entry["site_url"])):
             continue
         matches.append(path)
     if len(matches) != 1:
@@ -89,7 +113,7 @@ def context(root: Path, index: Path, files: dict[str, Path], page: dict[str, str
                 if match:
                     traffic.append({**row, "match": match, "report_record": str(n)})
     modules = []
-    if "modules" in files:
+    if page["id"] and "modules" in files:
         with files["modules"].open(encoding="utf-8-sig", newline="") as stream:
             modules = [row for row in csv.DictReader(stream) if row.get("page_id") == page["id"]]
     entry = load_index(index)
@@ -106,7 +130,8 @@ def context(root: Path, index: Path, files: dict[str, Path], page: dict[str, str
         if relative:
             availability = "included" if local_path(index.parent, relative).is_file() else "missing"
         checked_originals.append({**original, "availability": availability})
-    return {"project_root": str(root), "project_entry": "AGENTS.md", "index": str(index.relative_to(root)),
+    return {"project_root": str(root), "project_entry": "AGENTS.md" if (root / "AGENTS.md").is_file() else "",
+            "index": str(index.relative_to(root)),
             "file_base": str(index.parent.relative_to(root)),
             "files": {role: roles[role] for role in files},
             "missing_files": {role: name for role, name in roles.items() if role not in files},

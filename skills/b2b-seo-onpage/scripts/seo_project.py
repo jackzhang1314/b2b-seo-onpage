@@ -72,6 +72,8 @@ def index_paths(root: Path, body: str) -> list[Path]:
         return []
     area = body[bounds[0]:bounds[1]]
     links = LINK.findall(area)
+    if not links and "- SEO project index:" not in area and "- SEO draft index:" in area:
+        raise ValueError("Only draft architecture indexes are registered. Select --source to review an explicit workbench.")
     if not links or len(links) != sum(line.startswith("- SEO project index:") for line in area.splitlines()):
         raise ValueError("SEO project index link missing or invalid in AGENTS.md")
     return [local_file(root, unquote(link)) for link in links]
