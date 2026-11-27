@@ -36,7 +36,7 @@ Google Search Console 用于核对本站查询归属，Ahrefs 的 Exact URL 和 
 | 两项的内容判断 | 研究支撑大纲，不抄标题，不把问题词自动转FAQ，不把字数当排名要求 | 候选词绑定模块；事实单独核验；优先交推荐改稿，不强制两个标题或固定内链数量 |
 | [本套 On-page 2.0.0](https://github.com/jackzhang1314/b2b-seo-skills/blob/v2.0.0/skills/b2b-seo-onpage/SKILL.md) | 已选主词保护、真实页面/渲染区别、可定位改稿与改后回读 | 保留编辑与实施能力，补上必需的词库研究、SERP、竞品、简报与完整性校验 |
 
-Top 20 竞品自然排名位置1–30与种子扩展组成行业词库，是本套用户明确要求的工作流，不宣称它是 Semrush 或 Google 的强制规则。网页版交互参照 [Keyword Magic Tool 官方说明](https://www.semrush.com/kb/617-keyword-magic-tool-manual)；共享/代理平台按实际界面和权限，不能保证与官方功能相同。
+客户指定的竞品、实际排名数据与种子扩展共同说明行业词库范围。按具体 URL 读取全部可得排名行，保留市场和日期。[Semrush 自然排名报告](https://www.semrush.com/kb/494-organic-rankings-positions-report) · [Google 标题链接](https://developers.google.com/search/docs/appearance/title-link)
 
 ## 延续的参考
 

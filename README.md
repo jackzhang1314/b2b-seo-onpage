@@ -2,28 +2,28 @@
 
 **把客户已有的网站规划和关键词分组落实到每一个页面。** 给 Codex 行业词库、网站页面规划、关键词分组表和目标 URL 或页面编号，它会找出分配给这页的组及成员，回查原词，再交付一个 SEO 标题、H 标题和可替换的正文。需要修改 WordPress 页面时，可以接已有 WordPress Build Harness 完成保存和回读。
 
-v2.7.0 支持从几千到几万行的行业词库按页筛选。已有分组优先，词库用于查原词和补漏，同行实页用来核对采购表达。拟定的标题会和本站相邻页比较，再用本企业资料回答标题里影响下单的问题。[页面规划、关键词分组与词库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
+v2.8.0 从客户已经规划的页面开始。它先取全本页分组，再用合格外贸 B2B 同行的具体 URL 反查排名明细，把原分组里漏掉的别称、工艺、采购方式和行业用词带回本页。最终交 SEO Title、H1、首屏副标题、H2 和可替换正文。[页面规划、分组与总库怎样衔接](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
 已有页面还可以附上该 URL 的 Google Search Console 查询导出，保留确实带来相关展现或点击的买家用语。新页从已有架构、词库和产品资料开始。[关键词布局方法与示例](skills/b2b-seo-onpage/references/query-placement.md)
 
-## 安装 v2.7.0
+## 安装 v2.8.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.7.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.8.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.7.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.7.0/b2b-seo-onpage-2.7.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.7.0/b2b-seo-onpage-2.7.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.8.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.0/b2b-seo-onpage-2.8.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.8.0/b2b-seo-onpage-2.8.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.7.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.8.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
@@ -41,7 +41,7 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 - **真实业务资料**：企业角色、产品/型号范围、规格、可公开的能力与采购条件；已有架构或页面简报一并复用。
 - **补查工具入口（可选）**：已有网页版关键词工具，或已导出的研究数据。
 
-已有种子扩展或竞品自然排名导出时可以一并提供。Top 20 竞品资料可保留每家自然排名位置 1–30 的关键词及对应 URL。词库没有排名或搜索量时，仍可按客户已确认的分组改稿。
+可以直接提供含关键词和排名 URL 的竞品导出，以及 Semrush、Ahrefs 扩展词。保留各自国家库、日期和原始范围。几千到几万行都按页筛选，同一词在多家同行出现时保留多条来源。
 
 ## 可直接复制的调用
 
@@ -52,8 +52,8 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 企业及产品资料在【目录】。
 
 先找出已经分给这页的主词、词组和全部成员，再回查行业词库里的完整采购短语。
-请核对同行同页型的实际页面，给我一个推荐 SEO Title 和一句理由，
-再给 H1、相关 H2/H3 和可直接替换的段落。标明哪些词沿用了规划，
+用“本页产品＋B 端属性词”找做相同业务的外贸 B2B 独立站。用同行实际集合页或详情页 URL 回查排名表，
+把新找到的词和原组一起安排进 SEO Title、H1、Subtitle、H2 及相应正文。标明哪些沿用规划，
 哪些建议补充，哪些应留给其他页面。这次只交改稿。
 ```
 
@@ -70,6 +70,12 @@ python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
 ```
 
 已有架构时，给架构输出目录、index.html 或 Markdown 简报即可。Codex 会复用这页的主词、章节词、筛选词、模板模块及资料缺口。有词库先查词库，没有架构就独立研究本页；缺少客户词库时仍可依据实页和业务资料给出改稿，注明研究覆盖。
+
+## 怎样选同行、查漏词
+
+例如搜 `phone case factory`，靠前的结果可能是品牌名带 Factory 的零售店。跳过这些结果，向后查或换搜 `private label phone case manufacturer`，直到找到经营同类业务、能核实海外企业供货的独立站。搜索命中工厂首页时，再去它真正的手机壳批发集合页读 Title、H1、副标题和正文 H2，用集合页自己的 URL 回查排名表。
+
+在 `keyword-coverage.xlsx` 可以看到原分组每个词的去向、新增词的依据、实际放在哪一句，以及哪些词留给其他页。多个同义词可以共用一句，新增意图按组计数。报告开头汇总 SEO Title、H1、副标题和有改动或明确保留的 H2；词库核对分列已有或拟写的文案，以及其中可用的文案。[同行筛选和标题示例](skills/b2b-seo-onpage/references/category-modifier-research.md)
 
 ## 给已有页面布局关键词
 
@@ -127,9 +133,13 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 
 需要补查时，可通过 Computer Use 使用用户提供且获准自动操作的工具入口，包括实际可用的 Keyword Magic、关键词概览和 SERP 功能；不固定官方域名，也不要求 MCP。登录、验证码或权限问题由用户完成；平台明示禁止自动化时，改由用户手动导出，后续本地分析继续。
 
-只取得可见样本就说明样本范围。通用搜索或未验证地域的结果不会冒充完整美国Google前十。账号、密码和会话信息不写进交付或公开包。
+报告保留搜索服务的实际返回顺序。仅在核到目标地区 Google 自然排名时才标记为 Google 名次。账号、密码和会话信息留在授权环境内。
 
 ## 版本与验证范围
+
+v2.8.0 用一张模拟的品牌定制手机壳集合页，从原始规划、分组和排名明细走到实际改稿。原分配的 3 个词都有文案；从分组外采用了 2 个词，共新增 1 个采购意图。现货词归现货集合页，选购词归指南。样稿开头保留原 H1，列出建议 Title、副标题和 H2，逐项注明可用或待确认。
+
+本版通过 23 项自动回归，并用 5 万行词库和 10 万行排名明细验证按页取词。另用挖掘机、手机壳、CNC 加工三个公开网站的页面 HTML 核对标题和副标题提取。搜索观察记录的是实际检索来源；模拟客户的排名与获客效果需要真实项目数据另行评估。[验证记录](RELEASE.json)
 
 v2.7.0 将客户的页面规划、分组表和行业词库接到单页改稿。选词和布局表可回查原组、规划角色与来源。新版加入完整采购短语解读、相邻页标题比较和采购答案写作，并纳入候选版已有的按 URL 引用 Search Console 查询功能。本次正式版按要求未运行测试。
 

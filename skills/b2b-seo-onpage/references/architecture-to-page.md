@@ -32,6 +32,20 @@ python3 skills/b2b-seo-onpage/scripts/onpage.py architecture-page --source plann
 
 结果在 `architecture-page.json` 的 `planning_inputs`。 原架构也给了逐词分配时，`architecture_ownership_review` 会列出与本页候选重叠的其他页、暂缓或排除记录。查看 `assigned_rows` 的成员、`library_matches` 的原词和 `ownership_review` 中的跨页或未分配记录。无共用 ID 的同市场整句命中列于 `exact_phrase_candidates`，同 ID 但原词不同列于 `id_phrase_review`，均由编辑对照原件后采用。`missing_library_ids` 列出未对上的编号。`map_rows_read` 和 `library_rows_read` 统计扫过的记录数，单页完成度按该页成员的实际去向计算。分组、角色、原有来源列与本次读取的 CSV 行号均保留。
 
+### 用具体竞品 URL 在总库查漏
+
+先按架构的产品范围和页型，从 `ranked-url-summary.csv` 或客户对标资料挑出合格的外贸 B2B 页。汇总表只用来找页面。逐词回查使用 `ranking-observations.csv` 或用户的原始导出，保留全部实际排名和原行。搜索命中首页、从导航找到集合页时，分别核各自地址。
+
+```sh
+python3 SKILL_DIR/scripts/onpage.py architecture-page --source ARCH --page-id P12 --keyword-map map.csv --library library.csv --rankings ranks.csv --peer-url https://supplier.example/collections/cases/ --library-term "phone covers" --market US --language en --out page-input
+```
+
+`--peer-url`、`--rankings` 和 `--library-term` 可重复。只传已经确认合格的实读页。搜索词片段使用与该产品相关的别称或具体修饰短语。若总词过宽就收窄组合；单复数或其他语言的叫法可分别加入。脚本按字词边界查找英文短语，语义相关性由编辑判断。没有已选同行时仍可读原分组。传了同行且未指定排名文件时，优先使用架构目录中的 `ranking-observations.csv`，其次使用带排名 URL 的归一化总库。
+
+含排名明细的 CSV、分号 CSV 与制表符文件可直接读取（UTF-8 或带 BOM 的 UTF-16）。独立排名表可用 `Keyword`/`关键词`、`URL`/`排名 URL`、`Current URL` 与 `Current position`。对比期导出取当前 URL 和当前位置，旧列保留在原记录。遇到其他表头，先根据客户原件对应列名，再做归一化。排名明细也可只有 `keyword_id` 和 `url`，由同市场同语言词库还原原词。不同来源逐行保留排名、日期、指标和原文件位置。`--ranking-date YYYY-MM-DD` 可限定快照。原表整列缺市场或语言时，先由编辑核实文件级范围再使用本页参数，在结果中标记继承来源。若该列存在而行值缺失，则留待复核。URL 保留路径大小写、末尾斜杠及查询参数，不同地址的关系须有明确依据。
+
+`architecture-page.json` 中 `keyword_inventory` 保留逐词规划、排名、全库命中及全站归属，也列零命中 URL 和无法还原的排名行。发起整页校验时传 `--architecture-page page-input/architecture-page.json`。给每个候选提交 `include / other_page / review / exclude` 的编辑判断，include 要接到具体文案位置。已归别页或有冲突的词要调整时，引用经确认的规划变更。新增同义词和新增意图分别计数。[研究字段](research-contract.md)
+
 ## 已有架构怎样接
 
 核对过的上游是 [b2b-seo-site-architecture v0.4.1 输出说明](https://github.com/jackzhang1314/b2b-seo-site-architecture/blob/bb52b6894887ca72ba72490fad50641d9ccdec76/skills/b2b-seo-site-architecture/references/output-contract.md)。按实际收到的版本及文件取用。

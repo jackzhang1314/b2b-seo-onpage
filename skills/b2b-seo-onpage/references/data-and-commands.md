@@ -24,10 +24,13 @@ python3 SKILL_DIR/scripts/onpage.py inspect --html /绝对路径/page.html --url
 
 产出 `page-evidence.json`、`observations.csv`、`extracted-text.txt`、`run.json`，保留输入哈希。HTML 的 head、标题层级、链接、图片属性与 JSON-LD 原文分别保存；提取正文含导航及可能隐藏文本，不等于可见正文。H1 数量只是观察；canonical 缺失等是待核，不自动打分。
 
+首屏副标题用可选参数 `inspect --subtitle hero.json` 单独登记。JSON 如 `{"target_url":"https://example.com/product/","tag":"p","text":"Custom parts for distributors.","source_ref":"rendered hero under H1"}`。确认未见副标题可用空 tag 和 text。新增或修改 `field=subtitle` 前都要登记首屏观察。改稿写明 placement 和实际前文，保留原句时 location=subtitle。回读副标题时也提供新快照对应的观察文件。
+
 ## 2. Codex 写改稿并校验
 
 ```sh
 python3 SKILL_DIR/scripts/onpage.py check-plan --evidence /绝对路径/证据目录/page-evidence.json --plan /绝对路径/plan.json --out /绝对路径/新改稿目录
+# 对已有规划的完整页，在同一条命令中加 --architecture-page /绝对路径/page-input/architecture-page.json
 ```
 
 `plan.json` 的局部改稿最小例子（不是完整研究）：
@@ -80,7 +83,7 @@ claim verification_state：page_observed/user_provided/verified/unverified/contr
 }
 ```
 
-scope 可选 metadata/headings/section/full_page。已收到页面规划、分组表及词库时，在 `architecture_ref`、`grouping_ref`、`library_ref` 记录真实页、组和原词出处。selection_ref 可记录选定主词的依据。批量表格的按页读取方法见[三表衔接](architecture-to-page.md)。keyword_placement 的 location 为 title/description/h1–h6/intro/body/link/image_alt/not_used。已修改位置给 change_id，表达须出现在该条改稿中。正文开头 intro 对应 body。
+scope 可选 metadata/headings/section/full_page。已收到页面规划、分组表及词库时，在 `architecture_ref`、`grouping_ref`、`library_ref` 记录真实页、组和原词出处。selection_ref 可记录选定主词的依据。批量表格的按页读取方法见[三表衔接](architecture-to-page.md)。keyword_placement 的 location 为 title/description/h1–h6/subtitle/intro/body/link/image_alt/not_used。已修改位置给 change_id，表达须出现在该条改稿中。正文开头 intro 对应 body。
 
 保留现有表达时给 `source_ref`（不再给 change_id），脚本核它在该类型的已保存证据中出现；引用真实性和实际视觉位置由 Codex 核实。`not_used` 只写原因，不给 expression/change_id/source_ref。允许自然近义词作为 expression，不要求精确重复 keyword，也不计算密度分数。完整页必须说明主词和每一个已选辅助词的位置或本次不用的理由；只在研究表里选中、没有安排到正文也没有解释不用的词会被拒绝。
 

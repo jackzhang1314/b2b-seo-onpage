@@ -8,6 +8,9 @@ import json
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from architecture_page import query_key, url_key
+from keyword_discovery import ranking_columns, ranking_url
+
 
 def object_value(value: object) -> dict[str, object]:
     if not isinstance(value, dict) or not all(isinstance(k, str) for k in value):
@@ -51,7 +54,12 @@ class ResearchReview:
     keywords: list[dict[str, str]]
     serp: list[dict[str, str]]
     competitors: list[dict[str, str]]
-    brief: str
+    brief_body: str
+
+    @property
+    def brief(self) -> str:
+        return self.brief_body + "\n".join(["", f"研究记录状态为 {self.status}", "",
+            *[f"- {gap}" for gap in self.gaps], "", "文件与引用已校验。语义和实际覆盖由编辑核对。", ""])
 
 
 def validate_research(value: object, context: dict[str, object], focus: dict[str, object],
@@ -121,18 +129,21 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     else:
         refs(library.get("source_refs"), "library")
         origins = set(strings(library.get("source_kinds")))
-        if not origins <= {"seed_expansion", "competitor_rankings", "customer_curated"} or not origins:
+        if not origins <= {"product_terms", "seed_expansion", "competitor_rankings", "customer_curated"} or not origins:
             raise ValueError("Invalid library source_kinds")
-        if "customer_curated" not in origins and not {"seed_expansion", "competitor_rankings"}.issubset(origins):
-            gaps.append("行业词库未覆盖种子扩展与竞品排名两类来源")
         domains = strings(library.get("competitors", []))
         if len({domain.lower().strip() for domain in domains}) != len(domains):
             raise ValueError("Library competitor list contains duplicates")
-        if "competitor_rankings" in origins and len(domains) < 20:
-            gaps.append(f"行业词库仅登记 {len(domains)} 家竞品，未达到 Top 20 覆盖")
-        if "competitor_rankings" in origins or "rank_cutoff" in library:
-            if type(library.get("rank_cutoff")) is not int or library["rank_cutoff"] != 30:
-                raise ValueError("Library rank_cutoff must be position 30, not 30 keywords")
+        if "rank_cutoff" in library:
+            cutoff = library["rank_cutoff"]
+            if type(cutoff) is not int or cutoff < 1:
+                raise ValueError("rank_cutoff is the positive last included ranking position")
+        expected = {term(d) for d in strings(library.get("expected_competitors", []))}
+        missing = expected - {term(d) for d in domains}
+        if missing:
+            gaps.append("客户指定清单中尚缺竞品：" + ", ".join(sorted(missing)))
+        if "competitor_rankings" in origins and not domains and not library.get("scope_note"):
+            gaps.append("竞品排名表的实际来源范围待核")
 
     def coverage(part: dict[str, object], label: str) -> None:
         if part.get("coverage") not in {"complete", "partial", "unknown", "unavailable"}:
@@ -142,58 +153,97 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
 
     coverage(library, "行业词库")
     serp = object_value(research.get("serp"))
+    multi = "queries" in serp
+    searches = [object_value(item) for item in items(serp["queries"])] if multi else [serp]
     coverage(serp, "SERP")
-    string(serp.get("source"))
-    if serp.get("query") != context.get("keyword"):
-        raise ValueError("SERP query differs from selected primary keyword")
-    for key in ("market", "language"):
-        if string(serp.get("actual_" + key)) != context.get(key):
-            gaps.append(f"SERP 实际{key}与目标不一致或未核定")
+    if not searches:
+        gaps.append("未记录实际搜索查询")
     serp_rows: list[dict[str, str]] = []
-    positions: set[int] = set()
-    for item in items(serp.get("results")):
-        row = object_value(item)
-        position = row.get("position")
-        if type(position) is not int or not 1 <= position <= 10 or position in positions:
-            raise ValueError("SERP needs distinct observed organic positions 1-10; use partial for unranked samples")
-        positions.add(position)
-        serp_rows.append({"position": str(position), "url": url(row.get("url")),
-                          "title": str(row.get("title", "")),
-                          "page_type": string(row.get("page_type")),
-                          "evidence_refs": " | ".join(refs(row.get("evidence_refs"), "serp"))})
-    if positions != set(range(1, 11)):
-        gaps.append(f"SERP 仅登记 {len(positions)} 个前十自然位置")
-    for item in items(serp.get("samples", [])):
-        row = object_value(item)
-        serp_rows.append({"position": "", "url": url(row.get("url")),
-                          "title": str(row.get("title", "")),
-                          "page_type": string(row.get("page_type")),
-                          "evidence_refs": " | ".join(refs(row.get("evidence_refs"), "serp"))})
-    if serp.get("samples"):
-        gaps.append("存在未核定排名的搜索样本，未作为前十位置计数")
+    date_by_source = {s["id"]: s["collected_at"] for s in sources}
+    for search in searches:
+        query = string(search.get("query"))
+        provider = string(search.get("source"))
+        if multi:
+            coverage(search, query)
+        actual_market, actual_language = string(search.get("actual_market")), string(search.get("actual_language"))
+        if (actual_market, actual_language) != (context.get("market"), context.get("language")):
+            gaps.append(f"{query} 的实际市场或语言与本页不符或未核定")
+        basis = string(search.get("position_kind", "reported" if not multi else None))
+        if basis not in {"google_organic", "provider_order", "unverified", "reported"}:
+            raise ValueError("Unknown SERP position_kind")
+        positions: set[int] = set()
+        for key in ("results", "samples"):
+            for item in items(search.get(key, [])):
+                row = object_value(item)
+                position = row.get("position")
+                if key == "results":
+                    if basis == "unverified" or type(position) is not int or position < 1 or position in positions:
+                        raise ValueError("Use unique positive positions per query, or unranked samples")
+                    positions.add(position)
+                elif position is not None:
+                    raise ValueError("An unranked sample cannot carry a position")
+                citations = refs(row.get("evidence_refs"), "serp")
+                times = sorted({date_by_source[r.split("#", 1)[0]] for r in citations
+                                if kinds[r.split("#", 1)[0]] == "serp"})
+                screening = string(row.get("screening", "unreviewed"))
+                if screening not in {"candidate", "skip", "unreviewed"}:
+                    raise ValueError("Unknown result screening decision")
+                reason = string(row.get("screening_reason")) if screening == "skip" else str(row.get("screening_reason", ""))
+                serp_rows.append({"query": query, "source": provider, "position_kind": basis if position else "unverified",
+                                  "actual_market": actual_market, "actual_language": actual_language,
+                                  "collected_at": str(search.get("collected_at") or " | ".join(times)),
+                                  "position": str(position or ""), "url": url(row.get("url")),
+                                  "title": str(row.get("title", "")), "page_type": string(row.get("page_type")),
+                                  "screening": screening, "screening_reason": reason, "evidence_refs": " | ".join(citations)})
+        if search.get("coverage") == "complete" and not (search.get("results") or search.get("samples")):
+            gaps.append(f"{query} 没有可复查的搜索记录")
 
     competitors: list[dict[str, str]] = []
-    read_urls: set[str] = set()
     coverage(object_value(research.get("competitor_coverage")), "竞品页面")
+    qualified: set[str] = set()
     for item in items(research.get("competitor_pages")):
         page = object_value(item)
         state, page_url = string(page.get("read_state")), url(page.get("url"))
-        requested_url = url(page.get("requested_url", page_url))
+        requested = url(page.get("requested_url", page_url))
+        discovery = url(page.get("discovery_url", requested))
         if state not in {"read", "partial", "failed"}:
             raise ValueError("Invalid competitor read_state")
         citations = refs(page.get("evidence_refs"), "competitor" if state != "failed" else None)
-        if state == "read":
-            read_urls.add(page_url)
-            read_urls.add(requested_url)
+        row_out = {"url": page_url, "requested_url": requested, "discovery_url": discovery,
+                   "read_state": state, "evidence_refs": " | ".join(citations)}
+        for field in ("selection_reason", "observed_strengths", "page_gap", "recommendation"):
+            row_out[field] = string(page.get(field))
+        if "site_type" in page or multi:
+            site_type = string(page.get("site_type"))
+            if site_type not in {"export_b2b_independent", "mixed_b2b_page"}:
+                raise ValueError("Only a qualified export B2B independent page belongs in competitor_pages; log other results as skip")
+            for field in ("company", "business_evidence", "page_type", "discovery_source"):
+                row_out[field] = string(page.get(field))
+            discovery_source = row_out["discovery_source"]
+            if discovery_source not in {"search", "architecture", "customer"}:
+                raise ValueError("Invalid competitor discovery_source")
+            if discovery_source == "search":
+                hits = [hit for hit in serp_rows if hit["url"] == discovery and hit["screening"] != "skip"]
+                if not hits:
+                    raise ValueError("The discovery_url must be an observed, non-skipped search result")
+                row_out["search_observations"] = " | ".join(
+                    f"{hit['query']} · {hit['source']} · {hit['position_kind']} {hit['position']} · {hit['evidence_refs']}"
+                    for hit in hits)
+                if (urlsplit(discovery).hostname or "").removeprefix("www.") != (urlsplit(page_url).hostname or "").removeprefix("www."):
+                    row_out["discovery_relation_ref"] = refs([page.get("discovery_relation_ref")], "competitor")[0]
+            row_out["site_type"] = site_type
+            if state == "read":
+                for field in ("seo_title", "h1", "subtitle", "subtitle_tag"):
+                    row_out[field] = string(page.get(field))
+                row_out["h2"] = "\n".join(strings(page.get("h2")))
+                qualified.add(term(row_out["company"]))
         else:
+            row_out["site_type"] = "legacy_unclassified"
+        if state != "read":
             gaps.append(f"竞品页面未完整读取：{page_url} ({state})")
-        competitor_row = {"url": page_url, "requested_url": requested_url,
-                          "read_state": state, "evidence_refs": " | ".join(citations)}
-        for key in ("selection_reason", "observed_strengths", "page_gap", "recommendation"):
-            competitor_row[key] = string(page.get(key))
-        competitors.append(competitor_row)
-    if not read_urls.intersection(row["url"] for row in serp_rows):
-        gaps.append("没有完整读取过的 SERP 代表页面")
+        competitors.append(row_out)
+    if not qualified:
+        gaps.append("尚无具备外贸 B2B 身份和页型记录的已读同行")
 
     brief = object_value(research.get("brief"))
     if brief.get("page_role") != focus.get("page_role"):
@@ -203,6 +253,7 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
     for key, label in (("architecture_ref", "页面规划"), ("grouping_ref", "关键词分组"), ("library_ref", "行业词库")):
         if key in focus:
             lines.append(f"- {label} · {string(focus[key])}")
+    lines.append(f"已读并登记资格的外贸 B2B 同行：{len(qualified)} 家")
     lines.append("")
     for key, label in (("audience", "受众"), ("intent", "搜索意图与页型适配"), ("angle", "本页价值与依据")):
         lines.append(f"{label}：{string(brief.get(key))}")
@@ -239,6 +290,11 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         if origin == "planning" or group_ids or group_labels or planned_role or planned_page:
             if not any(kinds[ref.split("#", 1)[0]] in {"page_plan", "keyword_group"} for ref in citations):
                 raise ValueError("Planned keyword roles and groups need a page plan or keyword group reference")
+        if multi and origin == "web" and choice == "include":
+            skipped = {ref for row in serp_rows if row["screening"] == "skip" for ref in row["evidence_refs"].split(" | ")}
+            usable = {ref for row in serp_rows if row["screening"] != "skip" for ref in row["evidence_refs"].split(" | ")}
+            if set(citations) <= skipped - usable:
+                raise ValueError("Skipped search results cannot be the sole evidence for included web keywords")
         if origin == "web" and any(kinds[ref.split("#", 1)[0]] in {"serp", "competitor"} for ref in citations):
             observed_candidate = True
         targets = strings(decision.get("module_ids", []))
@@ -260,8 +316,15 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
                 raise ValueError("GSC query evidence must identify the current page or the explicit other_page URL")
             if choice == "include" and target_page in measured_pages:
                 observed_candidate = True
+        override = ""
+        if decision.get("ownership_override_ref"):
+            override = refs([decision["ownership_override_ref"]])[0]
+            if kinds[override.split("#", 1)[0]] not in {"page_plan", "keyword_group"}:
+                raise ValueError("An ownership override needs an approved planning source")
         keywords.append({"keyword": keyword, "origin": origin, "decision": choice,
                          "keyword_id": string(decision["keyword_id"]) if "keyword_id" in decision else "",
+                         "intent_group": str(decision.get("intent_group", "")),
+                         "ownership_override_ref": override,
                          "planned_page_id": planned_page, "group_ids": " | ".join(group_ids),
                          "group_labels": " | ".join(group_labels), "planned_role": planned_role,
                          "reason": string(decision.get("reason")), "module_ids": " | ".join(targets),
@@ -284,6 +347,123 @@ def validate_research(value: object, context: dict[str, object], focus: dict[str
         terms = [row["keyword"] for row in keywords if row["decision"] == "include" and mid in row["module_ids"].split(" | ")]
         lines.extend(["", f"模块 {mid} 选词：{'；'.join(terms) or '无指定关键词，按内容任务表达'}"])
     status = "simulation" if evidence_class == "simulation" else "partial" if gaps else "documented"
-    lines.extend(["", f"研究记录状态：{status}", "", *[f"- {gap}" for gap in gaps], "",
-                  "文件与引用已校验；不自动证明来源真实、覆盖无遗漏、语义正确、上线或排名提升。"])
     return ResearchReview(status, gaps, sources, keywords, serp_rows, competitors, "\n".join(lines) + "\n")
+
+
+def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object], review: ResearchReview,
+                        placements: list[dict[str, str]]) -> tuple[list[dict[str, str]], dict[str, int | None]]:
+    inventory = object_value(snapshot.get("keyword_inventory"))
+    page = object_value(snapshot.get("page"))
+    focus = object_value(context.get("focus"))
+    same_id = bool(page.get("id")) and page["id"] == focus.get("planned_page_id")
+    mapped = str(focus.get("page_url_mapping_ref", "")).split("#", 1)[0]
+    verified_mapping = same_id and any(s["id"] == mapped and s["kind"] == "page_plan" for s in review.sources)
+    if page.get("url"):
+        if url_key(string(page["url"])) != url_key(string(context.get("target_url"))) and not verified_mapping:
+            raise ValueError("Architecture page URL differs from the selected page")
+    elif not same_id:
+        raise ValueError("A planned page without a URL requires its confirmed focus.planned_page_id")
+    if inventory.get("page_id") != page.get("id") or inventory.get("page_url", "") != page.get("url", ""):
+        raise ValueError("Inventory belongs to another planned page")
+    planned_primary = str(page.get("primary_keyword") or "").strip()
+    if planned_primary and query_key(planned_primary) != query_key(string(context.get("keyword"))):
+        ref = str(focus.get("primary_override_ref", "")).split("#", 1)[0]
+        if not any(s["id"] == ref and s["kind"] in {"page_plan", "keyword_group"} for s in review.sources):
+            raise ValueError("A different planned primary keyword requires a confirmed planning reference")
+    for name in ("market", "language"):
+        if query_key(string(inventory.get(name))) != query_key(string(context.get(name))):
+            raise ValueError(f"Inventory {name} differs from the selected page")
+    decisions = {query_key(r["keyword"]): r for r in review.keywords}
+    locations: dict[str, list[dict[str, str]]] = {}
+    for placement in placements:
+        locations.setdefault(query_key(placement["keyword"]), []).append(placement)
+    result: list[dict[str, str]] = []
+    original_groups: set[str] = set()
+    added_groups: set[str] = set()
+    drafted_groups: set[str] = set()
+    peer_evidence = {ranking_url(row["url"]) for row in review.competitors
+                     if row["read_state"] == "read" and row["site_type"] in {"export_b2b_independent", "mixed_b2b_page"}}
+    def source_line(record: dict[str, object]) -> str:
+        file = record.get("input_csv_path") or record.get("input_csv_file") or record.get("source_file", "")
+        number = record.get("input_csv_row") or record.get("source_row", "")
+        return f"{file}#{number}" if file else ""
+
+    def ranking_reference(record: dict[str, object]) -> str:
+        if "reported_position" in record and "reported_date" in record:
+            position, stamp = record["reported_position"], record["reported_date"]
+        else:
+            raw = ranking_columns(record)
+            position, stamp = record.get(raw["position"], ""), record.get(raw["date"], "")
+        return f"{source_line(record)} · {record['ranking_url']} · {position} · {stamp}"
+
+    planned = added = covered = retained_additions = 0
+    planned_with_text = added_with_text = 0
+    checked: set[str] = set()
+    for value in items(inventory.get("candidates")):
+        candidate = object_value(value)
+        phrase = string(candidate.get("keyword"))
+        key = query_key(phrase)
+        if key in checked:
+            raise ValueError(f"Duplicate inventory keyword: {phrase}")
+        checked.add(key)
+        decision = decisions.get(key)
+        if decision is None:
+            raise ValueError(f"Missing inventory decision for: {phrase}")
+        ownership = string(candidate.get("ownership"))
+        assigned = candidate.get("assigned") is True
+        if decision["decision"] == "include" and ownership in {"other_page", "review"} and not decision["ownership_override_ref"]:
+            raise ValueError(f"Existing ownership needs review before inclusion: {phrase}")
+        uses = locations.get(key, [])
+        if decision["decision"] == "include" and not uses:
+            raise ValueError(f"Included inventory keyword needs an actual placement or an explained not_used: {phrase}")
+        ranking_rows = [object_value(r) for r in items(candidate.get("rankings", []))]
+        if ranking_rows and not assigned and decision["decision"] == "include":
+            qualified_url = any(ranking_url(string(r["ranking_url"])) in peer_evidence for r in ranking_rows)
+            if not qualified_url and not any(object_value(r).get("matched_terms") for r in items(candidate.get("library_matches", []))):
+                raise ValueError(f"Rank-only addition needs the qualified peer's actual reviewed URL: {phrase}")
+        group = decision["intent_group"].strip()
+        states = {r["copy_state"] for r in uses if r["location"] != "not_used"}
+        has_text = bool(states)
+        placed = bool(states & {"ready", "preserved_snapshot_text"})
+        if decision["decision"] != "include" and has_text:
+            raise ValueError(f"Placement contradicts the keyword decision: {phrase}")
+        if assigned:
+            planned += 1
+            planned_with_text += int(has_text)
+            covered += int(placed)
+            original_groups.add(group)
+        elif has_text:
+            added_with_text += 1
+            drafted_groups.add(group)
+            if placed:
+                added += 1
+                retained_additions += int("preserved_snapshot_text" in states)
+                added_groups.add(group)
+        if placed:
+            copy_status = "placed"
+        elif has_text:
+            copy_status = "draft_pending_confirmation"
+        else:
+            copy_status = "content_gap" if decision["decision"] == "include" else "not_placed"
+        result.append({"keyword": phrase, "assigned": str(assigned).lower(), "ownership": ownership,
+                       "decision": decision["decision"], "intent_group": group, "reason": decision["reason"],
+                       "copy_status": copy_status, "copy_states": " | ".join(sorted(states)),
+                       "locations": " | ".join(dict.fromkeys(r["location"] for r in uses)),
+                       "expressions": " | ".join(dict.fromkeys(r["expression"] for r in uses if r["expression"])),
+                       "planning_refs": " | ".join(source_line(object_value(r)) for r in items(candidate.get("planning", []))),
+                       "library_refs": " | ".join(source_line(object_value(r)) for r in items(candidate.get("library_matches", []))),
+                       "peer_urls": " | ".join(dict.fromkeys(string(r["ranking_url"]) for r in ranking_rows)),
+                       "ranking_refs": "\n".join(ranking_reference(r) for r in ranking_rows),
+                       "owners": " | ".join(dict.fromkeys(str(r.get("target_url") or r.get("owner_page_id") or r.get("page_id") or "")
+                                           for r in (object_value(v) for v in items(candidate.get("owner_rows", []))))),
+                       "other_target": decision["target_url"] or decision["target_page_role"],
+                       "evidence_refs": decision["evidence_refs"]})
+    def distinct_new(groups: set[str]) -> int | None:
+        if groups and ("" in original_groups or "" in groups):
+            return None
+        return len(groups - original_groups)
+
+    return result, {"planned_terms": planned, "evaluated_planned_terms": planned, "planned_with_text": planned_with_text,
+                    "placed_planned_terms": covered, "added_with_text": added_with_text, "added_placed_terms": added,
+                    "already_in_copy": retained_additions, "new_copy_terms": added - retained_additions,
+                    "draft_added_intents": distinct_new(drafted_groups), "added_intents": distinct_new(added_groups)}

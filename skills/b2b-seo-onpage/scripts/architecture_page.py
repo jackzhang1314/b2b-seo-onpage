@@ -1,6 +1,7 @@
 """Read one planned page from the site-architecture Skill's CSV delivery."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 import csv
 import json
 from pathlib import Path
@@ -9,9 +10,22 @@ from unicodedata import normalize
 from urllib.parse import urlsplit
 
 
+@contextmanager
+def table_reader(path: Path) -> Iterator[csv.DictReader[str]]:
+    with path.open("rb") as raw:
+        encoding = "utf-16" if raw.read(2) in {b"\xff\xfe", b"\xfe\xff"} else "utf-8-sig"
+    with path.open(encoding=encoding, newline="") as stream:
+        first = stream.readline()
+        stream.seek(0)
+        try:
+            delimiter = csv.Sniffer().sniff(first, delimiters=",;\t").delimiter
+        except csv.Error:
+            delimiter = ","
+        yield csv.DictReader(stream, delimiter=delimiter)
+
+
 def rows(path: Path, required: set[str], *, coordinate: str = "source") -> Iterator[dict[str, str]]:
-    with path.open(encoding="utf-8-sig", newline="") as stream:
-        reader = csv.DictReader(stream)
+    with table_reader(path) as reader:
         if not required.issubset(reader.fieldnames or []):
             raise ValueError(f"{path.name} lacks required columns: {sorted(required)}")
         for number, row in enumerate(reader, 2):
@@ -39,23 +53,26 @@ def in_plan_scope(row: dict[str, str], market: str | None, language: str | None)
                for key, expected in (("market", market), ("language", language)))
 
 
+def map_owner(row: dict[str, str], page_id: str, target: tuple[str, str, int | None, str, str] | None) -> str:
+    owner_id = row.get("owner_page_id", "").strip()
+    address = row.get("target_url", "").strip()
+    by_id = bool(owner_id) and owner_id == page_id
+    by_url = bool(address and target and url_key(address) == target)
+    if owner_id and address and target and by_id != by_url:
+        return "conflict"
+    if by_id or by_url:
+        return "here"
+    return "elsewhere" if owner_id or address else "unassigned"
+
+
 def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], mapping: Path,
                          library: Path | None, decision_path: Path, market: str, language: str) -> dict[str, object]:
     """Read a page's assigned groups and original library rows in one market and language."""
-    columns = {"keyword_id", "keyword", "target_url", "market", "language"}
+    columns = {"keyword", "market", "language"}
     target = url_key(page["url"]) if page.get("url") else None
 
     def same_scope(row: dict[str, str]) -> bool:
         return query_key(row["market"]) == query_key(market) and query_key(row["language"]) == query_key(language)
-
-    def owner(row: dict[str, str]) -> str:
-        page_id = row.get("owner_page_id", "").strip()
-        address = row["target_url"].strip()
-        id_matches = bool(page_id) and page_id == page["id"]
-        url_matches = bool(address and target and url_key(address) == target)
-        if page_id and address and target and id_matches != url_matches:
-            return "conflict"
-        return "here" if id_matches or url_matches else "elsewhere"
 
     assigned: list[dict[str, str]] = []
     review: list[dict[str, str]] = []
@@ -63,7 +80,7 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
     for row in rows(mapping, columns, coordinate="input_csv"):
         map_rows += 1
         if same_scope(row):
-            ownership = owner(row)
+            ownership = map_owner(row, page["id"], target)
             if ownership == "here":
                 assigned.append(row)
             elif ownership == "conflict":
@@ -80,7 +97,7 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
             phrases_by_id.setdefault(record["keyword_id"], set()).add(query_key(record["keyword"]))
     # Keep overlapping assignments to other URLs and deferred rows visible to the editor.
     for row in rows(mapping, columns, coordinate="input_csv"):
-        if same_scope(row) and (row["keyword_id"] in ids or query_key(row["keyword"]) in phrases) and owner(row) == "elsewhere":
+        if same_scope(row) and (row.get("keyword_id") in ids or query_key(row["keyword"]) in phrases) and map_owner(row, page["id"], target) in {"elsewhere", "unassigned"}:
             review.append(row)
 
     result: dict[str, object] = {"market": market, "language": language, "keyword_map": str(mapping.resolve()),
@@ -98,12 +115,12 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
         id_phrase_review: list[dict[str, str]] = []
         matched_ids: set[str] = set()
         library_rows = 0
-        for row in rows(library, {"keyword_id", "keyword_original", "market", "language"}, coordinate="input_csv"):
+        for row in rows(library, {"keyword_original", "market", "language"}, coordinate="input_csv"):
             library_rows += 1
             if not same_scope(row):
                 continue
             phrase = query_key(row["keyword_original"])
-            if row["keyword_id"] in ids:
+            if row.get("keyword_id") in ids:
                 expected = phrases_by_id.get(row["keyword_id"])
                 if expected and phrase not in expected:
                     id_phrase_review.append(row)
@@ -119,7 +136,9 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
 
 
 def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_map: Path | None = None,
-              library: Path | None = None, market: str | None = None, language: str | None = None) -> dict[str, object]:
+              library: Path | None = None, market: str | None = None, language: str | None = None,
+              ranking_files: list[Path] | None = None, peer_urls: list[str] | None = None,
+              library_terms: list[str] | None = None, ranking_date: str | None = None) -> dict[str, object]:
     if bool(url) == bool(page_id):
         raise ValueError("Select exactly one planned URL or page ID")
     wanted = url_key(url) if url else None
@@ -169,11 +188,30 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
     result: dict[str, object] = {"source_directory": str(directory.resolve()), "matched_by": "page_id" if page_id else "planned_url",
                                  "project": project, "upstream_research_complete": complete, "page": selected,
                                  "keyword_decisions": decisions, "gaps": gaps}
-    if library is not None and keyword_map is None:
-        raise ValueError("--library requires --keyword-map for the page-to-group join")
+    if ranking_files and not peer_urls:
+        raise ValueError("--rankings requires at least one qualified --peer-url")
+    if library_terms and not library:
+        raise ValueError("--library-term requires --library")
     if keyword_map is not None:
         if not target_market.strip() or not target_language.strip():
             raise ValueError("Supply the map's market and language via the page plan or --market and --language")
         result["planning_inputs"] = page_keyword_sources(selected, decisions, keyword_map, library, decisions_path,
                                                         target_market, target_language)
+    if keyword_map or library or peer_urls or decisions:
+        from keyword_discovery import columns as ranking_columns, page_inventory
+
+        sources = list(ranking_files or [])
+        if peer_urls and not sources:
+            upstream = directory / "ranking-observations.csv"
+            if upstream.is_file():
+                sources.append(upstream)
+            elif library and ranking_columns(library)["url"]:
+                sources.append(library)
+            else:
+                gaps.append("没有可按同行 URL 反查的排名明细")
+        if (sources or library) and not (target_market and target_language):
+            raise ValueError("Specify the market and language of the keyword inputs")
+        result["keyword_inventory"] = page_inventory(selected, decisions, directory, keyword_map, library,
+                                                     target_market, target_language, sources, peer_urls or [],
+                                                     library_terms or [], ranking_date)
     return result

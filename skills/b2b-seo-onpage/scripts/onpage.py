@@ -20,9 +20,9 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
-from onpage_research import validate_research
+from onpage_research import reconcile_inventory, validate_research
 
-VERSION = "2.7.0"
+VERSION = "2.8.0"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
@@ -30,7 +30,7 @@ TEXT_BREAK_TAGS = HEADING_TAGS | {
     "figure", "footer", "form", "header", "hr", "li", "main", "nav", "ol", "p", "pre", "section",
     "table", "tbody", "td", "th", "thead", "tr", "ul",
 }
-CHANGE_FIELDS = {"title", "description", "body", "link", "image_alt", "schema", "other"} | HEADING_TAGS
+CHANGE_FIELDS = {"title", "description", "subtitle", "body", "link", "image_alt", "schema", "other"} | HEADING_TAGS
 CHANGE_COLUMNS = ["change_id", "field", "heading_index", "after_tag", "parent_heading", "placement", "before", "proposed_after",
                   "reason", "priority", "copy_state", "apply_state", "claim_ids", "evidence_refs"]
 
@@ -299,7 +299,7 @@ def outline_parents(headings: Sequence[Mapping[str, object]]) -> list[int | None
 
 def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, language: str,
                  collected_at: str, stage_kind: str, capture_path: Path | None, out: Path,
-                 rendered_head_path: Path | None = None) -> None:
+                 rendered_head_path: Path | None = None, subtitle_path: Path | None = None) -> None:
     valid_url(url)
     string(keyword)
     string(market)
@@ -369,6 +369,18 @@ def inspect_page(source: Path, kind: str, url: str, keyword: str, market: str, l
         body = raw
         evidence["head"] = None
         observations.append({"check": "technical_metadata", "state": "not_observed", "detail": "Text/Markdown cannot establish canonical, robots, schema or image attributes", "source": "input_scope"})
+    if subtitle_path:
+        subtitle = obj(json.loads(subtitle_path.read_text(encoding="utf-8-sig")))
+        if subtitle.get("target_url") != url:
+            raise ValueError("Subtitle observation belongs to another page")
+        string(subtitle.get("source_ref"))
+        text, tag = subtitle.get("text"), subtitle.get("tag")
+        if not isinstance(text, str) or not isinstance(tag, str) or bool(text.strip()) != bool(tag.strip()):
+            raise ValueError("Supply the observed subtitle text/tag, or two empty strings for observed absence")
+        if text and compact(text) not in compact(body):
+            raise ValueError("Observed subtitle not found in the saved page")
+        evidence["subtitle"] = subtitle
+        evidence["subtitle_input"] = digest(subtitle_path)
     evidence["text"] = body
     with output_dir(out) as destination:
         write_json(destination / "page-evidence.json", evidence)
@@ -474,6 +486,8 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
                 if location in {"title", "description"}:
                     head = obj(evidence["head"]) if evidence.get("head") is not None else {}
                     samples = head_texts(head.get(location, []))
+                elif location == "subtitle":
+                    samples = [str(obj(evidence.get("subtitle", {})).get("text", ""))]
                 elif location in HEADING_TAGS:
                     headings = [obj(h) for h in arr(evidence.get("headings", []))]
                     if isinstance(heading_index, int):
@@ -499,7 +513,42 @@ def placement_rows(plan: dict[str, object], evidence: dict[str, object],
     return result
 
 
-def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
+def page_copy_preview(changes: list[dict[str, str]], evidence: dict[str, object],
+                      placements: list[dict[str, str]]) -> list[str]:
+    """Show full proposed or retained wording before the detailed change rationale."""
+    fields = {"title": "SEO Title", "h1": "H1", "subtitle": "Subtitle", "h2": "H2"}
+    proposed: dict[str, list[tuple[str, str]]] = {field: [] for field in fields}
+    for change in changes:
+        field = change["after_tag"] or change["field"]
+        if field in proposed:
+            state = "可用稿" if change["copy_state"] == "ready" else "待确认稿"
+            proposed[field].append((state, change["proposed_after"]))
+    if not any(c["field"] == "title" for c in changes) and evidence.get("head_seen"):
+        titles = head_texts(obj(evidence["head"]).get("title", []))
+        if len(titles) == 1:
+            proposed["title"].append(("原页", titles[0]))
+    if not any(c["field"] == "subtitle" for c in changes):
+        subtitle = obj(evidence.get("subtitle", {})).get("text")
+        if isinstance(subtitle, str) and subtitle:
+            proposed["subtitle"].append(("原页", subtitle))
+    headings = [obj(h) for h in arr(evidence.get("headings", []))]
+    single_h1 = sum(h["tag"] == "h1" for h in headings) == 1
+    for index, heading in enumerate(headings, 1):
+        tag, value = str(heading["tag"]), str(heading["text"])
+        if tag not in {"h1", "h2"}:
+            continue
+        if any(c["field"] == tag and c["before"] == value and c["heading_index"] in {"", str(index)} for c in changes):
+            continue
+        retained = any(p["location"] == tag and p["copy_state"] == "preserved_snapshot_text"
+                       and p["heading_index"] in {"", str(index)}
+                       and compact(p["expression"]).casefold() in compact(value).casefold() for p in placements)
+        if retained or (tag == "h1" and single_h1):
+            proposed[tag].append(("原页", value))
+    lines = [f"- **{label}**（{state}） {value}" for field, label in fields.items() for state, value in proposed[field]]
+    return ["## 本页标题与首屏文案", "", *lines, ""] if lines else []
+
+
+def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_path: Path | None = None) -> None:
     evidence, plan = (obj(json.loads(p.read_text(encoding="utf-8"))) for p in (evidence_path, plan_path))
     for key in ("target_url", "keyword", "market", "language"):
         if plan.get(key) != evidence.get(key):
@@ -556,6 +605,13 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
             raise ValueError("Heading selectors are only valid for heading changes")
         if "placement" in change:
             string(change["placement"])
+        if field == "subtitle":
+            if "subtitle" not in evidence:
+                raise ValueError("Record the visible hero subtitle or its observed absence with inspect --subtitle")
+            subtitle = obj(evidence["subtitle"])
+            if before != subtitle.get("text"):
+                raise ValueError("Subtitle before differs from the observed hero subtitle")
+            string(change.get("placement"))
         if field == "body" and before and compact(before) not in compact(str(evidence.get("text", ""))):
             raise ValueError("Body before not found in saved extracted text")
         if change.get("priority") not in {"P1", "P2", "P3"} or change.get("copy_state") not in {"ready", "blocked"}:
@@ -593,18 +649,38 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
     if focus.get("scope") == "full_page" and "research" not in plan:
         raise ValueError("Full-page optimization requires research: use the industry library or document independent page research")
     research = validate_research(plan["research"], plan, focus, plan_path.parent) if "research" in plan else None
+    coverage_rows: list[dict[str, str]] = []
+    coverage_summary: dict[str, int | None] = {}
+    if architecture_path:
+        if research is None:
+            raise ValueError("An architecture inventory requires keyword decisions in research")
+        snapshot = obj(json.loads(architecture_path.read_text(encoding="utf-8-sig")))
+        source_mode = str(obj(snapshot.get("project", {})).get("mode", "")).lower()
+        if source_mode in {"mock", "simulation", "synthetic"} and obj(plan["research"])["evidence_class"] != "simulation":
+            raise ValueError("A simulated architecture inventory requires simulation research")
+        coverage_rows, coverage_summary = reconcile_inventory(snapshot, plan, research, placements)
+        inventory = obj(snapshot["keyword_inventory"])
+        if inventory.get("unresolved_ranking_rows"):
+            research.gaps.append("排名明细中有尚未还原的原词，见页面词清单")
+        missing_urls = [u for u, count in obj(inventory.get("peer_url_matches", {})).items() if count == 0]
+        if missing_urls:
+            research.gaps.append("所给排名表未命中已读同行页：" + " | ".join(missing_urls))
     if research is not None:
+        if not architecture_path and focus.get("scope") == "full_page" and any(s["kind"] == "keyword_group" for s in research.sources):
+            research.gaps.append("未关联逐页词清单，无法核定原分组完整覆盖")
+        if research.gaps and research.status == "documented":
+            research.status = "partial"
         raw_serp = obj(obj(plan["research"])["serp"])
         snapshots = [source for source in research.sources if source["kind"] == "serp"]
         dates = sorted({source["collected_at"] for source in snapshots})
-        collected_at = raw_serp.get("collected_at") or (dates[0] if len(dates) == 1 else "Multiple snapshots; see source_snapshots")
-        serp = {**raw_serp, "source": raw_serp["source"],
-                "actual_scope": f"{raw_serp['actual_market']} / {raw_serp['actual_language']}",
+        collected_at = raw_serp.get("collected_at") or (dates[0] if len(dates) == 1 else "See query source snapshots")
+        scope = "各查询见检索明细" if "queries" in raw_serp else f"{raw_serp['actual_market']} / {raw_serp['actual_language']}"
+        serp = {**raw_serp, "source": raw_serp.get("source", "query_snapshots"), "actual_scope": scope,
                 "coverage": raw_serp["coverage"], "collected_at": collected_at,
                 "keyword": plan["keyword"], "market": plan["market"], "language": plan["language"],
                 "evidence_class": obj(plan["research"])["evidence_class"],
                 "source_snapshots": snapshots, "research_status": research.status, "limitations": research.gaps,
-                "results": [{"url": row["url"], "title": row["title"], "page_type": row["page_type"], "evidence_ref": row["evidence_refs"],
+                "results": [{**{k: v for k, v in row.items() if k != "position"}, "evidence_ref": row["evidence_refs"],
                              **({"position": int(row["position"])} if row["position"] else {})} for row in research.serp]}
     with output_dir(out) as destination:
         exported_plan = dict(plan)
@@ -623,12 +699,21 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
             write_json(destination / "research.json", exported_research)
             write_json(destination / "research-sources.json", research.sources)
             plan_table("keyword-selection.csv", research.keywords,
-                      ["keyword", "origin", "decision", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs",
+                      ["keyword", "origin", "decision", "intent_group", "ownership_override_ref", "reason", "module_ids", "target_url", "target_page_role", "metrics", "evidence_refs",
                        *PLANNING_COLUMNS])
             plan_table("serp-results.csv", research.serp,
-                      ["position", "url", "title", "page_type", "evidence_refs"])
+                      ["query", "source", "actual_market", "actual_language", "collected_at", "position_kind", "position",
+                       "url", "title", "page_type", "screening", "screening_reason", "evidence_refs"])
             plan_table("competitor-comparison.csv", research.competitors,
-                      ["url", "requested_url", "read_state", "selection_reason", "observed_strengths", "page_gap", "recommendation", "evidence_refs"])
+                      ["company", "site_type", "business_evidence", "discovery_source", "discovery_url", "discovery_relation_ref",
+                       "search_observations", "requested_url",
+                       "url", "page_type", "read_state", "seo_title", "h1", "subtitle", "subtitle_tag", "h2",
+                       "selection_reason", "observed_strengths", "page_gap", "recommendation", "evidence_refs"])
+            if architecture_path:
+                plan_table("keyword-coverage.csv", coverage_rows,
+                           ["keyword", "assigned", "ownership", "decision", "intent_group", "reason", "copy_status", "copy_states",
+                            "locations", "expressions", "planning_refs", "library_refs", "peer_urls", "ranking_refs",
+                            "owners", "other_target", "evidence_refs"])
             (destination / "page-brief.md").write_text(research.brief, encoding="utf-8")
         write_json(destination / "plan.json", exported_plan)
         if serp["source"] != "not_requested":
@@ -655,6 +740,8 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
         else:
             review += ["研究记录：未校验完整研究链。本次为局部/旧接口改稿，不代表完整 On-page 研究。", ""]
 
+        if focus.get("scope") == "full_page":
+            review += page_copy_preview(rows, evidence, placements)
         title_changes = [row for row in rows if row["field"] == "title"]
         recommended = title_changes[0] if len(title_changes) == 1 and title_changes[0]["copy_state"] == "ready" else None
         if not title_changes and focus.get("scope") in ("full_page", "metadata") and head is not None and evidence.get("head_seen"):
@@ -679,13 +766,26 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path) -> None:
             for item in placements:
                 review += [f"- {item['keyword']} → {item['location']}：{item['expression'] or '本次不用'}；{item['reason']}"]
             review += [""]
+        if architecture_path:
+            def intent_count(key: str) -> str:
+                count = coverage_summary[key]
+                return str(count) if count is not None else "未完整分组，暂不计数"
+
+            review += ["## 页面词库核对", "",
+                       f"- 原规划共 {coverage_summary['planned_terms']} 词，已判断 {coverage_summary['evaluated_planned_terms']} 词。"
+                       f"现有或拟写文案承接 {coverage_summary['planned_with_text']} 词，其中可用或已在原页出现 {coverage_summary['placed_planned_terms']} 词。",
+                       f"- 分组外补词共 {coverage_summary['added_with_text']} 词有原句或拟稿，其中 {coverage_summary['added_placed_terms']} 词已有可用文案"
+                       f"（原稿已承接 {coverage_summary['already_in_copy']}，本次可用的新文案承接 {coverage_summary['new_copy_terms']}）。",
+                       f"- 新增意图数（含待确认稿）{intent_count('draft_added_intents')}。已有可用文案的新增意图数 {intent_count('added_intents')}。",
+                       "", "[查看逐词依据与文案](keyword-coverage.xlsx)", ""]
         if research is not None and research.gaps:
             review += ["## 研究缺口", "", *[f"- {gap}" for gap in research.gaps], ""]
         review += ["## 资料缺口", "", *[f"- {gap}" for gap in gaps], "",
                    "状态：改稿建议。脚本只校验引用、上下文和部分现状匹配，不能自动证明事实完整、语义正确或排名提升。"]
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
         write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "changes": len(rows),
-                   "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path)],
+                   "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path), *([digest(architecture_path)] if architecture_path else [])],
+                   "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if architecture_path else "not_supplied",
                    "research_status": research.status if research is not None else "not_checked",
                    "research_gaps": research.gaps if research is not None else [],
                    "research_sources": research.sources if research is not None else [],
@@ -716,6 +816,8 @@ def compare_snapshots(plan_path: Path, after_path: Path, out: Path, local_simula
             elif field in HEADING_TAGS and after.get("input_kind") == "html":
                 samples = [str(obj(h).get("text", "")) for h in arr(after.get("headings", []))
                            if obj(h).get("tag") == change.get("after_tag", field)]
+            elif field == "subtitle" and "subtitle" in after:
+                samples = [str(obj(after["subtitle"]).get("text", ""))]
             elif field == "body":
                 samples = [str(after.get("text", ""))]
             if samples is not None:
@@ -783,10 +885,12 @@ def main() -> int:
     inspect.add_argument("--stage", required=True, choices=["source_html", "tool_raw_html", "browser_dom", "supplied_html", "supplied_text"])
     inspect.add_argument("--capture", type=Path)
     inspect.add_argument("--rendered-head", type=Path)
+    inspect.add_argument("--subtitle", type=Path, help="Observed visible hero subtitle JSON")
     inspect.add_argument("--out", type=Path, required=True)
     plan = commands.add_parser("check-plan")
     plan.add_argument("--evidence", type=Path, required=True)
     plan.add_argument("--plan", type=Path, required=True)
+    plan.add_argument("--architecture-page", type=Path, help="Reconcile all planned and discovered terms in architecture-page.json")
     plan.add_argument("--out", type=Path, required=True)
     compare = commands.add_parser("compare", help="Observe proposed copy in a separately captured after snapshot")
     compare.add_argument("--plan", type=Path, required=True)
@@ -800,6 +904,10 @@ def main() -> int:
     match.add_argument("--page-id")
     architecture.add_argument("--keyword-map", type=Path, help="Page and group assignments, one CSV row per member")
     architecture.add_argument("--library", type=Path, help="Original keyword rows keyed by keyword_id, market and language")
+    architecture.add_argument("--ranking-date", help="Optional ISO date for original ranking observations")
+    architecture.add_argument("--peer-url", action="append", help="Exact qualified peer page to look up, repeatable")
+    architecture.add_argument("--rankings", type=Path, action="append", help="Competitor ranking CSV, repeatable")
+    architecture.add_argument("--library-term", action="append", help="Product alias or scoped modifier phrase to find, repeatable")
     architecture.add_argument("--market", help="Target market as recorded in the keyword map")
     architecture.add_argument("--language", help="Content language as recorded in the keyword map")
     architecture.add_argument("--out", type=Path, required=True)
@@ -807,14 +915,15 @@ def main() -> int:
     try:
         if args.command == "architecture-page":
             page_note = read_page(args.source, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
-                                  market=args.market, language=args.language)
+                                  market=args.market, language=args.language, ranking_files=args.rankings,
+                                  peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date)
             with output_dir(args.out) as destination:
                 write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":
             inspect_page(args.html or args.text, "html" if args.html else "text", args.url, args.keyword,
-                         args.market, args.language, args.collected_at, args.stage, args.capture, args.out, args.rendered_head)
+                         args.market, args.language, args.collected_at, args.stage, args.capture, args.out, args.rendered_head, args.subtitle)
         elif args.command == "check-plan":
-            check_plan(args.evidence, args.plan, args.out)
+            check_plan(args.evidence, args.plan, args.out, args.architecture_page)
         else:
             compare_snapshots(args.plan, args.after, args.out, args.local_simulation)
     except (ValueError, OSError, csv.Error) as exc:
