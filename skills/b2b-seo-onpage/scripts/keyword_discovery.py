@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from demand_handoff import Demand
 from architecture_page import in_plan_scope, map_owner, query_key, rows, table_reader, url_key
 
 
@@ -41,7 +42,7 @@ def columns(path: Path) -> dict[str, str]:
         return ranking_columns(reader.fieldnames or [])
 
 
-def page_inventory(page: dict[str, str], decisions: list[dict[str, str]], directory: Path,
+def page_inventory(page: dict[str, str], decisions: list[dict[str, str]], demand: Demand,
                    mapping: Path | None, library: Path | None, market: str, language: str,
                    ranking_files: list[Path], peer_urls: list[str], library_terms: list[str],
                    ranking_date: str | None = None) -> dict[str, object]:
@@ -89,6 +90,7 @@ def page_inventory(page: dict[str, str], decisions: list[dict[str, str]], direct
         for row in rows(mapping, {"keyword", "market", "language"}, coordinate="input_csv"):
             if (query_key(row["market"]), query_key(row["language"])) != (query_key(market), query_key(language)):
                 continue
+            row = demand.map_row(row)
             state = map_owner(row, page["id"], selected_page_url)
             if state == "here":
                 owned.add(add(row["keyword"], "planning", row))
@@ -96,11 +98,9 @@ def page_inventory(page: dict[str, str], decisions: list[dict[str, str]], direct
                 add(row["keyword"], "planning", row)
             if state != "unassigned":
                 register_owner(row, state)
-    decision_path = directory / "keyword-decisions.csv"
-    if decision_path.is_file():
-        for row in rows(decision_path, {"page_id", "keyword", "disposition"}):
-            if row["page_id"] != page["id"] and in_plan_scope(row, market, language):
-                register_owner(row, "elsewhere")
+    for row in demand.decisions:
+        if row["page_id"] != page["id"]:
+            register_owner(row, "elsewhere")
 
     seeds = list(dict.fromkeys(query_key(t) for t in library_terms if t.strip()))
     if any(not t.strip() for t in library_terms):

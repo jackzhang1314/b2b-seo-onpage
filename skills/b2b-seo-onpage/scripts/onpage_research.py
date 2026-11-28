@@ -385,6 +385,17 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
         observed = inventory.get(name) if inventory else page.get(name)
         if (inventory or observed) and query_key(string(observed)) != query_key(string(context.get(name))):
             raise ValueError(f"Inventory {name} differs from the selected page")
+    note = object_value(snapshot.get("workbench_demand", {}))
+    incoming: dict[str, list[dict[str, object]]] = {}
+    for item in items(note.get("incoming", [])):
+        move = object_value(item)
+        incoming.setdefault(query_key(string(move["keyword"])), []).append(move)
+    outgoing = {query_key(string(object_value(item)["keyword"])) for item in items(note.get("outgoing", []))}
+    if query_key(string(context["keyword"])) in incoming and query_key(planned_primary) != query_key(string(context["keyword"])):
+        raise ValueError("A confirmed transfer is a section keyword and cannot replace the target page's primary keyword")
+    brief_modules = {str(m["id"]): str(m.get("design_module_id") or m["id"])
+                     for value in items(object_value(object_value(context.get("research", {})).get("brief", {})).get("modules", []))
+                     if (m := object_value(value))}
     decisions = {query_key(r["keyword"]): r for r in review.keywords}
     locations: dict[str, list[dict[str, str]]] = {}
     for placement in placements:
@@ -436,6 +447,18 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
             raise ValueError(f"Missing inventory decision for: {phrase}")
         ownership = string(candidate.get("ownership"))
         assigned = candidate.get("assigned") is True
+        moves = incoming.get(key, [])
+        transfer_modules = {str(m["target_module_id"]) for m in moves}
+        if decision["decision"] == "include":
+            owners = (object_value(row) for row in items(candidate.get("owner_rows", [])))
+            confirmed_elsewhere = any(owner.get("resolution_revision_id") and owner.get("page_id") != page.get("id")
+                                      for owner in owners if owner.get("ownership") == "elsewhere")
+            if key in outgoing or confirmed_elsewhere:
+                raise ValueError(f"This keyword was assigned to another page by the current workbench: {phrase}")
+            declared_modules = {brief_modules.get(mid, mid) for mid in decision["module_ids"].split(" | ")}
+            if moves and (decision.get("planned_page_id") not in (None, "", page.get("id"))
+                          or not transfer_modules.issubset(declared_modules)):
+                raise ValueError(f"Use the confirmed target page and section for: {phrase}")
         if decision["decision"] == "include" and ownership in {"other_page", "review"} and not decision["ownership_override_ref"]:
             raise ValueError(f"Existing ownership needs review before inclusion: {phrase}")
         uses = locations.get(key, [])
@@ -497,6 +520,10 @@ def reconcile_inventory(snapshot: dict[str, object], context: dict[str, object],
             return " | ".join(dict.fromkeys(value for value in entries if value))
         result.append({"keyword": phrase, "assigned": str(assigned).lower() if key in from_inventory else "", "ownership": ownership,
                        "source_pool": pool, "final_placements": final_placements,
+                       "workbench_source_page": " | ".join(dict.fromkeys(str(m["source_page_id"]) for m in moves)),
+                       "workbench_target_module": " | ".join(dict.fromkeys(str(m["target_module_id"]) for m in moves)),
+                       "workbench_reason": " | ".join(dict.fromkeys(str(m["resolution_reason"]) for m in moves)),
+                       "workbench_revision": " | ".join(dict.fromkeys(str(m["resolution_revision_id"]) for m in moves)),
                        "keyword_id": planned_values("keyword_id", "keyword_id"), "group_ids": planned_values("group_ids", "group_id"),
                        "planned_role": planned_values("planned_role", "disposition"), "group_labels": planned_values("group_labels", "group_label"),
                        "planned_page_id": decision["planned_page_id"] or (str(page.get("id", "")) if assigned else ""),

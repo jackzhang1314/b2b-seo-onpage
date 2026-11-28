@@ -6,10 +6,13 @@ import csv
 import json
 import re
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 from unicodedata import normalize
 from project_sources import comparable_pages, context as project_context, delivery_folder, indexed_files, on_site, url_key as url_key
 from seo_project import INDEX, project_for
+
+if TYPE_CHECKING:
+    from demand_handoff import Demand
 
 
 @contextmanager
@@ -58,7 +61,7 @@ def map_owner(row: dict[str, str], page_id: str, target: tuple[str, str, int | N
 
 
 def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], mapping: Path,
-                         library: Path | None, decision_path: Path, market: str, language: str) -> dict[str, object]:
+                         library: Path | None, demand: Demand, market: str, language: str) -> dict[str, object]:
     """Read a page's assigned groups and original library rows in one market and language."""
     columns = {"keyword", "market", "language"}
     target = url_key(page["url"]) if page.get("url") else None
@@ -72,6 +75,7 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
     for row in rows(mapping, columns, coordinate="input_csv"):
         map_rows += 1
         if same_scope(row):
+            row = demand.map_row(row)
             ownership = map_owner(row, page["id"], target)
             if ownership == "here":
                 assigned.append(row)
@@ -89,14 +93,17 @@ def page_keyword_sources(page: dict[str, str], decisions: list[dict[str, str]], 
             phrases_by_id.setdefault(record["keyword_id"], set()).add(query_key(record["keyword"]))
     # Keep overlapping assignments to other URLs and deferred rows visible to the editor.
     for row in rows(mapping, columns, coordinate="input_csv"):
-        if same_scope(row) and (row.get("keyword_id") in ids or query_key(row["keyword"]) in phrases) and map_owner(row, page["id"], target) in {"elsewhere", "unassigned"}:
+        if not same_scope(row):
+            continue
+        row = demand.map_row(row)
+        if (row.get("keyword_id") in ids or query_key(row["keyword"]) in phrases) and map_owner(row, page["id"], target) in {"elsewhere", "unassigned"}:
             review.append(row)
 
     result: dict[str, object] = {"market": market, "language": language, "keyword_map": str(mapping.resolve()),
                                 "map_rows_read": map_rows, "assigned_rows": assigned, "ownership_review": review}
-    if decision_path.is_file():
+    if demand.decisions:
         result["architecture_ownership_review"] = [
-            row for row in rows(decision_path, {"page_id", "keyword", "disposition"})
+            row for row in demand.decisions
             if (row["page_id"] != page["id"] or row["disposition"] in {"defer", "exclude"})
             and in_plan_scope(row, market, language)
             and (row.get("keyword_id") in ids or query_key(row["keyword"]) in phrases)
@@ -192,7 +199,8 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
               library: Path | None = None, market: str | None = None, language: str | None = None,
               ranking_files: list[Path] | None = None, peer_urls: list[str] | None = None,
               library_terms: list[str] | None = None, ranking_date: str | None = None,
-              registered: tuple[Path, Path] | None = None, allow_unplanned: bool = False) -> dict[str, object]:
+              registered: tuple[Path, Path] | None = None, allow_unplanned: bool = False,
+              workbench: dict[str, object] | None = None) -> dict[str, object]:
     if bool(url) == bool(page_id):
         raise ValueError("Select exactly one planned URL or page ID")
     directory = delivery_folder(directory)
@@ -204,7 +212,7 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
     gaps: list[str] = []
     files = indexed_files(registered[1]) if registered else {}
     for name in ("pages.csv", "content-plan.csv"):
-        path = directory / name
+        path = files.get("pages", directory / name) if name == "pages.csv" else directory / name
         if not path.is_file():
             gaps.append(f"未提供 {name}")
             continue
@@ -220,7 +228,7 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
         raise ValueError(f"Found {len(matches)} matching page rows. Check project, URL and page ID; consult the supplied HTML/Markdown when needed.")
     selected = matches[0] if matches else {"id": "", "url": str(url), "page_type": "", "primary_keyword": ""}
     project: dict[str, object] = {}
-    plan_path = directory / "architecture-plan.json"
+    plan_path = files.get("plan", directory / "architecture-plan.json")
     if plan_path.is_file():
         plan = json.loads(plan_path.read_text(encoding="utf-8-sig"))
         if not isinstance(plan, dict) or not isinstance(plan.get("project"), dict):
@@ -238,12 +246,20 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
         raise ValueError("Requested market/language differs from the selected architecture plan")
     target_market = market or selected.get("market") or (project_market if isinstance(project_market, str) else "")
     target_language = language or selected.get("language") or (project_language if isinstance(project_language, str) else "")
-    decisions_path = directory / "keyword-decisions.csv"
-    decisions: list[dict[str, str]] = []
-    if decisions_path.is_file():
-        decisions = [r for r in rows(decisions_path, {"page_id", "keyword", "disposition"})
-                     if selected["id"] and r["page_id"] == selected["id"] and in_plan_scope(r, target_market, target_language)]
-    elif keyword_map is None:
+    from demand_handoff import Demand
+    from workbench_bridge import page_binding, read_selection, shared_cli
+
+    if workbench is None:
+        workbench = read_selection(directory, shared_cli(None))
+    if workbench and (Path(str(workbench["workbench"])).resolve() != directory
+                      or any(str(workbench[k]).casefold() != str(project.get(k, "")).casefold()
+                             for k in ("market", "language", "mode") if project.get(k))):
+        raise ValueError("Workbench selection belongs to a different planning delivery or locale")
+    demand = Demand.from_workbench(directory, workbench, target_market, target_language)
+    demand_note = demand.page_note(selected, workbench)
+    selected = demand.page_summary(selected, demand_note)
+    decisions = [r for r in demand.decisions if selected["id"] and r["page_id"] == selected["id"]]
+    if not files.get("decisions", directory / "keyword-decisions.csv").is_file() and keyword_map is None:
         gaps.append("缺少逐词去向，covered_keywords 不能区分整页词、章节词和筛选词")
     validation_path = directory / "validation.json"
     validation = json.loads(validation_path.read_text(encoding="utf-8-sig")) if validation_path.is_file() else {}
@@ -255,6 +271,11 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
     result: dict[str, object] = {"source_directory": str(directory.resolve()), "matched_by": "page_id" if page_id else "planned_url",
                                  "project": project, "upstream_research_complete": complete, "page": selected,
                                  "keyword_decisions": decisions, "gaps": gaps, "workbench_selection": selection}
+    if workbench:
+        result["workbench_progress"] = page_binding(workbench, selected["id"])
+    if demand_note:
+        result["workbench_demand"] = demand_note
+        gaps.extend(demand.issues.get(selected["id"], []))
     if unplanned:
         result["matched_by"] = "unplanned_url"
     if not unplanned and any((directory / name).is_file() for name in ("design-modules.csv", "design-fields.csv", "product-attributes.csv")):
@@ -266,7 +287,7 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
         if peer_urls and not ranking_files and "rankings" in files:
             ranking_files = [files["rankings"]]
         result["project_context"] = project_context(*registered, files, selected, target_market, target_language,
-                                                    peer_urls, reviews, ranking_date)
+                                                    peer_urls, reviews, ranking_date, demand=demand)
     else:
         if not library and (directory / "clean-keywords.csv").is_file():
             library = directory / "clean-keywords.csv"
@@ -282,7 +303,7 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
     if keyword_map is not None and not unplanned:
         if not target_market.strip() or not target_language.strip():
             raise ValueError("Supply the map's market and language via the page plan or --market and --language")
-        result["planning_inputs"] = page_keyword_sources(selected, decisions, keyword_map, library, decisions_path,
+        result["planning_inputs"] = page_keyword_sources(selected, decisions, keyword_map, library, demand,
                                                         target_market, target_language)
     if keyword_map or library or peer_urls or decisions:
         from keyword_discovery import columns as ranking_columns, page_inventory
@@ -298,7 +319,7 @@ def read_page(directory: Path, url: str | None, page_id: str | None, *, keyword_
                 gaps.append("没有可按同行 URL 反查的排名明细")
         if (sources or library) and not (target_market and target_language):
             raise ValueError("Specify the market and language of the keyword inputs")
-        result["keyword_inventory"] = page_inventory(selected, decisions, directory, keyword_map, library,
+        result["keyword_inventory"] = page_inventory(selected, decisions, demand, keyword_map, library,
                                                      target_market, target_language, sources, peer_urls or [],
                                                      library_terms or [], ranking_date)
     return result

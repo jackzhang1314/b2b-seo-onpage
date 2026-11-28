@@ -64,4 +64,4 @@ python3 onpage.py compare --plan plan.json --after after/page-evidence.json \
 
 用户已指定项目、环境和实施范围时，在同一次任务继续调用该站的 `wordpress-builder`。Content 更新对应记录的 SEO 插件字段、H1 源字段、ACF 或正文并重新打开。新增单页内容优先使用已有模块，确有模板或字段绑定缺口再由 Design 处理。Delivery 读取同一环境的实际 URL，保存新的快照，再核标题、正文、原有产品和询价入口。按站点已有的写入授权推进整批，记录冲突、缺证和失败的具体页，继续完成可处理的页。[WordPress 实施流程](wordpress-harness-handoff.md)
 
-正式工作台用[共享写回流程](workbench-progress.md)保存版本和页号对应的「已优化」与「已发布」事件。把每页的实际结果也写回本轮 `site-queue.csv`。`progress` 使用 `drafted`、`saved`、`verified` 或 `blocked`；`cms_record` 记录对象类型和 ID，后两列分别引用后台及前台回读。只有同一版本已保存并在目标环境读回，才标记 `verified`。线上首次建页按用户授权的范围处理。规划了但站上尚无记录且只授权优化现有页时，交出可用稿并记明原因。重试从已有队列继续，先检查原记录和上次回执，避免重复建页或覆盖刚发生的编辑。
+正式工作台用[共享写回流程](workbench-progress.md)记录对应版本和页面的实际结果，包括现有正文已核对、改稿已保存，以及发布后已回读。把每页的实际结果也写回本轮 `site-queue.csv`。`progress` 使用 `drafted`、`saved`、`verified` 或 `blocked`；`cms_record` 记录对象类型和 ID，后两列分别引用后台及前台回读。只有同一版本已保存并在目标环境读回，才标记 `verified`。线上首次建页按用户授权的范围处理。规划了但站上尚无记录且只授权优化现有页时，交出可用稿并记明原因。重试从已有队列继续，先检查原记录和上次回执，避免重复建页或覆盖刚发生的编辑。

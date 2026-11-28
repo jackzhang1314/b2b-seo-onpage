@@ -1,4 +1,4 @@
 interface:
   display_name: "外贸 B2B 网站 On-page SEO"
   short_description: "按架构工作台优化整站或单页，在商业页 Title 与 H1 落实采购属性，经 Harness 写入并回读"
-  default_prompt: "使用 $b2b-seo-onpage，从选定的架构工作台处理本轮勾选的 SEO 页面或我指定的 URL，结合词库和可比 B2B 同行补词，重写标题与正文。首页、集合页和详情页的 Title 与主 H1 各含品类及真实采购属性。在获准的 WordPress 目标保存并回读，向工作台分别登记已优化与已发布。"
+  default_prompt: "使用 $b2b-seo-onpage，从选定的架构工作台处理本轮勾选的 SEO 页面或我指定的 URL，结合词库和可比 B2B 同行补词，按工作台确认的小节与业务答复检查标题和正文。首页、集合页和详情页的 Title 与主 H1 各含品类及真实采购属性。已有正文回答需求时登记已核对。需要修改时按授权改稿、通过 WordPress 保存并回读，向工作台记录实际进度。"

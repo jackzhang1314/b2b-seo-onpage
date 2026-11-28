@@ -4,7 +4,11 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
+
+if TYPE_CHECKING:
+    from demand_handoff import Demand
 
 from seo_project import index_paths, load_index, local_file, local_path, project_for
 
@@ -94,7 +98,7 @@ def comparable_pages(path: Path | None, page_id: str, mode: object) -> list[dict
 
 
 def context(root: Path, index: Path, files: dict[str, Path], page: dict[str, str], market: str, language: str,
-            peers: list[str], reviews: list[dict[str, str]], date: str | None) -> dict[str, object]:
+            peers: list[str], reviews: list[dict[str, str]], date: str | None, *, demand: Demand) -> dict[str, object]:
     from keyword_discovery import ranking_url
 
     urls = {ranking_url(url): "selected_peer" for url in peers}
@@ -116,6 +120,7 @@ def context(root: Path, index: Path, files: dict[str, Path], page: dict[str, str
     if page["id"] and "modules" in files:
         with files["modules"].open(encoding="utf-8-sig", newline="") as stream:
             modules = [row for row in csv.DictReader(stream) if row.get("page_id") == page["id"]]
+        modules = demand.modules(page["id"], modules)
     entry = load_index(index)
     roles = entry["files"]
     originals = entry["originals"]

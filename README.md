@@ -12,7 +12,9 @@
 使用 $b2b-seo-onpage，结合这个项目的工作台，只优化【页面 URL】。用 WordPress Builder Harness 保存并回读这页。
 ```
 
-工作台把「建页」和「做 SEO」分别勾选。要整站优化，可以一次选中全部目标页；已经上线的页面也可以单独勾选。稿件通过检查并保存后，工作台显示「已优化」。WordPress 真正保存发布、后台和前台都读回预期内容后，才显示「已发布」。只给一个新 URL 或旧版工作台，也可以单页优化。[工作台选择与进度](skills/b2b-seo-onpage/references/workbench-progress.md)
+在工作台勾选「做 SEO」即可安排整站或单页。比如你跳过了「3 吨挖掘机」独立页，并把当时选定的词合并到「小型挖掘机」页的「机型对比」小节，On-page 就把这些词带到该节。小型挖掘机页沿用自己的主词。后来新增的词等下一次确认。
+
+如果企业补充了业务信息，On-page 会带着这条答复核对实际页面。现有正文已经回答需求时，可凭正式页面的原句登记「已核对」。需要修改时，稿件检查通过、保存并读回后登记「已优化」。通过 WordPress 保存发布、再从后台与前台读回预期内容后登记「已发布」。旧工作台与单独新增的 URL 也可继续单页优化。[工作台选择与进度](skills/b2b-seo-onpage/references/workbench-progress.md)
 
 首页、产品集合页和详情页的 SEO Title 和主 H1 **每处都要有本页品类和至少一个合适的 B 端属性词**。已有主词继续沿用。比如工厂能定制玻璃瓶，可选 `custom glass bottle manufacturer`；仅做批发，就用真实的 `wholesale` 或 `supplier`。Semrush / Ahrefs 查不到组合量时，仍可按真实交易方式研究和采用，搜索量留空。详情页还会保留型号。完整改稿的覆盖表可直接翻到「SEO Title 与主 H1」查看两处实际文案和企业依据。可以直接要求“只交稿”，也可以指定已经新增、尚未进入工作台的 URL。[整站、单页和双标题示例](skills/b2b-seo-onpage/references/commercial-page-workflow.md)
 
@@ -22,24 +24,24 @@ v2.9.0 从客户确认的页面规划和分组取全本页成员，再按合格�
 
 v2.10.0 支持从客户网站根目录 AGENTS.md 找回已有行业词库、竞品 Top Pages、逐词排名与架构工作台。在该项目打开新会话，告诉 Codex 页号或 URL 即可。[项目入口与单页读取](skills/b2b-seo-onpage/references/architecture-to-page.md)
 
-## 安装 v2.12.0
+## 安装 v2.13.0
 
 把下面这段发给 Codex 即可安装固定版本。
 
 ```text
 请使用 $skill-installer 从这个固定版本安装 B2B On-page SEO Skill。
-https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.12.0/skills/b2b-seo-onpage
+https://github.com/jackzhang1314/b2b-seo-onpage/tree/v2.13.0/skills/b2b-seo-onpage
 已有相同版本且内容一致就复用。升级时先备份同名旧版和本地定制，保留较新版本。
 安装后核对 Skill 版本和文件完整性，并告诉我怎么开始。
 ```
 
-离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.12.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.12.0/b2b-seo-onpage-2.12.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.12.0/b2b-seo-onpage-2.12.0.zip.sha256)
+离线安装可下载 ZIP，将解压目录交给 Codex，要求它按包内的 `RELEASE.json` 核对完整性，安装整个 `skills/b2b-seo-onpage` 目录。[下载 v2.13.0 ZIP](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.13.0/b2b-seo-onpage-2.13.0.zip) · [下载 SHA-256 校验文件](https://github.com/jackzhang1314/b2b-seo-onpage/releases/download/v2.13.0/b2b-seo-onpage-2.13.0.zip.sha256)
 
 也可以使用本机 `skill-installer` 的命令行脚本，将下面的脚本路径换成本机实际路径。
 
 ```sh
 python3 /path/to/skill-installer/scripts/install-skill-from-github.py \
-  --repo jackzhang1314/b2b-seo-onpage --ref v2.12.0 --path skills/b2b-seo-onpage
+  --repo jackzhang1314/b2b-seo-onpage --ref v2.13.0 --path skills/b2b-seo-onpage
 ```
 
 宿主刷新技能列表后即可使用，必要时打开新会话。处理脚本使用 Python 3.11+ 标准库。关键词工具账号和站点权限沿用你的环境，实际修改 WordPress 时再接入该站已有的 Build Harness。
@@ -155,17 +157,19 @@ On-page负责判断“应该怎样改、为什么”；Harness负责找到该站
 
 ## 版本与验证范围
 
-v2.12.0 接入架构工作台的独立 SEO 选择与执行回执。指定工作台固定该版本，勾选的整站任务分别记录已优化和已发布，重试复用同一事件。手机壳本地 WordPress 回读和测试范围见 [版本验证](RELEASE.json)。
+v2.13.0 接入网站架构 v0.10.0 确认的合并去向、目标小节和企业答复。单页简报和逐词覆盖表可以追溯原页及合并理由。对已有正文的复核单独记录。本版按维护要求省略了功能测试、案例运行与浏览器验证。[本版清单](RELEASE.json)
 
-v2.11.0 新增整站工作清单和同站新增 URL 入口。首页、集合页、详情页分别校验实际 SEO Title 与主 H1 中的品类和有公开依据的采购表达，前台回读可逐字对照已核准稿。旧 AI 页面可按上游模块重写。测试和公开发布范围见 [版本清单](RELEASE.json)。
+v2.12.0 接入架构工作台的独立 SEO 选择与执行回执。指定工作台固定该版本，勾选的整站任务分别记录已优化和已发布，重试复用同一事件。手机壳本地 WordPress 回读和测试范围见 [版本验证](https://github.com/jackzhang1314/b2b-seo-onpage/blob/v2.12.0/RELEASE.json)。
 
-v2.9.0 将改后的最终段落、上游模块和字段接入逐词验收。手机壳集合页用模拟客户资料及已保存的同行实页完成回放，覆盖旧 H1、错放小节、复合词的两处答案、公开状态和相邻现货页归属。验证范围见 [RELEASE.json](RELEASE.json)。
+v2.11.0 新增整站工作清单和同站新增 URL 入口。首页、集合页、详情页分别校验实际 SEO Title 与主 H1 中的品类和有公开依据的采购表达，前台回读可逐字对照已核准稿。旧 AI 页面可按上游模块重写。测试和公开发布范围见 [版本清单](https://github.com/jackzhang1314/b2b-seo-onpage/blob/v2.11.0/RELEASE.json)。
+
+v2.9.0 将改后的最终段落、上游模块和字段接入逐词验收。手机壳集合页用模拟客户资料及已保存的同行实页完成回放，覆盖旧 H1、错放小节、复合词的两处答案、公开状态和相邻现货页归属。验证范围见 [RELEASE.json](https://github.com/jackzhang1314/b2b-seo-onpage/blob/v2.9.0/RELEASE.json)。
 
 v2.8.1 将首屏副标题 `subtitle` 补入完整改稿字段清单，示例、命令和使用说明可以逐项对照。[改稿字段及用法](skills/b2b-seo-onpage/references/data-and-commands.md)
 
 v2.8.0 用一张模拟的品牌定制手机壳集合页，从原始规划、分组和排名明细走到实际改稿。原分配的 3 个词都有文案；从分组外采用了 2 个词，共新增 1 个采购意图。现货词归现货集合页，选购词归指南。样稿开头保留原 H1，列出建议 Title、副标题和 H2，逐项注明可用或待确认。
 
-本版通过 23 项自动回归，并用 5 万行词库和 10 万行排名明细验证按页取词。另用挖掘机、手机壳、CNC 加工三个公开网站的页面 HTML 核对标题和副标题提取。搜索观察记录的是实际检索来源；模拟客户的排名与获客效果需要真实项目数据另行评估。[验证记录](RELEASE.json)
+v2.8.0 当时通过 23 项自动回归，并用 5 万行词库和 10 万行排名明细验证按页取词。另用挖掘机、手机壳、CNC 加工三个公开网站的页面 HTML 核对标题和副标题提取。搜索观察记录的是实际检索来源；模拟客户的排名与获客效果需要真实项目数据另行评估。[验证记录](https://github.com/jackzhang1314/b2b-seo-onpage/blob/v2.8.0/RELEASE.json)
 
 v2.7.0 将客户的页面规划、分组表和行业词库接到单页改稿。选词和布局表可回查原组、规划角色与来源。新版加入完整采购短语解读、相邻页标题比较和采购答案写作，并纳入候选版已有的按 URL 引用 Search Console 查询功能。本次正式版按要求未运行测试。
 

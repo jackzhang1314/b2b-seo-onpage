@@ -13,7 +13,10 @@ import sys
 from tempfile import NamedTemporaryFile
 from urllib.parse import unquote
 
-from project_sources import delivery_folder, discover, on_site, url_key
+from architecture_page import in_plan_scope, rows
+from demand_handoff import Demand
+from page_alignment import check_front_answers, confirmed_capture
+from project_sources import delivery_folder, discover, indexed_files, on_site, url_key
 from seo_project import INDEX, block_range, load_index, local_file, project_for
 
 SCHEMA = "b2b-seo-workbench-handoff/1"
@@ -65,13 +68,31 @@ def read_selection(folder: Path, cli: Path) -> Json:
     data = read(path)
     if data.get("schema") != SCHEMA or not data.get("revision_id"):
         raise ValueError("Unsupported workbench selection schema or missing revision")
-    declared = any("seo_decision" in p or "seo_eligible" in p for p in records(data, "pages"))
+    original_pages = records(data, "pages")
+    declared = any("seo_decision" in p or "seo_eligible" in p for p in original_pages)
     if declared and cli.is_file():
         live = invoke(cli, "resolve", "--workbench", str(folder))
         if (Path(str(live.get("workbench", ""))).resolve() != folder.resolve()
                 or live.get("revision_id") != data["revision_id"]):
             raise ValueError("The shared resolver returned a different workbench revision")
-        data = {**data, "pages": records(live, "pages")}
+        live_project = obj(live["project"])
+        if any(live_project.get(k) != obj(data["project"]).get(k) for k in ("site_url", "mode", "market", "language")):
+            raise ValueError("The shared resolver returned a different project or locale")
+        refreshed = records(live, "pages")
+        # A newer resolver can synthesize empty defaults when reading an older, unchanged file.
+        if live.get("change_number") == data.get("change_number"):
+            new_fields = ("demand_resolution", "business_answer", "onpage_alignment")
+            legacy_ids = {p.get("id") for p in original_pages if all(k not in p for k in new_fields)}
+            for page in refreshed:
+                if page.get("id") in legacy_ids:
+                    for field in new_fields:
+                        page.pop(field, None)
+        data = {**data, "pages": refreshed}
+    project = obj(data["project"])
+    index = load_index(folder / INDEX)
+    if (url_key(str(project.get("site_url", ""))) != url_key(str(index["site_url"]))
+            or any(str(project.get(k, "")).casefold() != str(index[k]).casefold() for k in ("mode", "market", "language"))):
+        raise ValueError("Handoff and registered site, market, language or data mode differ")
     pages: dict[str, Json] = {}
     for page in records(data, "pages"):
         pid = str(page.get("id") or page.get("page_id") or "")
@@ -83,7 +104,8 @@ def read_selection(folder: Path, cli: Path) -> Json:
             raise ValueError("Eligible page lacks an explicit SEO request")
         pages[pid] = page
     return {"workbench": str(folder.resolve()), "revision_id": data["revision_id"], "mode": obj(data["project"]).get("mode"),
-            "site_url": obj(data["project"]).get("site_url"), "has_seo_selection": declared, "pages": pages}
+            "site_url": project["site_url"], "market": project["market"], "language": project["language"],
+            "has_seo_selection": declared, "pages": pages}
 
 
 def locate(source: Path | None, root: Path | None, url: str | None, market: str | None, language: str | None,
@@ -145,7 +167,11 @@ def select_jobs(jobs: list[dict[str, str]], selection: Json) -> tuple[list[dict[
             progress = obj(obj(row.get("progress", {})).get("onpage", {}))
             job.update(revision_id=str(bound["revision_id"]), decision=str(bound["decision"]),
                        seo_decision=str(bound["seo_decision"]), progress=str(progress.get("status") or "pending"))
-            if not job["issue"] and job["progress"] in {"optimized", "published"}:
+            for key in ("onpage_alignment", "business_question", "business_answer"):
+                job[key] = str(row.get(key) or "")
+            if not job["issue"] and job["onpage_alignment"] == "needs_review":
+                job["next_step"] = "review_current_content"
+            elif not job["issue"] and job["progress"] in {"optimized", "published"}:
                 job["next_step"] = "resume_from_review" if job["progress"] == "optimized" else "check_current_version"
             selected.append(job)
         else:
@@ -157,6 +183,30 @@ def select_jobs(jobs: list[dict[str, str]], selection: Json) -> tuple[list[dict[
         raise ValueError("Selected workbench IDs missing from in-scope planning tables: " + ", ".join(sorted(absent)))
     return selected, {"mode": "seo_selection" if selection["has_seo_selection"] else "legacy_build_choices_only",
                       "revision_id": selection["revision_id"], "planned_or_live_pages": len(jobs), "omitted": omitted}
+
+
+def verify_demand(architecture: Json, selection: Json) -> None:
+    saved = obj(architecture.get("workbench_demand", {}))
+    if not saved:
+        pid = str(obj(architecture.get("page", {})).get("id") or "")
+        state = obj(obj(selection.get("pages", {})).get(pid, {}))
+        if pid and any(k in state for k in ("demand_resolution", "business_answer", "onpage_alignment")):
+            raise ValueError("This page now has the new workbench handoff; read its page brief again")
+        return
+    folder = Path(str(selection.get("workbench") or "")).resolve()
+    if (saved.get("revision_id") != selection.get("revision_id")
+            or str(folder) != architecture.get("source_directory") or str(folder) != saved.get("source_directory")
+            or any(saved.get(k) != selection.get(k) for k in ("market", "language"))):
+        raise ValueError("The saved page brief belongs to a different workbench revision or locale")
+    market, language = str(selection["market"]), str(selection["language"])
+    pages = indexed_files(folder / INDEX)["pages"]
+    matches = [r for r in rows(pages, {"id", "url"}) if r["id"] == saved.get("page_id") and in_plan_scope(r, market, language)]
+    if len(matches) != 1:
+        raise ValueError("Current workbench ownership no longer identifies the saved page")
+    demand = Demand.from_workbench(folder, selection, market, language)
+    current = demand.page_note(matches[0], selection)
+    if not saved.get("scope_sha256") or current.get("scope_sha256") != saved["scope_sha256"]:
+        raise ValueError("Business answers or confirmed keyword destinations changed; read the page brief again")
 
 
 def cms_record(path: Path) -> Json:
@@ -206,6 +256,18 @@ def confirm_public(plan: Json, after: Json, saved: Path, reopened: Path, report:
     return f"{b['type']}:{b['id']}@{b['version']}"
 
 
+def checked_copy(folder: Path, run: Json, original: Path, plan: Json) -> bool:
+    saved = folder / "plan.json"
+    if run.get("command") != "check-plan":
+        return False
+    # Full-page research materializes absolute source paths and evidence digests in the saved copy.
+    if not run.get("saved_plan_sha256"):
+        return read(saved) == plan
+    source_hash = hashlib.sha256(original.read_bytes()).hexdigest()
+    return (hashlib.sha256(saved.read_bytes()).hexdigest() == run["saved_plan_sha256"]
+            and any(r["path"] == str(original.resolve()) and r["sha256"] == source_hash for r in records(run, "inputs")))
+
+
 def sync(note: Path, plan_path: Path, folder: Path, cli: Path, *, after: Path | None = None,
          reviewed: Path | None = None, saved: Path | None = None, reopened: Path | None = None) -> Json:
     architecture, plan, run = read(note), read(plan_path), read(folder / "run.json")
@@ -215,6 +277,7 @@ def sync(note: Path, plan_path: Path, folder: Path, cli: Path, *, after: Path | 
         raise ValueError("This workbench page has no requested, eligible SEO task")
     workbench = delivery_folder(Path(str(pinned["workbench"])))
     selection = read_selection(workbench, cli)
+    verify_demand(architecture, selection)
     owner = obj(obj(selection.get("pages", {})).get(pid, {}))
     planned = obj(architecture.get("page", {}))
     if (planned.get("id") != pid or planned.get("url") != owner.get("url")
@@ -236,28 +299,67 @@ def sync(note: Path, plan_path: Path, folder: Path, cli: Path, *, after: Path | 
             raise ValueError("Review inputs do not match the selected page, plan, or capture")
     status, document, target = "optimized", "onpage-review.md", ""
     when = str(run.get("completed_at") or "")
+    demand_note = obj(architecture.get("workbench_demand", {}))
+    draft_folder = reviewed.parent if after and reviewed else folder
+    draft_run = read(draft_folder / "run.json") if after and reviewed else run
+    extra_evidence: list[Path] = []
+    alignment: Json = {}
+    if demand_note:
+        changes = records(plan, "changes")
+        if changes and all(c.get("before") == c.get("after") and c.get("after_tag", c["field"]) == c["field"]
+                           for c in changes):
+            raise ValueError("The proposed copy is unchanged; review the existing page with a retain decision")
+        path = draft_folder / "workbench-alignment.json"
+        if hashlib.sha256(path.read_bytes()).hexdigest() != draft_run.get("alignment_sha256"):
+            raise ValueError("The workbench alignment report differs from the checked draft")
+        alignment = read(path)
+        if alignment.get("status") != "aligned" or alignment.get("scope_sha256") != demand_note["scope_sha256"]:
+            raise ValueError("This revision still needs section or business evidence; see workbench-alignment.json")
+        extra_evidence.append(path)
     if after:
         if run.get("command") != "compare" or run.get("comparison_scope") == "local_simulation" or not (reviewed and saved and reopened):
             raise ValueError("Publishing needs the reviewed headings, CMS save and independent CMS and frontend readbacks")
-        draft = read(reviewed.parent / "run.json")
-        if (draft.get("command") != "check-plan" or read(reviewed.parent / "plan.json") != plan
+        draft = draft_run
+        if (not checked_copy(reviewed.parent, draft, plan_path, plan)
                 or draft.get("commercial_headings") not in {"pass", "not_required"}
                 or not any(row.get("sha256") == inputs[str(note.resolve())] for row in records(draft, "inputs"))):
             raise ValueError("Published readback must match the previously reviewed plan and workbench page")
         public_snapshot = read(after)
         target = confirm_public(plan, public_snapshot, saved, reopened, folder)
         when = str(obj(public_snapshot["capture"])["retrieved_at"])
+        if demand_note:
+            if not plan.get("changes"):
+                raise ValueError("Retained content can be reviewed without reporting a new publication")
+            confirmed_capture(public_snapshot, architecture, plan, owner)
+            check_front_answers(alignment, public_snapshot)
         status, document = "published", "implementation-review.md"
-    elif run.get("command") != "check-plan" or read(folder / "plan.json") != plan:
+    elif not checked_copy(folder, run, plan_path, plan):
         raise ValueError("Need the saved and re-read On-page plan")
+    elif demand_note and not plan.get("changes"):
+        if plan.get("review_outcome") != "retain":
+            raise ValueError("Only a reviewed decision to retain the current page can record reviewed")
+        inspected = obj(run.get("page_evidence"))
+        source_path = Path(str(inspected["path"]))
+        if hashlib.sha256(source_path.read_bytes()).hexdigest() != inspected["sha256"] or inputs.get(str(source_path.resolve())) != inspected["sha256"]:
+            raise ValueError("The inspected front-end evidence differs from the checked review")
+        snapshot = read(source_path)
+        when = confirmed_capture(snapshot, architecture, plan, owner)
+        check_front_answers(alignment, snapshot)
+        target = str(obj(snapshot["input"])["sha256"])
+        extra_evidence += [source_path, Path(str(obj(snapshot["input"])["path"]))]
+        status = "reviewed"
     evidence = folder / document
     if not evidence.read_text(encoding="utf-8").strip():
         raise ValueError("Missing saved On-page review")
     key = [pinned["revision_id"], pid, status, plan, target]
+    if demand_note:
+        key.append(demand_note["scope_sha256"])
+    if status == "reviewed":
+        key.append(when)
     event = "onpage-" + hashlib.sha256(json.dumps(key, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     summary = f"{pid} · {status} · {obj(plan['focus'])['scope']} · {plan['target_url']}"
     proof = folder / "workbench-proof.json"
-    documents = [evidence, note, plan_path, folder / "run.json", folder / "commercial-headings.json"]
+    documents = [evidence, note, plan_path, folder / "run.json", folder / "commercial-headings.json", *extra_evidence]
     for source in (reviewed, after, saved, reopened):
         if source:
             documents.append(source)
@@ -275,7 +377,8 @@ def sync(note: Path, plan_path: Path, folder: Path, cli: Path, *, after: Path | 
     evidence_ref = proof.resolve().as_uri()
     # The shared writer compares the original payload for a repeat event.
     for previous in records(owner, "history") if "history" in owner else []:
-        if previous.get("track") == "onpage" and previous.get("event_id") == event:
+        if (previous.get("track") == "onpage" and previous.get("event_id") == event
+                and previous.get("origin_revision_id", pinned["revision_id"]) == pinned["revision_id"]):
             evidence_ref, when = str(previous["evidence"]), str(previous["occurred_at"])
             break
     args = ["record", "--workbench", str(workbench), "--revision-id", str(pinned["revision_id"]),

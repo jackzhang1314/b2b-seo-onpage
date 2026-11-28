@@ -21,14 +21,15 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from urllib.parse import urljoin, urlsplit
 
 from architecture_page import read_page
-from project_sources import url_key
-from workbench_bridge import handoff_file, locate, page_binding, read_selection, select_jobs, shared_cli, sync
+from project_sources import delivery_folder, url_key
+from workbench_bridge import handoff_file, locate, read_selection, select_jobs, shared_cli, sync, verify_demand
 from commercial_headings import audit as audit_headings, compare_reviewed, coverage_sheet
 from site_queue import COLUMNS as QUEUE_COLUMNS, site_queue
 from onpage_research import check_architecture_target, reconcile_inventory, validate_research
+from page_alignment import brief_addendum, check_answers
 from page_copy import DESIGN_COLUMNS, PLACEMENT_DETAIL, PageCopy
 
-VERSION = "2.12.0"
+VERSION = "2.13.0"
 PLANNING_COLUMNS = ["keyword_id", "planned_page_id", "group_ids", "group_labels", "planned_role"]
 HEADING_TAGS = {f"h{level}" for level in range(1, 7)}
 TEXT_BREAK_TAGS = HEADING_TAGS | {
@@ -700,7 +701,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             parser.flush_block()
             evidence["content_blocks"] = parser.content_blocks
     brief = obj(obj(plan.get("research", {})).get("brief", {}))
-    project_copy = bool(focus.get("scope") == "full_page" or plan.get("keyword_placement") or "commercial_headings" in plan)
+    project_copy = bool(focus.get("scope") == "full_page" or plan.get("keyword_placement") or plan.get("workbench_answers") or "commercial_headings" in plan)
     if not project_copy:
         project_copy = any(row["field"] in {"title", "h1"} or row.get("after_tag") == "h1" for row in rows)
     page = PageCopy(evidence, rows if project_copy else [], brief, obj(snapshot.get("page_design", {})),
@@ -708,6 +709,7 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
     page.prepare_placements([obj(p) for p in arr(plan.get("keyword_placement", []))])
     decisions = {compact(r["keyword"]).casefold(): r for r in research.keywords} if research else {}
     placements = placement_rows(plan, page, rows, decisions)
+    alignment = check_answers(snapshot, plan, evidence, page, placements)
     design_rows = page.design_coverage(placements)
     headings = audit_headings(plan, page.blocks, snapshot)
     if architecture_path:
@@ -790,8 +792,9 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
                            ["keyword", "assigned", "ownership", "decision", "intent_group", "reason", "copy_status", "copy_states",
                             "locations", "expressions", "planning_refs", "library_refs", "peer_urls", "ranking_refs",
                             "owners", "other_target", "evidence_refs", "source_pool", "origin", "metrics", "observed_peer_urls",
+                            "workbench_source_page", "workbench_target_module", "workbench_reason", "workbench_revision",
                             "required_modules", "missing_answers", *PLACEMENT_DETAIL, *PLANNING_COLUMNS], *sheets)
-            (destination / "page-brief.md").write_text(research.brief, encoding="utf-8")
+            (destination / "page-brief.md").write_text(research.brief + brief_addendum(obj(snapshot.get("workbench_demand", {}))), encoding="utf-8")
         write_json(destination / "plan.json", exported_plan)
         if serp["source"] != "not_requested":
             write_json(destination / "serp-brief.json", serp)
@@ -875,9 +878,14 @@ def check_plan(evidence_path: Path, plan_path: Path, out: Path, architecture_pat
             review += ["## 研究缺口", "", *[f"- {gap}" for gap in research.gaps], ""]
         review += ["## 资料缺口", "", *[f"- {gap}" for gap in gaps], "",
                    "状态：改稿建议。脚本只校验引用、上下文和部分现状匹配，不能自动证明事实完整、语义正确或排名提升。"]
+        if alignment:
+            write_json(destination / "workbench-alignment.json", alignment)
+            review.extend([brief_addendum(obj(snapshot["workbench_demand"])), *[f"- {gap}" for gap in texts(alignment["gaps"])]])
         (destination / "onpage-review.md").write_text("\n".join(review) + "\n", encoding="utf-8")
         write_json(destination / "run.json", {"version": VERSION, "command": "check-plan", "completed_at": datetime.now(timezone.utc).isoformat(), "changes": len(rows),
-                   "commercial_headings": headings["status"],
+                   "commercial_headings": headings["status"], "saved_plan_sha256": digest(destination / "plan.json")["sha256"],
+                   "page_evidence": digest(evidence_path),
+                   "alignment_sha256": digest(destination / "workbench-alignment.json")["sha256"] if alignment else "",
                    "claims": len(claims), "inputs": [digest(evidence_path), digest(plan_path), *([digest(architecture_path)] if architecture_path else [])],
                    "keyword_coverage": coverage_summary, "keyword_coverage_status": "reconciled" if "keyword_inventory" in snapshot else "decisions_only" if coverage_summary else "not_supplied",
                    "research_status": research.status if research is not None else "not_checked",
@@ -1049,6 +1057,10 @@ def main() -> int:
     args = parser.parse_args()
     try:
         review: dict[str, object] = {}
+        if args.command in {"check-plan", "compare"} and args.architecture_page:
+            brief = obj(json.loads(args.architecture_page.read_bytes()))
+            if brief.get("workbench_demand"):
+                verify_demand(brief, read_selection(delivery_folder(Path(str(brief["source_directory"]))), shared_cli(args.architecture_skill)))
         if args.command in {"architecture-page", "site-queue"}:
             if args.source and args.mode:
                 raise ValueError("--mode selects a registered workbench; use it without --source")
@@ -1058,6 +1070,13 @@ def main() -> int:
             selection = read_selection(source_folder, writer)
             if args.command == "site-queue":
                 scope, jobs = site_queue(source_folder, args.market, args.language, args.site_inventory)
+                if any(isinstance(p, dict) and p.get("decision") == "skip" and obj(p.get("demand_resolution") or {}).get("action") == "merge"
+                       for p in obj(selection.get("pages", {})).values()):
+                    from demand_handoff import Demand
+                    demand = Demand.from_workbench(source_folder, selection, scope["market"], scope["language"])
+                    for job in jobs:
+                        move = demand.page_summary({"id": job["page_id"], "primary_keyword": job["primary_keyword"]}, {})
+                        job["primary_keyword"] = move["primary_keyword"]
                 if args.site_url and scope["site_url"] and url_key(args.site_url) != url_key(scope["site_url"]):
                     raise ValueError("The selected site URL differs from the site in the workbench")
                 jobs, selection_summary = select_jobs(jobs, selection)
@@ -1077,9 +1096,7 @@ def main() -> int:
                 page_note = read_page(source_folder, args.url, args.page_id, keyword_map=args.keyword_map, library=args.library,
                                       market=args.market, language=args.language, ranking_files=args.rankings,
                                       peer_urls=args.peer_url, library_terms=args.library_term, ranking_date=args.ranking_date,
-                                      registered=registered, allow_unplanned=args.allow_unplanned)
-                if selection:
-                    page_note["workbench_progress"] = page_binding(selection, str(obj(page_note["page"])["id"]))
+                                      registered=registered, allow_unplanned=args.allow_unplanned, workbench=selection)
                 with output_dir(args.out) as destination:
                     write_json(destination / "architecture-page.json", page_note)
         elif args.command == "inspect":

@@ -15,7 +15,7 @@ Target = tuple[UrlKey, str, str]
 
 COLUMNS = ["page_id", "page_name", "url", "page_type", "primary_keyword", "parent_id", "action", "approval",
            "market", "language", "source", "source_row", "heading_policy", "next_step",
-           "revision_id", "decision", "seo_decision", "progress", "cms_record", "backend_readback", "frontend_readback", "issue"]
+           "revision_id", "decision", "seo_decision", "progress", "onpage_alignment", "business_question", "business_answer", "cms_record", "backend_readback", "frontend_readback", "issue"]
 
 
 def heading_policy(kind: str) -> str:
